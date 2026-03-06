@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, password, name } = body;
+    const { email, password, name, role } = body;
 
     if (!email || !password || !name) {
       return NextResponse.json(
@@ -30,11 +30,18 @@ export async function POST(request: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
+    const userRole = role === 'therapist' ? 'therapist' : 'parent';
+    const inviteCode = userRole === 'therapist'
+      ? `THER-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
+      : undefined;
+
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
         name,
+        role: userRole,
+        inviteCode,
       },
     });
 
@@ -44,6 +51,7 @@ export async function POST(request: Request) {
           id: user.id,
           email: user.email,
           name: user.name,
+          role: user.role,
         },
       },
       { status: 201 }

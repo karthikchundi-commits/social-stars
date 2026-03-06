@@ -56,6 +56,7 @@ export default function ChildDashboard() {
 
   const [child, setChild] = useState<Child | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [assignedActivities, setAssignedActivities] = useState<Activity[]>([]);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [streak, setStreak] = useState(0);
@@ -86,7 +87,14 @@ export default function ChildDashboard() {
 
       const currentChild = childData?.children?.find((c: Child) => c?.id === childId);
       setChild(currentChild ?? null);
-      setActivities(activitiesData?.activities ?? []);
+      const allActivities: Activity[] = activitiesData?.activities ?? [];
+      const assignmentIds = new Set<string>(
+        (progressData?.assignments ?? []).map((a: any) => a.activityId)
+      );
+      setAssignedActivities(
+        (progressData?.assignments ?? []).map((a: any) => a.activity).filter(Boolean)
+      );
+      setActivities(allActivities.filter((a) => !assignmentIds.has(a.id)));
 
       const completedActivityIds: string[] =
         progressData?.completedActivities?.map((ca: any) => ca?.activityId ?? '') ?? [];
@@ -317,6 +325,38 @@ export default function ChildDashboard() {
                   <h3 className="font-bold text-gray-800">{achievement?.title ?? ''}</h3>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Therapist-assigned activities */}
+        {assignedActivities.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-indigo-600 mb-4 flex items-center gap-2">
+              ⭐ From Your Therapist
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {assignedActivities.map((activity) => {
+                const isCompleted = completedIds.has(activity?.id ?? '');
+                return (
+                  <button
+                    key={activity?.id}
+                    onClick={() => handleActivityClick(activity)}
+                    className="child-card bg-gradient-to-br from-indigo-50 to-purple-50 text-left relative overflow-hidden border-2 border-indigo-200"
+                  >
+                    {isCompleted && (
+                      <div className="absolute top-4 right-4 bg-yellow-400 rounded-full p-2 z-10">
+                        <Star className="w-6 h-6 text-white fill-white" />
+                      </div>
+                    )}
+                    <div className={`w-full h-28 bg-gradient-to-br ${getActivityColor(activity?.type ?? '')} rounded-2xl mb-4 flex items-center justify-center text-white`}>
+                      {getActivityIcon(activity?.type ?? '')}
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-800 mb-1">{activity?.title ?? 'Activity'}</h3>
+                    <p className="text-gray-600 text-base">{activity?.description ?? ''}</p>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}

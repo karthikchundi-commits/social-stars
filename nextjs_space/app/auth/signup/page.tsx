@@ -12,6 +12,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState<'parent' | 'therapist'>('parent');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -35,7 +36,7 @@ export default function SignupPage() {
       const response = await fetch('/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, role }),
       });
 
       const data = await response.json();
@@ -79,6 +80,19 @@ export default function SignupPage() {
         </div>
 
         <div className="bg-white rounded-3xl shadow-2xl p-8">
+          {/* Role selector */}
+          <div className="flex gap-3 mb-6">
+            {(['parent', 'therapist'] as const).map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setRole(r)}
+                className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all capitalize ${role === r ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+              >
+                {r === 'parent' ? '👨‍👩‍👧 Parent' : '🩺 Therapist / Teacher'}
+              </button>
+            ))}
+          </div>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">

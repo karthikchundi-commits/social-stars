@@ -65,7 +65,13 @@ export async function GET(request: Request) {
 
     const streak = calculateStreak(completedActivities);
 
-    return NextResponse.json({ completedActivities, achievements, streak });
+    const assignments = await prisma.activityAssignment.findMany({
+      where: { childId },
+      include: { activity: true },
+      orderBy: { assignedAt: 'desc' },
+    });
+
+    return NextResponse.json({ completedActivities, achievements, streak, assignments });
   } catch (error) {
     console.error('Error fetching progress:', error);
     return NextResponse.json(
