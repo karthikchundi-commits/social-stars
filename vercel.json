@@ -1,0 +1,5 @@
+{
+  "rootDirectory": "nextjs_space",
+  "buildCommand": "prisma migrate deploy && next build",
+  "installCommand": "yarn install"
+}

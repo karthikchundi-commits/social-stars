@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 1rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 text-foreground;
+    font-family: var(--font-fredoka), var(--font-inter), sans-serif;
+  }
+}
+
+/* Suppress hydration errors */
+[data-hydration-error] {
+  display: none !important;
+}
+
+/* Child-friendly animations */
+@keyframes bounce-gentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+.bounce-gentle {
+  animation: bounce-gentle 2s ease-in-out infinite;
+}
+
+.wiggle {
+  animation: wiggle 0.5s ease-in-out;
+}
+
+.sparkle {
+  animation: sparkle 1.5s ease-in-out infinite;
+}
+
+/* Large, easy-to-tap buttons for children */
+.child-button {
+  @apply min-h-[80px] text-2xl font-bold rounded-3xl shadow-lg transition-all duration-300;
+  @apply hover:scale-105 hover:shadow-xl active:scale-95;
+}
+
+/* Colorful card styles */
+.child-card {
+  @apply rounded-3xl p-6 shadow-lg transition-all duration-300;
+  @apply hover:shadow-xl hover:-translate-y-1;
+}

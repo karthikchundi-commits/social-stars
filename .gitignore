@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Next.js
+nextjs_space/.next/
+nextjs_space/out/
+nextjs_space/*.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.production
+nextjs_space/.env
+nextjs_space/.env.local
+nextjs_space/.env.production
+
+# Prisma
+nextjs_space/node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
