@@ -13,8 +13,76 @@ import {
   Wind,
   MessageSquare,
   Flame,
+  Sparkles,
 } from 'lucide-react';
 import Image from 'next/image';
+
+// ── Recommendation engine ────────────────────────────────────────────────────
+
+const TYPE_PRIORITY: Record<string, string[]> = {
+  anxious:  ['breathing', 'emotion', 'story', 'scenario', 'communication'],
+  angry:    ['breathing', 'emotion', 'story', 'scenario', 'communication'],
+  sad:      ['emotion', 'breathing', 'story', 'scenario', 'communication'],
+  tired:    ['emotion', 'breathing', 'story', 'scenario', 'communication'],
+  calm:     ['story', 'scenario', 'emotion', 'communication', 'breathing'],
+  happy:    ['scenario', 'communication', 'story', 'emotion', 'breathing'],
+  excited:  ['scenario', 'communication', 'story', 'emotion', 'breathing'],
+  silly:    ['communication', 'scenario', 'story', 'emotion', 'breathing'],
+};
+
+const MOOD_BANNER: Record<string, { emoji: string; message: string; color: string }> = {
+  anxious:  { emoji: '😟', message: "Feeling a bit worried? Let's start with something calming.", color: 'from-purple-100 to-blue-100 border-purple-200' },
+  angry:    { emoji: '😠', message: "Had a tough moment? Breathing first will help us feel better.", color: 'from-red-50 to-orange-50 border-red-200' },
+  sad:      { emoji: '😢', message: "Feeling sad is okay. Let's do something gentle together.", color: 'from-blue-50 to-indigo-50 border-blue-200' },
+  tired:    { emoji: '😴', message: "A bit tired today? We'll keep it easy and fun.", color: 'from-gray-50 to-blue-50 border-gray-200' },
+  calm:     { emoji: '😌', message: "You're calm — perfect for exploring stories and scenarios!", color: 'from-teal-50 to-green-50 border-teal-200' },
+  happy:    { emoji: '😊', message: "You're happy! Great time to practise social skills.", color: 'from-yellow-50 to-orange-50 border-yellow-200' },
+  excited:  { emoji: '🤩', message: "So excited! Let's channel that energy into social adventures.", color: 'from-pink-50 to-purple-50 border-pink-200' },
+  silly:    { emoji: '😜', message: "Feeling silly? Let's play and communicate together!", color: 'from-orange-50 to-yellow-50 border-orange-200' },
+};
+
+function getRecommendations(
+  mood: string | null,
+  streak: number,
+  completedIds: Set<string>,
+  allActivities: Activity[],
+  assignedIds: Set<string>,
+): Activity[] {
+  // Exclude assigned activities (shown separately)
+  const pool = allActivities.filter((a) => !assignedIds.has(a.id));
+  if (!pool.length) return [];
+
+  // If no mood yet or streak is 0, prioritise easiest uncompleted activities across all types
+  const priority = mood ? (TYPE_PRIORITY[mood] ?? Object.keys(TYPE_PRIORITY)[0].split(',')) : ['breathing', 'emotion', 'scenario', 'story', 'communication'];
+
+  const picked: Activity[] = [];
+  const used = new Set<string>();
+
+  // For each type in priority order, pick best uncompleted → then completed
+  for (const type of priority) {
+    if (picked.length >= 3) break;
+    const ofType = pool.filter((a) => a.type === type && !used.has(a.id));
+    const uncompleted = ofType.filter((a) => !completedIds.has(a.id));
+    const candidates = uncompleted.length ? uncompleted : ofType;
+    if (candidates.length) {
+      picked.push(candidates[0]);
+      used.add(candidates[0].id);
+    }
+  }
+
+  // If fewer than 3, fill from remaining pool (uncompleted first)
+  if (picked.length < 3) {
+    const remaining = pool.filter((a) => !used.has(a.id));
+    const uncompleted = remaining.filter((a) => !completedIds.has(a.id));
+    const extra = uncompleted.length ? uncompleted : remaining;
+    for (const a of extra) {
+      if (picked.length >= 3) break;
+      picked.push(a);
+    }
+  }
+
+  return picked;
+}
 
 interface Activity {
   id: string;
@@ -202,6 +270,9 @@ export default function ChildDashboard() {
   }
 
   const totalStars = completedIds.size;
+  const assignedIds = new Set(assignedActivities.map((a) => a.id));
+  const recommendations = getRecommendations(todayMood, streak, completedIds, activities, assignedIds);
+  const moodBanner = todayMood ? MOOD_BANNER[todayMood] : null;
 
   return (
     <div className="min-h-screen p-6">
@@ -325,6 +396,48 @@ export default function ChildDashboard() {
                   <h3 className="font-bold text-gray-800">{achievement?.title ?? ''}</h3>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Mood-adaptive recommendation banner + picks */}
+        {recommendations.length > 0 && (
+          <div className="mb-8">
+            {moodBanner && (
+              <div className={`bg-gradient-to-br ${moodBanner.color} border-2 rounded-2xl px-6 py-4 mb-5 flex items-center gap-3`}>
+                <span className="text-3xl">{moodBanner.emoji}</span>
+                <p className="text-gray-700 font-semibold text-lg">{moodBanner.message}</p>
+              </div>
+            )}
+            <h2 className="text-2xl font-bold text-purple-600 mb-4 flex items-center gap-2">
+              <Sparkles className="w-7 h-7 text-yellow-500" />
+              {todayMood ? 'Just for You Right Now' : 'Great Place to Start'}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {recommendations.map((activity) => {
+                const isCompleted = completedIds.has(activity.id);
+                return (
+                  <button
+                    key={`rec-${activity.id}`}
+                    onClick={() => handleActivityClick(activity)}
+                    className="child-card bg-gradient-to-br from-yellow-50 to-orange-50 text-left relative overflow-hidden border-2 border-yellow-200 ring-2 ring-yellow-300 ring-offset-2"
+                  >
+                    {isCompleted && (
+                      <div className="absolute top-4 right-4 bg-yellow-400 rounded-full p-2 z-10">
+                        <Star className="w-6 h-6 text-white fill-white" />
+                      </div>
+                    )}
+                    <div className={`w-full h-28 bg-gradient-to-br ${getActivityColor(activity.type)} rounded-2xl mb-4 flex items-center justify-center text-white`}>
+                      {getActivityIcon(activity.type)}
+                    </div>
+                    <div className="absolute top-3 left-3 bg-yellow-400 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" /> Recommended
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-800 mb-1">{activity.title}</h3>
+                    <p className="text-gray-600 text-base">{activity.description}</p>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
