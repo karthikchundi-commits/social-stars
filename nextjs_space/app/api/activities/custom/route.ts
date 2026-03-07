@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { title, description, content } = await request.json();
+  const { title, description, content, type } = await request.json();
   if (!title || !description || !content) {
     return NextResponse.json({ error: 'title, description, and content are required' }, { status: 400 });
   }
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     data: {
       title,
       description,
-      type: 'story',
+      type: type ?? 'story',
       content: typeof content === 'string' ? content : JSON.stringify(content),
       difficulty: 2,
       starsReward: 3,
