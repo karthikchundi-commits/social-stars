@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
-  ArrowLeft, Copy, Check, Users, Star, Award,
-  Flame, Plus, Trash2, BookOpen, ClipboardList,
+  Copy, Check, Users, Star, Award,
+  Plus, Trash2, BookOpen, ClipboardList, Quote,
 } from 'lucide-react';
 
 interface AssignedActivity {
@@ -128,10 +128,6 @@ export default function TherapistPage() {
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-7xl mx-auto">
-        <button onClick={() => router.push('/select-child')} className="mb-6 px-6 py-3 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2 font-semibold text-gray-700">
-          <ArrowLeft className="w-5 h-5" /> Back
-        </button>
-
         <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-5xl font-bold text-purple-600 mb-1">Therapist Portal</h1>
@@ -188,6 +184,50 @@ export default function TherapistPage() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Success Stories */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-700 mb-5 flex items-center gap-2">
+            <Quote className="w-6 h-6 text-yellow-500" /> Customer Success Stories
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[
+              {
+                quote: "After just 3 weeks using Social Stars, Liam started greeting his classmates by name every morning. His teacher said she'd never seen him do that before.",
+                name: 'Sarah M.',
+                role: 'Parent of Liam, age 5',
+                emoji: '🌟',
+                color: 'from-yellow-50 to-orange-50',
+                border: 'border-yellow-200',
+              },
+              {
+                quote: "I assign breathing activities before school on Mondays. Two of my clients went from meltdowns to calm arrivals within a month. The data in the portal is invaluable.",
+                name: 'Dr. Priya R.',
+                role: 'Occupational Therapist',
+                emoji: '🏆',
+                color: 'from-purple-50 to-pink-50',
+                border: 'border-purple-200',
+              },
+              {
+                quote: "Maya now points to the emotion cards on the fridge and tells us how she feels. She used to shut down completely. Social Stars gave us a shared language.",
+                name: 'James & Anya K.',
+                role: 'Parents of Maya, age 4',
+                emoji: '💜',
+                color: 'from-blue-50 to-teal-50',
+                border: 'border-blue-200',
+              },
+            ].map((story) => (
+              <div key={story.name} className={`bg-gradient-to-br ${story.color} border-2 ${story.border} rounded-2xl p-6`}>
+                <div className="text-3xl mb-3">{story.emoji}</div>
+                <p className="text-gray-700 text-sm italic mb-4 leading-relaxed">&ldquo;{story.quote}&rdquo;</p>
+                <div>
+                  <p className="font-bold text-gray-800 text-sm">{story.name}</p>
+                  <p className="text-xs text-gray-500">{story.role}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Clients List */}

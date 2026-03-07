@@ -12,7 +12,8 @@ export default function HomePage() {
 
   useEffect(() => {
     if (status === 'authenticated') {
-      router.push('/select-child');
+      const role = (session?.user as any)?.role;
+      router.replace(role === 'therapist' ? '/therapist' : '/select-child');
     }
   }, [status, router]);
 
@@ -32,13 +33,13 @@ export default function HomePage() {
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
             <Link
-              href="/auth/signup"
+              href="/get-started"
               className="px-10 py-5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xl rounded-3xl hover:from-purple-600 hover:to-pink-600 transition-all transform hover:scale-105 shadow-xl"
             >
               Get Started
             </Link>
             <Link
-              href="/auth/login"
+              href="/get-started"
               className="px-10 py-5 bg-white text-purple-600 font-bold text-xl rounded-3xl hover:bg-gray-50 transition-all transform hover:scale-105 shadow-xl border-2 border-purple-200"
             >
               Login
@@ -142,7 +143,7 @@ export default function HomePage() {
             Start Your Child's Learning Journey Today!
           </h2>
           <Link
-            href="/auth/signup"
+            href="/get-started"
             className="inline-block px-12 py-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-2xl rounded-3xl hover:from-purple-600 hover:to-pink-600 transition-all transform hover:scale-105 shadow-2xl"
           >
             Create Free Account

@@ -30,7 +30,7 @@ export default function SelectChildPage() {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth/login');
+      router.push('/get-started');
     }
   }, [status, router]);
 
@@ -190,8 +190,16 @@ export default function SelectChildPage() {
       {showLinkModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
-            <h2 className="text-2xl font-bold text-purple-600 mb-2">Link to a Therapist</h2>
-            <p className="text-gray-500 mb-6">Enter the invite code your therapist or teacher shared with you.</p>
+            <div className="text-center mb-6">
+              <div className="text-4xl mb-3">🩺</div>
+              <h2 className="text-2xl font-bold text-purple-600 mb-2">Connect with Your Therapist</h2>
+              <p className="text-gray-500 text-sm">Enter the invite code your therapist shared with you. This will link your account so they can:</p>
+              <ul className="mt-3 text-sm text-left text-gray-600 space-y-1 bg-purple-50 rounded-xl p-4">
+                <li>✅ View your child's progress and mood check-ins</li>
+                <li>✅ Assign personalised activities to your child</li>
+                <li>✅ Track achievements and engagement over time</li>
+              </ul>
+            </div>
             <form onSubmit={handleLinkTherapist} className="space-y-4">
               <input
                 type="text"
@@ -201,10 +209,10 @@ export default function SelectChildPage() {
                 placeholder="THER-XXXXXX"
                 required
               />
-              {linkResult && <p className="text-center font-semibold">{linkResult}</p>}
-              <div className="flex gap-3">
+              {linkResult && <p className="text-center font-semibold mt-1">{linkResult}</p>}
+              <div className="flex gap-3 mt-2">
                 <button type="button" onClick={() => { setShowLinkModal(false); setLinkResult(''); setLinkCode(''); }} className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl">Cancel</button>
-                <button type="submit" className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl">Link</button>
+                <button type="submit" className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl">Connect</button>
               </div>
             </form>
           </div>
