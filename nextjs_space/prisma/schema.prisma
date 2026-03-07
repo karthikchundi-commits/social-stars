@@ -56,9 +56,10 @@ model User {
   accounts         Account[]
   sessions         Session[]
   children         ChildProfile[]
-  therapistLinks   TherapistFamily[] @relation("TherapistUser")
-  parentLinks      TherapistFamily[] @relation("ParentUser")
-  customActivities Activity[]        @relation("CustomActivities")
+  therapistLinks   TherapistFamily[]    @relation("TherapistUser")
+  parentLinks      TherapistFamily[]    @relation("ParentUser")
+  customActivities Activity[]           @relation("CustomActivities")
+  enrollments      ProspectEnrollment[] @relation("TherapistEnrollments")
 }
 
 model ChildProfile {
@@ -114,6 +115,30 @@ model Achievement {
   badgeType   String // "star", "trophy", "medal"
   badgeImage  String
   earnedAt    DateTime     @default(now())
+}
+
+model ProspectEnrollment {
+  id          String          @id @default(cuid())
+  therapistId String
+  therapist   User            @relation("TherapistEnrollments", fields: [therapistId], references: [id], onDelete: Cascade)
+  parentName  String
+  parentEmail String
+  token       String          @unique
+  status      String          @default("pending") // "pending" | "completed"
+  notes       String?         @db.Text
+  goals       String?         @db.Text
+  createdAt   DateTime        @default(now())
+  completedAt DateTime?
+  children    ProspectChild[]
+}
+
+model ProspectChild {
+  id           String             @id @default(cuid())
+  enrollmentId String
+  enrollment   ProspectEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  name         String
+  age          Int
+  notes        String?
 }
 
 model TherapistFamily {

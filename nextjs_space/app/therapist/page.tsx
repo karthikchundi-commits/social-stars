@@ -137,12 +137,20 @@ export default function TherapistPage() {
             <h1 className="text-5xl font-bold text-purple-600 mb-1">Therapist Portal</h1>
             <p className="text-xl text-gray-600">Welcome, {session?.user?.name}</p>
           </div>
-          <button
-            onClick={() => router.push('/story-builder')}
-            className="px-6 py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
-          >
-            <BookOpen className="w-5 h-5" /> Story Builder
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => router.push('/therapist/enroll')}
+              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
+            >
+              <Plus className="w-5 h-5" /> Enroll Family
+            </button>
+            <button
+              onClick={() => router.push('/story-builder')}
+              className="px-6 py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
+            >
+              <BookOpen className="w-5 h-5" /> Story Builder
+            </button>
+          </div>
         </div>
 
         {/* Invite Code */}
@@ -187,7 +195,13 @@ export default function TherapistPage() {
           <div className="bg-white rounded-3xl shadow-xl p-12 text-center">
             <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-600 mb-2">No clients yet</h2>
-            <p className="text-gray-500">Share your invite code with parents. They enter it in their account settings to link to you.</p>
+            <p className="text-gray-500 mb-4">Click <strong>Enroll Family</strong> to generate a personalised registration link, or share your invite code with parents who already have an account.</p>
+            <button
+              onClick={() => router.push('/therapist/enroll')}
+              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 mx-auto"
+            >
+              <Plus className="w-5 h-5" /> Enroll Your First Family
+            </button>
           </div>
         ) : (
           <div className="space-y-6">
