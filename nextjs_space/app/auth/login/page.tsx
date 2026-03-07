@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Sparkles, Mail, Lock, ArrowRight } from 'lucide-react';
@@ -31,7 +31,9 @@ export default function LoginPage() {
         return;
       }
 
-      router.push('/select-child');
+      const session = await getSession();
+      const role = (session?.user as any)?.role;
+      router.push(role === 'therapist' ? '/therapist' : '/select-child');
       router.refresh();
     } catch (err) {
       setError('An error occurred. Please try again.');

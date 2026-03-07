@@ -82,7 +82,7 @@ export default function SelectChildPage() {
   };
 
   const handleLogout = async () => {
-    await signOut({ callbackUrl: '/auth/login' });
+    await signOut({ callbackUrl: '/' });
   };
 
   const handleParentDashboard = () => {
