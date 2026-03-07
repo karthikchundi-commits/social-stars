@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import {
   ArrowLeft, Heart, Star, BookOpen, BarChart2, Wind,
   Stethoscope, ClipboardList, Users, Link as LinkIcon,
@@ -30,13 +31,21 @@ const THERAPIST_BENEFITS = [
 
 export default function GetStartedPage() {
   const router = useRouter();
+  const { data: session } = useSession() || {};
   const [role, setRole] = useState<Role>(null);
+
+  const handleBackToHome = () => {
+    const userRole = (session?.user as any)?.role;
+    if (userRole === 'therapist') router.push('/therapist');
+    else if (userRole === 'parent') router.push('/select-child');
+    else router.push('/');
+  };
 
   if (role === null) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6">
-        <button onClick={() => router.push('/')} className="mb-10 flex items-center gap-2 text-gray-500 hover:text-purple-600 font-semibold transition-colors">
-          <ArrowLeft className="w-5 h-5" /> Back to Home
+        <button onClick={handleBackToHome} className="mb-10 flex items-center gap-2 text-gray-500 hover:text-purple-600 font-semibold transition-colors">
+          <ArrowLeft className="w-5 h-5" /> Back
         </button>
 
         <div className="text-center mb-10">
