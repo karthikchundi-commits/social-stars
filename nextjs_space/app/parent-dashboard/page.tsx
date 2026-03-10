@@ -42,6 +42,7 @@ interface ChildProgress {
   streak: number;
   byType: Record<string, number>;
   recentMoods: MoodCheckIn[];
+  hasAssignments: boolean;
 }
 
 const MOOD_EMOJI: Record<string, string> = {
@@ -109,6 +110,7 @@ export default function ParentDashboard() {
           streak: progressData?.streak ?? 0,
           byType,
           recentMoods: (moodData?.checkIns ?? []).slice(0, 7),
+          hasAssignments: (progressData?.assignments ?? []).length > 0,
         };
       });
 
@@ -192,6 +194,7 @@ export default function ParentDashboard() {
   ].filter((d) => d.value > 0);
 
   const hasNotes = children.some((c) => (therapistNotes[c.id] ?? []).length > 0);
+  const isTherapistLinked = hasNotes || progressData.some((p) => p.hasAssignments);
 
   return (
     <div className="min-h-screen p-6">
@@ -204,12 +207,18 @@ export default function ParentDashboard() {
             <p className="text-xl text-gray-600">Welcome back, {session?.user?.name} 👋</p>
           </div>
           <div className="flex gap-3 flex-wrap">
-            <button
-              onClick={() => setShowLinkModal(true)}
-              className="px-5 py-3 bg-gradient-to-r from-orange-400 to-pink-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
-            >
-              <Link className="w-5 h-5" /> Link Therapist
-            </button>
+            {isTherapistLinked ? (
+              <div className="px-5 py-3 bg-gradient-to-r from-green-400 to-teal-500 text-white font-bold rounded-2xl flex items-center gap-2 shadow-lg">
+                <Link className="w-5 h-5" /> Therapist Connected ✓
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowLinkModal(true)}
+                className="px-5 py-3 bg-gradient-to-r from-orange-400 to-pink-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
+              >
+                <Link className="w-5 h-5" /> Link Therapist
+              </button>
+            )}
             <button
               onClick={() => setShowAddModal(true)}
               className="px-5 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
