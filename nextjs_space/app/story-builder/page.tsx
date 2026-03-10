@@ -108,7 +108,7 @@ export default function StoryBuilderPage() {
     setSaving(false);
     if (res.ok) {
       setSaved(true);
-      setTimeout(() => router.push('/select-child'), 1500);
+      setTimeout(() => router.push('/parent-dashboard'), 1500);
     } else {
       setError('Failed to save story. Please try again.');
     }

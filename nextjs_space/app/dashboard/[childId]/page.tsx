@@ -306,7 +306,7 @@ export default function ChildDashboard() {
         {/* Header */}
         <div className="mb-8">
           <button
-            onClick={() => router.push('/select-child')}
+            onClick={() => router.push('/parent-dashboard')}
             className="mb-4 px-6 py-3 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2 font-semibold text-gray-700"
           >
             <ArrowLeft className="w-5 h-5" />

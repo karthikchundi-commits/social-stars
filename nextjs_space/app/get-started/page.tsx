@@ -37,7 +37,7 @@ export default function GetStartedPage() {
   const handleBackToHome = () => {
     const userRole = (session?.user as any)?.role;
     if (userRole === 'therapist') router.push('/therapist');
-    else if (userRole === 'parent') router.push('/select-child');
+    else if (userRole === 'parent') router.push('/parent-dashboard');
     else router.push('/');
   };
 
