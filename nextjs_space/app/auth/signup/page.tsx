@@ -61,7 +61,7 @@ function SignupForm() {
 
       const session = await getSession();
       const userRole = (session?.user as any)?.role;
-      router.replace(userRole === 'therapist' ? '/therapist' : '/select-child');
+      router.replace(userRole === 'therapist' ? '/therapist' : '/parent-dashboard');
     } catch {
       setError('An error occurred. Please try again.');
       setLoading(false);
