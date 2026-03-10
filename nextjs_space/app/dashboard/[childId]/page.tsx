@@ -15,7 +15,6 @@ import {
   Flame,
   Sparkles,
 } from 'lucide-react';
-import Image from 'next/image';
 
 // ── Recommendation engine ────────────────────────────────────────────────────
 
@@ -103,6 +102,7 @@ interface Achievement {
   id: string;
   title: string;
   badgeImage: string;
+  badgeType: string;
   earnedAt: string;
 }
 
@@ -381,22 +381,26 @@ export default function ChildDashboard() {
               Your Badges!
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {achievements.slice(0, 4).map((achievement) => (
-                <div
-                  key={achievement?.id}
-                  className="bg-white rounded-2xl p-4 shadow-lg text-center sparkle"
-                >
-                  <div className="relative w-20 h-20 mx-auto mb-2">
-                    <Image
-                      src={achievement?.badgeImage ?? ''}
-                      alt={achievement?.title ?? 'Badge'}
-                      fill
-                      className="object-contain"
-                    />
+              {achievements.slice(0, 4).map((achievement) => {
+                const badgeEmoji =
+                  achievement?.badgeType === 'trophy' ? '🏆' :
+                  achievement?.badgeType === 'medal' ? '🥇' : '⭐';
+                const badgeGradient =
+                  achievement?.badgeType === 'trophy' ? 'from-yellow-400 to-orange-500' :
+                  achievement?.badgeType === 'medal' ? 'from-yellow-300 to-yellow-500' :
+                  'from-purple-400 to-pink-500';
+                return (
+                  <div
+                    key={achievement?.id}
+                    className="bg-white rounded-2xl p-4 shadow-lg text-center sparkle"
+                  >
+                    <div className={`w-20 h-20 mx-auto mb-3 rounded-full bg-gradient-to-br ${badgeGradient} flex items-center justify-center shadow-lg`}>
+                      <span className="text-4xl">{badgeEmoji}</span>
+                    </div>
+                    <h3 className="font-bold text-gray-800 text-sm">{achievement?.title ?? ''}</h3>
                   </div>
-                  <h3 className="font-bold text-gray-800">{achievement?.title ?? ''}</h3>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

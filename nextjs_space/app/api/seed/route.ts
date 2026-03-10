@@ -187,7 +187,7 @@ export async function GET(request: Request) {
         // Achievements for children with 5+ completions
         if (childDef.completedTypes.length >= 5) {
           await prisma.achievement.create({
-            data: { childId: child.id, title: 'Social Star', description: 'Completed 5 different activity types!', badgeType: 'trophy', badgeImage: '🏆' },
+            data: { childId: child.id, title: 'Social Star', description: 'Completed 5 different activity types!', badgeType: 'trophy', badgeImage: 'https://cdn.abacus.ai/images/11bd862a-e6ac-401b-a5ea-b82f771a991e.jpg' },
           });
         }
       }
