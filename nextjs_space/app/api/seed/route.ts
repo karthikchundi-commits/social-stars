@@ -66,11 +66,165 @@ export async function GET(request: Request) {
       },
     ];
 
+    const createdActivities: { id: string; type: string }[] = [];
     for (const activity of activities) {
-      await prisma.activity.create({ data: activity as any });
+      const a = await prisma.activity.create({ data: activity as any });
+      createdActivities.push(a);
     }
 
-    return NextResponse.json({ success: true, activities: activities.length });
+    // ── Helper to pick activities by type ─────────────────────────────────────
+    const byType = (type: string) => createdActivities.filter((a) => a.type === type);
+
+    // ── THERAPIST ─────────────────────────────────────────────────────────────
+    const therapistPassword = await bcrypt.hash('therapist123', 10);
+    const therapist = await prisma.user.upsert({
+      where: { email: 'therapist@test.com' },
+      update: { inviteCode: 'THER-TEST1' },
+      create: {
+        email: 'therapist@test.com',
+        password: therapistPassword,
+        name: 'Dr. Sarah Mitchell',
+        role: 'therapist',
+        inviteCode: 'THER-TEST1',
+      },
+    });
+
+    // ── PARENTS & CHILDREN ────────────────────────────────────────────────────
+    const parentPassword = await bcrypt.hash('parent123', 10);
+
+    const parentDefs = [
+      {
+        email: 'emma@test.com', name: 'Emma Johnson',
+        children: [
+          { name: 'Liam', age: 5, avatarColor: '#FF6B6B', moods: ['happy', 'excited', 'happy', 'calm', 'happy', 'anxious', 'happy'], completedTypes: ['breathing', 'emotion', 'scenario', 'story', 'social_coach'] },
+          { name: 'Zoe', age: 4, avatarColor: '#4ECDC4', moods: ['calm', 'happy', 'tired', 'calm', 'happy'], completedTypes: ['breathing', 'emotion', 'communication'] },
+        ],
+      },
+      {
+        email: 'david@test.com', name: 'David Chen',
+        children: [
+          { name: 'Aiden', age: 6, avatarColor: '#45B7D1', moods: ['anxious', 'angry', 'anxious', 'calm', 'happy', 'calm', 'excited'], completedTypes: ['breathing', 'emotion', 'scenario', 'communication', 'social_coach', 'story'] },
+        ],
+      },
+      {
+        email: 'maria@test.com', name: 'Maria Garcia',
+        children: [
+          { name: 'Sofia', age: 3, avatarColor: '#96CEB4', moods: ['happy', 'silly', 'happy', 'excited', 'happy'], completedTypes: ['emotion', 'communication', 'breathing'] },
+          { name: 'Lucas', age: 5, avatarColor: '#FF9149', moods: ['sad', 'tired', 'sad', 'calm', 'happy', 'calm'], completedTypes: ['breathing', 'story', 'scenario', 'emotion'] },
+        ],
+      },
+      {
+        email: 'james@test.com', name: 'James Wilson',
+        children: [
+          { name: 'Noah', age: 4, avatarColor: '#BB8FCE', moods: ['excited', 'happy', 'excited', 'silly', 'excited', 'calm', 'happy'], completedTypes: ['social_coach', 'scenario', 'story', 'emotion', 'communication', 'breathing'] },
+        ],
+      },
+    ];
+
+    const now = new Date();
+
+    for (const parentDef of parentDefs) {
+      // Create/upsert parent
+      const parent = await prisma.user.upsert({
+        where: { email: parentDef.email },
+        update: {},
+        create: { email: parentDef.email, password: parentPassword, name: parentDef.name, role: 'parent' },
+      });
+
+      // Link to therapist
+      await prisma.therapistFamily.upsert({
+        where: { therapistId_parentId: { therapistId: therapist.id, parentId: parent.id } },
+        update: {},
+        create: { therapistId: therapist.id, parentId: parent.id },
+      });
+
+      for (const childDef of parentDef.children) {
+        // Create child (delete existing first to avoid duplicates)
+        await prisma.childProfile.deleteMany({ where: { userId: parent.id, name: childDef.name } });
+        const child = await prisma.childProfile.create({
+          data: { name: childDef.name, age: childDef.age, avatarColor: childDef.avatarColor, userId: parent.id },
+        });
+
+        // Mood check-ins — one per day going back
+        for (let i = 0; i < childDef.moods.length; i++) {
+          const date = new Date(now);
+          date.setDate(date.getDate() - i);
+          await prisma.moodCheckIn.create({ data: { childId: child.id, mood: childDef.moods[i], checkedAt: date } });
+        }
+
+        // Completed activities — one per type listed
+        let dayOffset = 0;
+        for (const type of childDef.completedTypes) {
+          const pool = byType(type);
+          if (!pool.length) continue;
+          // Complete 1-2 activities of this type
+          for (let k = 0; k < Math.min(2, pool.length); k++) {
+            const act = pool[k];
+            const completedAt = new Date(now);
+            completedAt.setDate(completedAt.getDate() - dayOffset);
+            await prisma.completedActivity.upsert({
+              where: { childId_activityId: { childId: child.id, activityId: act.id } },
+              update: {},
+              create: { childId: child.id, activityId: act.id, score: 80 + Math.floor(Math.random() * 20), completedAt },
+            });
+            dayOffset++;
+          }
+        }
+
+        // Assign 2 activities from therapist
+        const toAssign = [
+          byType('scenario')[0],
+          byType('social_coach')[0],
+        ].filter(Boolean);
+        for (const act of toAssign) {
+          await prisma.activityAssignment.upsert({
+            where: { childId_activityId: { childId: child.id, activityId: act.id } },
+            update: {},
+            create: { childId: child.id, activityId: act.id, assignedBy: therapist.id, note: 'Assigned by Dr. Mitchell — practice this week!' },
+          });
+        }
+
+        // Achievements for children with 5+ completions
+        if (childDef.completedTypes.length >= 5) {
+          await prisma.achievement.create({
+            data: { childId: child.id, title: 'Social Star', description: 'Completed 5 different activity types!', badgeType: 'trophy', badgeImage: '🏆' },
+          });
+        }
+      }
+    }
+
+    // ── THERAPIST NOTES for selected children ─────────────────────────────────
+    // Find Liam and Aiden to add example notes
+    const liamParent = await prisma.user.findUnique({ where: { email: 'emma@test.com' } });
+    const aidenParent = await prisma.user.findUnique({ where: { email: 'david@test.com' } });
+
+    if (liamParent) {
+      const liam = await prisma.childProfile.findFirst({ where: { userId: liamParent.id, name: 'Liam' } });
+      if (liam) {
+        await prisma.therapistNote.createMany({ data: [
+          { childId: liam.id, therapistId: therapist.id, content: 'Liam is making excellent progress with emotion recognition. He correctly identified 4 out of 6 emotions this week.', noteType: 'observation', isShared: true },
+          { childId: liam.id, therapistId: therapist.id, content: 'Recommend practising the Social Coach activities 3x this week — Liam responds well to turn-based interactions.', noteType: 'recommendation', isShared: true },
+          { childId: liam.id, therapistId: therapist.id, content: 'Liam completed his first Social Coach activity independently today — a real breakthrough!', noteType: 'milestone', isShared: true },
+        ]});
+      }
+    }
+
+    if (aidenParent) {
+      const aiden = await prisma.childProfile.findFirst({ where: { userId: aidenParent.id, name: 'Aiden' } });
+      if (aiden) {
+        await prisma.therapistNote.createMany({ data: [
+          { childId: aiden.id, therapistId: therapist.id, content: 'Aiden shows some anxiety in the mornings. Starting each session with a Belly Breathing activity has shown noticeable improvement.', noteType: 'observation', isShared: true },
+          { childId: aiden.id, therapistId: therapist.id, content: 'Prioritise breathing activities before any social scenario work. Aiden performs significantly better when regulated first.', noteType: 'recommendation', isShared: true },
+        ]});
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      activities: createdActivities.length,
+      therapist: therapist.email,
+      parents: parentDefs.map((p) => p.email),
+    });
   } catch (error) {
     console.error('Seed error:', error);
     return NextResponse.json({ error: String(error) }, { status: 500 });
