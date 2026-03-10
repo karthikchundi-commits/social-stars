@@ -20,14 +20,14 @@ import Image from 'next/image';
 // ── Recommendation engine ────────────────────────────────────────────────────
 
 const TYPE_PRIORITY: Record<string, string[]> = {
-  anxious:  ['breathing', 'emotion', 'story', 'scenario', 'communication'],
-  angry:    ['breathing', 'emotion', 'story', 'scenario', 'communication'],
-  sad:      ['emotion', 'breathing', 'story', 'scenario', 'communication'],
-  tired:    ['emotion', 'breathing', 'story', 'scenario', 'communication'],
-  calm:     ['story', 'scenario', 'emotion', 'communication', 'breathing'],
-  happy:    ['scenario', 'communication', 'story', 'emotion', 'breathing'],
-  excited:  ['scenario', 'communication', 'story', 'emotion', 'breathing'],
-  silly:    ['communication', 'scenario', 'story', 'emotion', 'breathing'],
+  anxious:  ['breathing', 'emotion', 'story', 'scenario', 'communication', 'social_coach'],
+  angry:    ['breathing', 'emotion', 'story', 'scenario', 'communication', 'social_coach'],
+  sad:      ['emotion', 'breathing', 'story', 'scenario', 'communication', 'social_coach'],
+  tired:    ['emotion', 'breathing', 'story', 'scenario', 'communication', 'social_coach'],
+  calm:     ['story', 'social_coach', 'scenario', 'emotion', 'communication', 'breathing'],
+  happy:    ['social_coach', 'scenario', 'communication', 'story', 'emotion', 'breathing'],
+  excited:  ['social_coach', 'scenario', 'communication', 'story', 'emotion', 'breathing'],
+  silly:    ['communication', 'social_coach', 'scenario', 'story', 'emotion', 'breathing'],
 };
 
 const MOOD_BANNER: Record<string, { emoji: string; message: string; color: string }> = {

@@ -460,6 +460,122 @@ async function main() {
     },
   ];
 
+  // ── SOCIAL COACH ACTIVITIES ───────────────────────────────────────────────────
+  const socialCoachActivities = [
+    {
+      title: 'Making a New Friend',
+      description: 'Practice meeting someone new at the playground',
+      type: 'social_coach',
+      category: 'friendship',
+      imageUrl: null,
+      difficulty: 1,
+      starsReward: 3,
+      content: JSON.stringify({
+        scenario: 'You are at the playground and see a child sitting alone on the bench.',
+        characterName: 'Jamie',
+        characterEmoji: '👧',
+        turns: [
+          {
+            prompt: 'Jamie is sitting alone and looks a little sad.',
+            options: [
+              { text: 'Walk over and say "Hi, I\'m here!"', isCorrect: true, feedback: 'Great start! Walking over is very brave and kind.', resultEmoji: '😊' },
+              { text: 'Look away and keep playing alone', isCorrect: false, feedback: 'Jamie might feel happier if you say hello!', resultEmoji: '😕' },
+              { text: 'Stare from far away', isCorrect: false, feedback: 'Try walking over — it\'s okay to say hi!', resultEmoji: '😐' },
+            ],
+          },
+          {
+            prompt: '"Hi!" says Jamie. "Do you want to play on the swings with me?"',
+            options: [
+              { text: 'Say "Yes, that sounds fun!"', isCorrect: true, feedback: 'Wonderful! Playing together makes both of you happy.', resultEmoji: '🤩' },
+              { text: 'Say nothing and run away', isCorrect: false, feedback: 'It\'s okay to say yes — Jamie wants to be your friend!', resultEmoji: '😢' },
+              { text: 'Shrug and walk away', isCorrect: false, feedback: 'Saying yes is a great way to make a friend.', resultEmoji: '😕' },
+            ],
+          },
+          {
+            prompt: 'You\'ve been playing for a while. Jamie asks, "What\'s your favourite animal?"',
+            options: [
+              { text: 'Tell Jamie your favourite animal and ask theirs', isCorrect: true, feedback: 'Amazing! Sharing and asking questions is how friendships grow.', resultEmoji: '😄' },
+              { text: 'Say "I don\'t know" and stop talking', isCorrect: false, feedback: 'You can share something you like — it\'s fun to talk!', resultEmoji: '😕' },
+              { text: 'Ignore the question', isCorrect: false, feedback: 'Answering questions helps us get to know each other.', resultEmoji: '😟' },
+            ],
+          },
+        ],
+      }),
+    },
+    {
+      title: 'Lunchtime with a Friend',
+      description: 'Practice sharing and being kind at lunch',
+      type: 'social_coach',
+      category: 'sharing',
+      imageUrl: null,
+      difficulty: 2,
+      starsReward: 3,
+      content: JSON.stringify({
+        scenario: 'It\'s lunchtime at school. Your friend Sam sits next to you and opens their lunchbox.',
+        characterName: 'Sam',
+        characterEmoji: '👦',
+        turns: [
+          {
+            prompt: 'Sam says "Oh no, I forgot my snack!"',
+            options: [
+              { text: 'Offer to share some of your snack', isCorrect: true, feedback: 'That\'s so kind! Sharing makes Sam feel much better.', resultEmoji: '😊' },
+              { text: 'Say nothing and keep eating', isCorrect: false, feedback: 'Offering to share would make Sam feel really happy!', resultEmoji: '😕' },
+              { text: 'Eat faster so Sam can\'t see', isCorrect: false, feedback: 'Sharing is caring — Sam would really appreciate it.', resultEmoji: '😢' },
+            ],
+          },
+          {
+            prompt: 'Sam says "Thank you! You\'re really nice. Can I sit with you tomorrow too?"',
+            options: [
+              { text: 'Say "Yes! I\'d like that!"', isCorrect: true, feedback: 'You\'ve made a lunchtime friend! That\'s wonderful.', resultEmoji: '🤩' },
+              { text: 'Say "Maybe" and look away', isCorrect: false, feedback: 'Saying yes is a lovely way to show you care.', resultEmoji: '😕' },
+              { text: 'Shrug your shoulders', isCorrect: false, feedback: 'A warm yes would make Sam feel so welcome!', resultEmoji: '😐' },
+            ],
+          },
+        ],
+      }),
+    },
+    {
+      title: 'When Someone Is Upset',
+      description: 'Learn how to comfort a friend who feels sad',
+      type: 'social_coach',
+      category: 'empathy',
+      imageUrl: null,
+      difficulty: 2,
+      starsReward: 3,
+      content: JSON.stringify({
+        scenario: 'Your classmate Lily is sitting in the corner of the classroom. She looks like she is about to cry.',
+        characterName: 'Lily',
+        characterEmoji: '👧',
+        turns: [
+          {
+            prompt: 'Lily has tears in her eyes and is hugging her bag.',
+            options: [
+              { text: 'Walk over and softly ask "Are you okay?"', isCorrect: true, feedback: 'That\'s so caring! Asking if someone is okay is the kindest thing.', resultEmoji: '😊' },
+              { text: 'Laugh and point', isCorrect: false, feedback: 'That would hurt Lily\'s feelings. Try being kind instead.', resultEmoji: '😢' },
+              { text: 'Walk past and ignore her', isCorrect: false, feedback: 'Lily might feel much better if you just check in on her.', resultEmoji: '😕' },
+            ],
+          },
+          {
+            prompt: 'Lily says "I miss my mum." She looks very sad.',
+            options: [
+              { text: 'Say "I understand. I miss my mum sometimes too."', isCorrect: true, feedback: 'Sharing your feelings helps Lily feel less alone.', resultEmoji: '🥰' },
+              { text: 'Say "That\'s silly, stop crying"', isCorrect: false, feedback: 'All feelings are okay — being kind helps Lily feel better.', resultEmoji: '😢' },
+              { text: 'Walk away without saying anything', isCorrect: false, feedback: 'Staying and being kind means so much to someone who is sad.', resultEmoji: '😕' },
+            ],
+          },
+          {
+            prompt: 'Lily wipes her tears. "Thank you for being so nice to me," she says.',
+            options: [
+              { text: 'Smile and say "That\'s what friends do!"', isCorrect: true, feedback: 'Perfect! You showed real empathy and made a good friend.', resultEmoji: '🌟' },
+              { text: 'Say nothing and walk away', isCorrect: false, feedback: 'A warm smile would make this moment so special for Lily.', resultEmoji: '😕' },
+              { text: 'Say "Whatever" and shrug', isCorrect: false, feedback: 'Accepting thanks kindly is part of being a good friend.', resultEmoji: '😐' },
+            ],
+          },
+        ],
+      }),
+    },
+  ];
+
   // ── SEED ALL ACTIVITIES ──────────────────────────────────────────────────────
   const allActivities = [
     ...breathingActivities,       // Calm Down first — shown first in dashboard
@@ -467,6 +583,7 @@ async function main() {
     ...scenarioActivities,
     ...storyActivities,
     ...communicationActivities,
+    ...socialCoachActivities,
   ];
 
   await prisma.activity.deleteMany({});
