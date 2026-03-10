@@ -31,6 +31,8 @@ export async function POST(request: Request) {
   });
   if (!child) return NextResponse.json({ error: 'Child not found' }, { status: 404 });
 
+  const profile = child.characteristics ? JSON.parse(child.characteristics) : null;
+
   const byType: Record<string, number> = {};
   child.completedActivities.forEach((ca) => {
     byType[ca.activity.type] = (byType[ca.activity.type] ?? 0) + 1;
@@ -41,9 +43,20 @@ export async function POST(request: Request) {
     moodCounts[m.mood] = (moodCounts[m.mood] ?? 0) + 1;
   });
 
-  const prompt = `You are a warm, encouraging assistant helping a parent understand their child's progress in a social skills app for autistic children ages 3–6. Use simple, jargon-free language. Be warm and supportive.
+  const profileSection = profile ? `
+Child profile from parent:
+- Communication level: ${profile.communicationLevel ?? 'not specified'}
+- Sensory needs: ${profile.sensoryNeeds || 'not specified'}
+- Interests & favourite things: ${profile.interests || 'not specified'}
+- Current challenges: ${profile.challenges || 'not specified'}
+- Goals the parent wants to work on: ${profile.goals || 'not specified'}
+- Additional notes: ${profile.notes || 'none'}
+` : 'No child profile filled in yet.';
+
+  const prompt = `You are a warm, encouraging assistant helping a parent understand their child's progress in a social skills app for autistic children ages 3–6. Use simple, jargon-free language. Be warm and supportive. Personalise your response to the specific child's profile where possible.
 
 Child: ${child.name}, Age ${child.age}
+${profileSection}
 Total activities completed: ${child.completedActivities.length}
 Activities by type: ${JSON.stringify(byType)}
 Badges earned: ${child.achievements.length}

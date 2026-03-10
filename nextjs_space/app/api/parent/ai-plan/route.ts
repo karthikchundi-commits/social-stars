@@ -30,13 +30,25 @@ export async function POST(request: Request) {
   });
   if (!child) return NextResponse.json({ error: 'Child not found' }, { status: 404 });
 
+  const profile = child.characteristics ? JSON.parse(child.characteristics) : null;
   const completedTypes = new Set(child.completedActivities.map((ca) => ca.activity.type));
   const recentMoods = child.moodCheckIns.map((m) => m.mood);
   const totalDone = child.completedActivities.length;
 
-  const prompt = `You are a friendly assistant helping a parent plan activities for their autistic child at home. Create a simple, fun, doable one-week activity plan. Use everyday language — no clinical terms.
+  const profileSection = profile ? `
+Child profile from parent:
+- Communication level: ${profile.communicationLevel ?? 'not specified'}
+- Sensory needs: ${profile.sensoryNeeds || 'not specified'}
+- Interests & favourite things: ${profile.interests || 'not specified'}
+- Current challenges: ${profile.challenges || 'not specified'}
+- Goals the parent wants to work on: ${profile.goals || 'not specified'}
+- Additional notes: ${profile.notes || 'none'}
+` : 'No child profile filled in yet — use age and mood as the main guide.';
+
+  const prompt = `You are a friendly assistant helping a parent plan activities for their autistic child at home. Create a simple, fun, doable one-week activity plan tailored to this specific child. Use everyday language — no clinical terms. Use the child's profile, interests, and challenges to make the plan feel personal.
 
 Child: ${child.name}, Age ${child.age}
+${profileSection}
 Total activities completed so far: ${totalDone}
 Activity types tried: ${Array.from(completedTypes).join(', ') || 'none yet'}
 Recent moods: ${recentMoods.join(', ') || 'not recorded yet'}

@@ -69,6 +69,7 @@ model ChildProfile {
   name                String
   age                 Int
   avatarColor         String              @default("#FF6B6B")
+  characteristics     String?             @db.Text // JSON: { communicationLevel, sensoryNeeds, interests, challenges, goals, notes }
   userId              String
   user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt           DateTime            @default(now())

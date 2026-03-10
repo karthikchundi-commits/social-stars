@@ -98,11 +98,19 @@ export default function ParentDashboard() {
   const [therapistNotes, setTherapistNotes] = useState<Record<string, TherapistNote[]>>({});
   const [loading, setLoading] = useState(true);
 
-  // Add child modal
+  // Add child modal — 2 steps
   const [showAddModal, setShowAddModal] = useState(false);
+  const [addStep, setAddStep] = useState<1 | 2>(1);
   const [newChildName, setNewChildName] = useState('');
   const [newChildAge, setNewChildAge] = useState('3');
   const [selectedColor, setSelectedColor] = useState(AVATAR_COLORS[0]);
+  // Step 2: characteristics
+  const [commLevel, setCommLevel] = useState('verbal');
+  const [sensoryNeeds, setSensoryNeeds] = useState('');
+  const [interests, setInterests] = useState('');
+  const [challenges, setChallenges] = useState('');
+  const [goals, setGoals] = useState('');
+  const [childNotes, setChildNotes] = useState('');
 
   // Link therapist modal
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -182,17 +190,37 @@ export default function ParentDashboard() {
     }
   };
 
+  const resetAddModal = () => {
+    setShowAddModal(false);
+    setAddStep(1);
+    setNewChildName('');
+    setNewChildAge('3');
+    setSelectedColor(AVATAR_COLORS[0]);
+    setCommLevel('verbal');
+    setSensoryNeeds('');
+    setInterests('');
+    setChallenges('');
+    setGoals('');
+    setChildNotes('');
+  };
+
   const handleAddChild = async (e: React.FormEvent) => {
     e.preventDefault();
+    const characteristics = {
+      communicationLevel: commLevel,
+      sensoryNeeds,
+      interests,
+      challenges,
+      goals,
+      notes: childNotes,
+    };
     const res = await fetch('/api/children', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newChildName, age: newChildAge, avatarColor: selectedColor }),
+      body: JSON.stringify({ name: newChildName, age: newChildAge, avatarColor: selectedColor, characteristics }),
     });
     if (res.ok) {
-      setShowAddModal(false);
-      setNewChildName('');
-      setNewChildAge('3');
+      resetAddModal();
       fetchDashboardData();
     }
   };
@@ -817,42 +845,121 @@ export default function ParentDashboard() {
         </div>
       )}
 
-      {/* Add Child Modal */}
+      {/* Add Child Modal — 2 steps */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
-            <h2 className="text-2xl font-bold text-purple-600 mb-6">Add a Child</h2>
-            <form onSubmit={handleAddChild} className="space-y-5">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Child's Name</label>
-                <input type="text" value={newChildName} onChange={(e) => setNewChildName(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none"
-                  placeholder="Enter name" required />
+          <div className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl max-h-[92vh] overflow-y-auto">
+
+            {/* Step indicator */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${addStep === 1 ? 'bg-purple-500 text-white' : 'bg-green-400 text-white'}`}>
+                {addStep === 1 ? '1' : '✓'}
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Age</label>
-                <select value={newChildAge} onChange={(e) => setNewChildAge(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none">
-                  {[3, 4, 5, 6].map((age) => <option key={age} value={age}>{age} years old</option>)}
-                </select>
+              <div className="flex-1 h-1 rounded-full bg-gray-200">
+                <div className={`h-full rounded-full bg-purple-500 transition-all ${addStep === 2 ? 'w-full' : 'w-0'}`} />
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Choose a Colour</label>
-                <div className="grid grid-cols-4 gap-3">
-                  {AVATAR_COLORS.map((color) => (
-                    <button key={color} type="button" onClick={() => setSelectedColor(color)}
-                      className={`w-full aspect-square rounded-xl transition-all ${selectedColor === color ? 'ring-4 ring-purple-500 scale-110' : ''}`}
-                      style={{ backgroundColor: color }} />
-                  ))}
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${addStep === 2 ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                2
+              </div>
+            </div>
+
+            {addStep === 1 ? (
+              <>
+                <h2 className="text-2xl font-bold text-purple-600 mb-1">Add a Child</h2>
+                <p className="text-gray-500 text-sm mb-5">Basic info first — you can always update the profile later.</p>
+                <div className="space-y-5">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Child&apos;s Name</label>
+                    <input type="text" value={newChildName} onChange={(e) => setNewChildName(e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none"
+                      placeholder="Enter name" required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Age</label>
+                    <select value={newChildAge} onChange={(e) => setNewChildAge(e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none">
+                      {[3, 4, 5, 6, 7, 8].map((age) => <option key={age} value={age}>{age} years old</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Choose a Colour</label>
+                    <div className="grid grid-cols-4 gap-3">
+                      {AVATAR_COLORS.map((color) => (
+                        <button key={color} type="button" onClick={() => setSelectedColor(color)}
+                          className={`w-full aspect-square rounded-xl transition-all ${selectedColor === color ? 'ring-4 ring-purple-500 scale-110' : ''}`}
+                          style={{ backgroundColor: color }} />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button type="button" onClick={resetAddModal}
+                      className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl">Cancel</button>
+                    <button type="button" onClick={() => { if (newChildName) setAddStep(2); }}
+                      disabled={!newChildName}
+                      className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl disabled:opacity-50">
+                      Next →
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className="flex gap-3">
-                <button type="button" onClick={() => setShowAddModal(false)}
-                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl">Cancel</button>
-                <button type="submit"
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl">Add Child</button>
-              </div>
-            </form>
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl font-bold text-purple-600 mb-1">About {newChildName}</h2>
+                <p className="text-gray-500 text-sm mb-5">
+                  Help us personalise AI plans and insights for {newChildName}. All fields are optional but the more you share, the better the AI works.
+                </p>
+                <form onSubmit={handleAddChild} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Communication Style</label>
+                    <select value={commLevel} onChange={(e) => setCommLevel(e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none">
+                      <option value="verbal">Fully verbal</option>
+                      <option value="limited_verbal">Limited verbal (some words/phrases)</option>
+                      <option value="non_verbal">Non-verbal</option>
+                      <option value="aac">Uses AAC device / picture cards</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Sensory Needs</label>
+                    <textarea value={sensoryNeeds} onChange={(e) => setSensoryNeeds(e.target.value)} rows={2}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none resize-none"
+                      placeholder="e.g. sensitive to loud sounds, dislikes bright lights, loves deep pressure" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Interests & Favourite Things ⭐</label>
+                    <textarea value={interests} onChange={(e) => setInterests(e.target.value)} rows={2}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none resize-none"
+                      placeholder="e.g. dinosaurs, trains, drawing, swimming, a favourite TV character" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Current Challenges</label>
+                    <textarea value={challenges} onChange={(e) => setChallenges(e.target.value)} rows={2}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none resize-none"
+                      placeholder="e.g. difficulty with transitions, struggles with sharing, gets overwhelmed in groups" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Goals You&apos;d Like to Work On</label>
+                    <textarea value={goals} onChange={(e) => setGoals(e.target.value)} rows={2}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none resize-none"
+                      placeholder="e.g. improve turn-taking, build confidence making friends, reduce anxiety before new situations" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Anything Else the AI Should Know</label>
+                    <textarea value={childNotes} onChange={(e) => setChildNotes(e.target.value)} rows={2}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none resize-none"
+                      placeholder="Any other notes — diagnosis details, things that really help, things to avoid" />
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button type="button" onClick={() => setAddStep(1)}
+                      className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl">← Back</button>
+                    <button type="submit"
+                      className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl">
+                      Add {newChildName} 🎉
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}

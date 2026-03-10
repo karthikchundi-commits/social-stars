@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, age, avatarColor } = body;
+    const { name, age, avatarColor, characteristics } = body;
 
     if (!name || !age) {
       return NextResponse.json(
@@ -55,6 +55,7 @@ export async function POST(request: Request) {
         name,
         age: parseInt(age),
         avatarColor: avatarColor || '#FF6B6B',
+        characteristics: characteristics ? JSON.stringify(characteristics) : null,
         userId: (session.user as any).id,
       },
     });
