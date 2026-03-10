@@ -361,8 +361,7 @@ export default function ParentDashboard() {
         </div>
 
         {/* Therapist Notes */}
-        {children.some((c) => (therapistNotes[c.id] ?? []).length > 0) && (
-          <div className="bg-white rounded-3xl shadow-xl p-8 mb-8">
+        <div className="bg-white rounded-3xl shadow-xl p-8 mb-8">
             <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center gap-3">
               <MessageSquare className="w-8 h-8 text-purple-500" />
               Notes from Your Therapist
@@ -370,11 +369,10 @@ export default function ParentDashboard() {
             <div className="space-y-6">
               {children.map((child) => {
                 const notes = therapistNotes[child.id] ?? [];
-                if (notes.length === 0) return null;
                 return (
                   <div key={child.id}>
                     <h3
-                      className="text-lg font-bold text-gray-700 mb-3 flex items-center gap-2"
+                      className="text-lg font-bold mb-3 flex items-center gap-2"
                       style={{ color: child.avatarColor }}
                     >
                       <div
@@ -385,34 +383,37 @@ export default function ParentDashboard() {
                       </div>
                       {child.name}
                     </h3>
-                    <div className="space-y-3">
-                      {notes.map((note) => (
-                        <div
-                          key={note.id}
-                          className={`rounded-2xl p-4 border ${
-                            note.noteType === 'milestone'
-                              ? 'bg-green-50 border-green-200'
-                              : note.noteType === 'recommendation'
-                              ? 'bg-purple-50 border-purple-200'
-                              : 'bg-blue-50 border-blue-200'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-bold uppercase tracking-wide opacity-70">
-                              {note.noteType === 'milestone' ? '🏆 Milestone' : note.noteType === 'recommendation' ? '💡 Recommendation' : '👁 Observation'}
-                            </span>
-                            <span className="text-xs opacity-50 ml-auto">{note.therapist.name} · {new Date(note.createdAt).toLocaleDateString()}</span>
+                    {notes.length === 0 ? (
+                      <p className="text-gray-400 italic text-sm mb-4">No notes from your therapist yet.</p>
+                    ) : (
+                      <div className="space-y-3 mb-4">
+                        {notes.map((note) => (
+                          <div
+                            key={note.id}
+                            className={`rounded-2xl p-4 border ${
+                              note.noteType === 'milestone'
+                                ? 'bg-green-50 border-green-200'
+                                : note.noteType === 'recommendation'
+                                ? 'bg-purple-50 border-purple-200'
+                                : 'bg-blue-50 border-blue-200'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-xs font-bold uppercase tracking-wide opacity-70">
+                                {note.noteType === 'milestone' ? '🏆 Milestone' : note.noteType === 'recommendation' ? '💡 Recommendation' : '👁 Observation'}
+                              </span>
+                              <span className="text-xs opacity-50 ml-auto">{note.therapist.name} · {new Date(note.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-gray-800 leading-relaxed">{note.content}</p>
                           </div>
-                          <p className="text-gray-800 leading-relaxed">{note.content}</p>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
           </div>
-        )}
 
         {/* Autism Support Tips */}
         <div className="bg-white rounded-3xl shadow-xl p-8">
