@@ -106,6 +106,7 @@ export async function POST(request: Request) {
     challenges,
     activityType,
     extraInstructions,
+    preview = false, // if true, return suggestion without saving to DB
   } = await request.json();
 
   if (!childId || !activityType) {
@@ -183,6 +184,11 @@ Respond with ONLY the JSON object. No markdown, no explanation.`;
       parsed = JSON.parse(raw);
     } catch {
       return NextResponse.json({ error: 'AI returned invalid JSON. Please try again.' }, { status: 500 });
+    }
+
+    // Preview mode — return suggestion without saving
+    if (preview) {
+      return NextResponse.json({ title: parsed.title, description: parsed.description, content: parsed.content });
     }
 
     // Save activity to DB

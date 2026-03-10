@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
   Copy, Check, Users, Star, Award,
-  Plus, Trash2, BookOpen, ClipboardList, Quote, LogOut, Sparkles, TrendingUp, Calendar,
+  Plus, Trash2, BookOpen, ClipboardList, Quote, LogOut, Sparkles, TrendingUp, Calendar, PenLine,
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 
@@ -136,10 +136,16 @@ export default function TherapistPage() {
           </div>
           <div className="flex gap-3 flex-wrap">
             <button
+              onClick={() => router.push('/therapist/create')}
+              className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
+            >
+              <PenLine className="w-5 h-5" /> Create Activity
+            </button>
+            <button
               onClick={() => router.push('/therapist/generate')}
               className="px-6 py-3 bg-gradient-to-r from-orange-400 to-pink-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
             >
-              <Sparkles className="w-5 h-5" /> AI Activity
+              <Sparkles className="w-5 h-5" /> Quick AI
             </button>
             <button
               onClick={() => router.push('/therapist/plan')}
