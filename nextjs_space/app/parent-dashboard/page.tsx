@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
   TrendingUp, Award, Activity, Flame, Heart, MessageSquare,
-  Plus, Link, LogOut, Play, Star, BarChart2,
+  Plus, LogOut, Play, Star, BarChart2, Sparkles, Brain,
+  CalendarDays, UserCheck, Search,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -27,6 +28,36 @@ interface TherapistNote {
   noteType: string;
   createdAt: string;
   therapist: { name: string };
+}
+
+interface TherapistEntry {
+  id: string;
+  name: string;
+  inviteCode: string | null;
+  isLinked: boolean;
+}
+
+interface AiInsights {
+  headline: string;
+  summary: string;
+  moodInsight: string;
+  strengths: string[];
+  suggestionsThisWeek: { activityType: string; suggestion: string }[];
+  tipsForYou: string[];
+  encouragement: string;
+}
+
+interface AiPlanDay {
+  day: string;
+  activities: { type: string; title: string; tip: string }[];
+}
+
+interface AiPlan {
+  title: string;
+  weekFocus: string;
+  days: AiPlanDay[];
+  generalTips: string[];
+  encouragement: string;
 }
 
 interface MoodCheckIn {
@@ -77,6 +108,18 @@ export default function ParentDashboard() {
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [linkCode, setLinkCode] = useState('');
   const [linkResult, setLinkResult] = useState('');
+  const [linkTab, setLinkTab] = useState<'browse' | 'code'>('browse');
+  const [therapistDirectory, setTherapistDirectory] = useState<TherapistEntry[]>([]);
+  const [loadingDirectory, setLoadingDirectory] = useState(false);
+  const [connectingId, setConnectingId] = useState<string | null>(null);
+
+  // AI tools state
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiModalType, setAiModalType] = useState<'insights' | 'plan'>('insights');
+  const [selectedChildForAi, setSelectedChildForAi] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiInsights, setAiInsights] = useState<AiInsights | null>(null);
+  const [aiPlan, setAiPlan] = useState<AiPlan | null>(null);
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/auth/login');
@@ -163,7 +206,63 @@ export default function ParentDashboard() {
     });
     const data = await res.json();
     setLinkResult(res.ok ? `✅ Linked to ${data.therapistName}!` : `❌ ${data.error}`);
-    if (res.ok) setLinkCode('');
+    if (res.ok) { setLinkCode(''); fetchDashboardData(); }
+  };
+
+  const openLinkModal = async () => {
+    setShowLinkModal(true);
+    setLinkTab('browse');
+    setLoadingDirectory(true);
+    try {
+      const res = await fetch('/api/therapist/directory');
+      const data = await res.json();
+      setTherapistDirectory(data.therapists ?? []);
+    } finally {
+      setLoadingDirectory(false);
+    }
+  };
+
+  const handleConnectTherapist = async (inviteCode: string | null, therapistId: string) => {
+    if (!inviteCode) return;
+    setConnectingId(therapistId);
+    const res = await fetch('/api/therapist/invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ inviteCode }),
+    });
+    if (res.ok) {
+      setTherapistDirectory((prev) => prev.map((t) => t.id === therapistId ? { ...t, isLinked: true } : t));
+      fetchDashboardData();
+    }
+    setConnectingId(null);
+  };
+
+  const openAiModal = (type: 'insights' | 'plan') => {
+    setAiModalType(type);
+    setAiInsights(null);
+    setAiPlan(null);
+    setSelectedChildForAi(children[0]?.id ?? '');
+    setShowAiModal(true);
+  };
+
+  const handleRunAi = async () => {
+    if (!selectedChildForAi) return;
+    setAiLoading(true);
+    setAiInsights(null);
+    setAiPlan(null);
+    try {
+      const endpoint = aiModalType === 'insights' ? '/api/parent/ai-insights' : '/api/parent/ai-plan';
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ childId: selectedChildForAi }),
+      });
+      const data = await res.json();
+      if (aiModalType === 'insights') setAiInsights(data.insights);
+      else setAiPlan(data.plan);
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   if (loading || status === 'loading') {
@@ -207,16 +306,28 @@ export default function ParentDashboard() {
             <p className="text-xl text-gray-600">Welcome back, {session?.user?.name} 👋</p>
           </div>
           <div className="flex gap-3 flex-wrap">
+            <button
+              onClick={() => openAiModal('insights')}
+              className="px-5 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
+            >
+              <Brain className="w-5 h-5" /> AI Insights
+            </button>
+            <button
+              onClick={() => openAiModal('plan')}
+              className="px-5 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
+            >
+              <CalendarDays className="w-5 h-5" /> AI Weekly Plan
+            </button>
             {isTherapistLinked ? (
               <div className="px-5 py-3 bg-gradient-to-r from-green-400 to-teal-500 text-white font-bold rounded-2xl flex items-center gap-2 shadow-lg">
-                <Link className="w-5 h-5" /> Therapist Connected ✓
+                <UserCheck className="w-5 h-5" /> Therapist Connected ✓
               </div>
             ) : (
               <button
-                onClick={() => setShowLinkModal(true)}
+                onClick={openLinkModal}
                 className="px-5 py-3 bg-gradient-to-r from-orange-400 to-pink-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
               >
-                <Link className="w-5 h-5" /> Link Therapist
+                <Search className="w-5 h-5" /> Find a Therapist
               </button>
             )}
             <button
@@ -466,36 +577,242 @@ export default function ParentDashboard() {
 
       </div>
 
-      {/* Link Therapist Modal */}
+      {/* Find / Link Therapist Modal */}
       {showLinkModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
-            <div className="text-center mb-6">
-              <div className="text-4xl mb-3">🩺</div>
-              <h2 className="text-2xl font-bold text-purple-600 mb-2">Connect with Your Therapist</h2>
-              <p className="text-gray-500 text-sm">Enter the invite code your therapist shared with you.</p>
-              <ul className="mt-3 text-sm text-left text-gray-600 space-y-1 bg-purple-50 rounded-xl p-4">
-                <li>✅ They can view your child's progress and moods</li>
-                <li>✅ Assign personalised activities to your child</li>
-                <li>✅ Leave notes and recommendations for you</li>
-              </ul>
+          <div className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="text-center mb-5">
+              <div className="text-4xl mb-2">🩺</div>
+              <h2 className="text-2xl font-bold text-purple-600 mb-1">Find a Therapist</h2>
+              <p className="text-gray-500 text-sm">Browse available therapists or enter an invite code.</p>
             </div>
-            <form onSubmit={handleLinkTherapist} className="space-y-4">
-              <input
-                type="text"
-                value={linkCode}
-                onChange={(e) => setLinkCode(e.target.value.toUpperCase())}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none text-xl font-bold tracking-widest text-center"
-                placeholder="THER-XXXXXX"
-                required
-              />
-              {linkResult && <p className="text-center font-semibold">{linkResult}</p>}
-              <div className="flex gap-3">
-                <button type="button" onClick={() => { setShowLinkModal(false); setLinkResult(''); setLinkCode(''); }}
-                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl">Cancel</button>
-                <button type="submit" className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl">Connect</button>
+
+            {/* Tabs */}
+            <div className="flex rounded-xl overflow-hidden border-2 border-purple-200 mb-6">
+              <button
+                onClick={() => setLinkTab('browse')}
+                className={`flex-1 py-2 font-bold text-sm transition-colors ${linkTab === 'browse' ? 'bg-purple-500 text-white' : 'text-purple-600 hover:bg-purple-50'}`}
+              >
+                Browse Therapists
+              </button>
+              <button
+                onClick={() => setLinkTab('code')}
+                className={`flex-1 py-2 font-bold text-sm transition-colors ${linkTab === 'code' ? 'bg-purple-500 text-white' : 'text-purple-600 hover:bg-purple-50'}`}
+              >
+                Enter Invite Code
+              </button>
+            </div>
+
+            {linkTab === 'browse' ? (
+              <div>
+                {loadingDirectory ? (
+                  <div className="text-center py-8 text-gray-400">Loading therapists...</div>
+                ) : therapistDirectory.length === 0 ? (
+                  <div className="text-center py-8 text-gray-400">No therapists registered yet.</div>
+                ) : (
+                  <div className="space-y-3">
+                    {therapistDirectory.map((t) => (
+                      <div key={t.id} className="flex items-center justify-between bg-purple-50 rounded-2xl p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold">
+                            {t.name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-800">{t.name}</p>
+                            <p className="text-xs text-gray-500">Autism support specialist</p>
+                          </div>
+                        </div>
+                        {t.isLinked ? (
+                          <span className="text-xs font-bold text-green-600 bg-green-100 px-3 py-1 rounded-full">Connected ✓</span>
+                        ) : (
+                          <button
+                            onClick={() => handleConnectTherapist(t.inviteCode, t.id)}
+                            disabled={connectingId === t.id || !t.inviteCode}
+                            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-bold rounded-xl hover:opacity-90 disabled:opacity-50 transition-all"
+                          >
+                            {connectingId === t.id ? 'Connecting...' : 'Connect'}
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p className="text-xs text-gray-400 mt-4 text-center">
+                  Connecting lets your therapist view progress, assign activities, and leave notes for you.
+                </p>
               </div>
-            </form>
+            ) : (
+              <form onSubmit={handleLinkTherapist} className="space-y-4">
+                <input
+                  type="text"
+                  value={linkCode}
+                  onChange={(e) => setLinkCode(e.target.value.toUpperCase())}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none text-xl font-bold tracking-widest text-center"
+                  placeholder="THER-XXXXXX"
+                  required
+                />
+                {linkResult && <p className="text-center font-semibold">{linkResult}</p>}
+                <button type="submit" className="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl">Connect</button>
+              </form>
+            )}
+
+            <button
+              onClick={() => { setShowLinkModal(false); setLinkResult(''); setLinkCode(''); }}
+              className="w-full mt-4 px-6 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* AI Tools Modal */}
+      {showAiModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center gap-3 mb-6">
+              {aiModalType === 'insights' ? (
+                <Brain className="w-8 h-8 text-indigo-500" />
+              ) : (
+                <CalendarDays className="w-8 h-8 text-teal-500" />
+              )}
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">
+                  {aiModalType === 'insights' ? 'AI Progress Insights' : 'AI Weekly Activity Plan'}
+                </h2>
+                <p className="text-gray-500 text-sm">
+                  {aiModalType === 'insights'
+                    ? 'A personalised summary of your child\'s progress'
+                    : 'A simple, fun activity plan for the week ahead'}
+                </p>
+              </div>
+            </div>
+
+            {/* Child selector */}
+            {!aiInsights && !aiPlan && (
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Which child?</label>
+                <select
+                  value={selectedChildForAi}
+                  onChange={(e) => setSelectedChildForAi(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none"
+                >
+                  {children.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name} (age {c.age})</option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleRunAi}
+                  disabled={aiLoading || !selectedChildForAi}
+                  className="mt-4 w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-2xl hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  {aiLoading ? 'Generating...' : aiModalType === 'insights' ? 'Generate Insights' : 'Generate Plan'}
+                </button>
+              </div>
+            )}
+
+            {/* Insights result */}
+            {aiInsights && (
+              <div className="space-y-5">
+                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-5 border border-indigo-100">
+                  <p className="text-xl font-bold text-indigo-700">✨ {aiInsights.headline}</p>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-700 mb-1">How they&apos;re doing</h3>
+                  <p className="text-gray-600 leading-relaxed">{aiInsights.summary}</p>
+                </div>
+                <div className="bg-yellow-50 rounded-2xl p-4 border border-yellow-100">
+                  <h3 className="font-bold text-yellow-700 mb-1">😊 Mood Patterns</h3>
+                  <p className="text-gray-700">{aiInsights.moodInsight}</p>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-700 mb-2">🌟 Strengths</h3>
+                  <ul className="space-y-1">
+                    {aiInsights.strengths.map((s, i) => (
+                      <li key={i} className="flex items-start gap-2 text-gray-700"><span className="text-green-500 font-bold">✓</span>{s}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-700 mb-2">📅 Try this week</h3>
+                  <div className="space-y-2">
+                    {aiInsights.suggestionsThisWeek.map((s, i) => (
+                      <div key={i} className="bg-blue-50 rounded-xl p-3 border border-blue-100">
+                        <span className="text-xs font-bold text-blue-500 uppercase">{s.activityType.replace('_', ' ')}</span>
+                        <p className="text-gray-700 text-sm mt-0.5">{s.suggestion}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-700 mb-2">💡 Tips for you</h3>
+                  <ul className="space-y-1">
+                    {aiInsights.tipsForYou.map((t, i) => (
+                      <li key={i} className="text-gray-700 flex items-start gap-2"><span className="text-purple-400">•</span>{t}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="bg-pink-50 rounded-2xl p-4 border border-pink-100 text-center">
+                  <p className="text-pink-700 font-semibold italic">💗 {aiInsights.encouragement}</p>
+                </div>
+                <button onClick={() => { setAiInsights(null); }} className="w-full py-3 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200">Try Another Child</button>
+              </div>
+            )}
+
+            {/* Plan result */}
+            {aiPlan && (
+              <div className="space-y-5">
+                <div className="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-2xl p-5 border border-teal-100">
+                  <h3 className="text-xl font-bold text-teal-700">📅 {aiPlan.title}</h3>
+                  <p className="text-gray-600 mt-1">{aiPlan.weekFocus}</p>
+                </div>
+                <div className="space-y-3">
+                  {aiPlan.days.map((day, i) => (
+                    <div key={i} className="border-2 border-gray-100 rounded-2xl p-4">
+                      <h4 className="font-bold text-purple-600 mb-2">{day.day}</h4>
+                      <div className="space-y-2">
+                        {day.activities.map((act, j) => (
+                          <div key={j} className="bg-gray-50 rounded-xl p-3">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className="text-xs font-bold text-indigo-500 uppercase bg-indigo-50 px-2 py-0.5 rounded-full">{act.type.replace('_', ' ')}</span>
+                              <span className="font-semibold text-gray-800 text-sm">{act.title}</span>
+                            </div>
+                            <p className="text-gray-600 text-xs">{act.tip}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {aiPlan.generalTips.length > 0 && (
+                  <div>
+                    <h3 className="font-bold text-gray-700 mb-2">💡 Tips for the week</h3>
+                    <ul className="space-y-1">
+                      {aiPlan.generalTips.map((t, i) => (
+                        <li key={i} className="text-gray-700 flex items-start gap-2 text-sm"><span className="text-teal-400">•</span>{t}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div className="bg-pink-50 rounded-2xl p-4 border border-pink-100 text-center">
+                  <p className="text-pink-700 font-semibold italic">💗 {aiPlan.encouragement}</p>
+                </div>
+                <button onClick={() => { setAiPlan(null); }} className="w-full py-3 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200">Try Another Child</button>
+              </div>
+            )}
+
+            {!aiInsights && !aiPlan && (
+              <button
+                onClick={() => setShowAiModal(false)}
+                className="w-full mt-2 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+            )}
+            {(aiInsights || aiPlan) && (
+              <button onClick={() => setShowAiModal(false)} className="w-full mt-2 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200">Close</button>
+            )}
           </div>
         </div>
       )}
