@@ -79,7 +79,7 @@ export async function GET(request: Request) {
     const therapistPassword = await bcrypt.hash('therapist123', 10);
     const therapist = await prisma.user.upsert({
       where: { email: 'therapist@test.com' },
-      update: { inviteCode: 'THER-TEST1' },
+      update: { password: therapistPassword, name: 'Dr. Sarah Mitchell', role: 'therapist', inviteCode: 'THER-TEST1' },
       create: {
         email: 'therapist@test.com',
         password: therapistPassword,
@@ -127,7 +127,7 @@ export async function GET(request: Request) {
       // Create/upsert parent
       const parent = await prisma.user.upsert({
         where: { email: parentDef.email },
-        update: {},
+        update: { password: parentPassword, name: parentDef.name, role: 'parent' },
         create: { email: parentDef.email, password: parentPassword, name: parentDef.name, role: 'parent' },
       });
 
