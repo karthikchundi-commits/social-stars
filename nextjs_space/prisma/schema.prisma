@@ -60,6 +60,8 @@ model User {
   parentLinks      TherapistFamily[]    @relation("ParentUser")
   customActivities Activity[]           @relation("CustomActivities")
   enrollments      ProspectEnrollment[] @relation("TherapistEnrollments")
+  therapyPlans     TherapyPlan[]        @relation("TherapistPlans")
+  therapistNotes   TherapistNote[]      @relation("TherapistNotes")
 }
 
 model ChildProfile {
@@ -74,6 +76,8 @@ model ChildProfile {
   achievements        Achievement[]
   moodCheckIns        MoodCheckIn[]
   assignments         ActivityAssignment[]
+  therapyPlans        TherapyPlan[]
+  therapistNotes      TherapistNote[]
 }
 
 model Activity {
@@ -171,4 +175,29 @@ model MoodCheckIn {
   child     ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
   mood      String       // "happy", "sad", "angry", "anxious", "calm", "excited", "tired"
   checkedAt DateTime     @default(now())
+}
+
+model TherapyPlan {
+  id          String       @id @default(cuid())
+  childId     String
+  child       ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+  therapistId String
+  therapist   User         @relation("TherapistPlans", fields: [therapistId], references: [id], onDelete: Cascade)
+  title       String
+  content     String       @db.Text // JSON: { durationWeeks, weeklyGoal, weeks: [{ weekNumber, focus, activities, tips }] }
+  status      String       @default("active") // "active" | "completed" | "archived"
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model TherapistNote {
+  id          String       @id @default(cuid())
+  childId     String
+  child       ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+  therapistId String
+  therapist   User         @relation("TherapistNotes", fields: [therapistId], references: [id], onDelete: Cascade)
+  content     String       @db.Text
+  noteType    String       @default("observation") // "observation" | "recommendation" | "milestone"
+  isShared    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
 }

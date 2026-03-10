@@ -230,6 +230,7 @@ export default function ChildDashboard() {
       story: `/activity/story/${id}?childId=${childId}`,
       breathing: `/activity/breathing/${id}?childId=${childId}`,
       communication: `/activity/communication/${id}?childId=${childId}`,
+      social_coach: `/activity/social-coach/${id}?childId=${childId}`,
     };
 
     if (routes[type]) {

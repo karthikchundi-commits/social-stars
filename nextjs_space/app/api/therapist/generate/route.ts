@@ -59,6 +59,25 @@ Example: { "instruction": "Tell me how you feel today!", "targetTaps": 3, "items
   { "label": "Sad", "emoji": "😢", "audio": "I feel sad." },
   { "label": "Help", "emoji": "🙋", "audio": "I need help please." }
 ]}`,
+
+  social_coach: `Return content as: { "scenario": "...", "characterName": "...", "characterEmoji": "...", "turns": [ { "prompt": "...", "options": [ { "text": "...", "isCorrect": true|false, "feedback": "...", "resultEmoji": "..." } ] } ] }
+- scenario: brief description of the real-world social situation (1-2 sentences)
+- characterName: name of the child's conversation partner (e.g. "Lily", "Teacher Kim")
+- characterEmoji: emoji representing the character (e.g. "👧", "👩‍🏫")
+- turns: 2-4 conversation turns, each presenting a social choice
+- prompt: what the other person says or does (simple, concrete language for ages 3-6)
+- options: exactly 3 choices the child can pick, one isCorrect: true
+- feedback: warm, 1-sentence response shown after selection
+- resultEmoji: emoji showing the character's reaction (😊 for correct, 😕 for incorrect)
+Example: { "scenario": "You see a new friend sitting alone at lunch.", "characterName": "Sam", "characterEmoji": "👦",
+  "turns": [
+    { "prompt": "Sam looks sad and is sitting alone.", "options": [
+      { "text": "Ask Sam to eat with you", "isCorrect": true, "feedback": "That was so kind! Sam is happy now.", "resultEmoji": "😊" },
+      { "text": "Ignore Sam and sit somewhere else", "isCorrect": false, "feedback": "Sam might feel lonely. Try saying hello next time!", "resultEmoji": "😕" },
+      { "text": "Point and laugh", "isCorrect": false, "feedback": "That would hurt Sam's feelings. Being kind is better.", "resultEmoji": "😢" }
+    ]}
+  ]
+}`,
 };
 
 // ── Route handler ────────────────────────────────────────────────────────────

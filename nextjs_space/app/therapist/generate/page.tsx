@@ -39,6 +39,7 @@ const ACTIVITY_TYPES = [
   { value: 'story', label: '📖 Interactive Story', desc: 'Page-by-page story with questions' },
   { value: 'breathing', label: '🌬️ Breathing Exercise', desc: 'Guided calm-down breathing' },
   { value: 'communication', label: '💬 Communication Board', desc: 'Tap-to-speak board activity' },
+  { value: 'social_coach', label: '🎭 Social Interaction Coach', desc: 'Real-life situation simulation with branching dialogue' },
 ];
 
 const MOOD_EMOJI: Record<string, string> = {

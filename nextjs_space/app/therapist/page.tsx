@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
   Copy, Check, Users, Star, Award,
-  Plus, Trash2, BookOpen, ClipboardList, Quote, LogOut, Sparkles,
+  Plus, Trash2, BookOpen, ClipboardList, Quote, LogOut, Sparkles, TrendingUp, Calendar,
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 
@@ -139,7 +139,19 @@ export default function TherapistPage() {
               onClick={() => router.push('/therapist/generate')}
               className="px-6 py-3 bg-gradient-to-r from-orange-400 to-pink-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
             >
-              <Sparkles className="w-5 h-5" /> AI Generator
+              <Sparkles className="w-5 h-5" /> AI Activity
+            </button>
+            <button
+              onClick={() => router.push('/therapist/plan')}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
+            >
+              <Calendar className="w-5 h-5" /> Therapy Plan
+            </button>
+            <button
+              onClick={() => router.push('/therapist/insights')}
+              className="px-6 py-3 bg-gradient-to-r from-teal-500 to-green-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
+            >
+              <TrendingUp className="w-5 h-5" /> AI Insights
             </button>
             <button
               onClick={() => router.push('/therapist/enroll')}

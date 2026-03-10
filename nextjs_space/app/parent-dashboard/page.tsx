@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { ArrowLeft, TrendingUp, Award, Activity, Flame, Heart } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Award, Activity, Flame, Heart, MessageSquare } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -22,6 +22,14 @@ interface Child {
   id: string;
   name: string;
   avatarColor: string;
+}
+
+interface TherapistNote {
+  id: string;
+  content: string;
+  noteType: string;
+  createdAt: string;
+  therapist: { name: string };
 }
 
 interface MoodCheckIn {
@@ -88,6 +96,7 @@ export default function ParentDashboard() {
   const { data: session, status } = useSession() || {};
   const [children, setChildren] = useState<Child[]>([]);
   const [progressData, setProgressData] = useState<ChildProgress[]>([]);
+  const [therapistNotes, setTherapistNotes] = useState<Record<string, TherapistNote[]>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -136,6 +145,22 @@ export default function ParentDashboard() {
 
       const allProgress = await Promise.all(progressPromises);
       setProgressData(allProgress);
+
+      // Fetch therapist notes for each child
+      const notesResults = await Promise.all(
+        childrenList.map(async (child: Child) => {
+          try {
+            const notesRes = await fetch(`/api/therapist/notes?childId=${child.id}`);
+            const notesData = await notesRes.json();
+            return { childId: child.id, notes: notesData.notes ?? [] };
+          } catch {
+            return { childId: child.id, notes: [] };
+          }
+        })
+      );
+      const notesMap: Record<string, TherapistNote[]> = {};
+      notesResults.forEach(({ childId, notes }) => { notesMap[childId] = notes; });
+      setTherapistNotes(notesMap);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -334,6 +359,60 @@ export default function ParentDashboard() {
             ))}
           </div>
         </div>
+
+        {/* Therapist Notes */}
+        {children.some((c) => (therapistNotes[c.id] ?? []).length > 0) && (
+          <div className="bg-white rounded-3xl shadow-xl p-8 mb-8">
+            <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+              <MessageSquare className="w-8 h-8 text-purple-500" />
+              Notes from Your Therapist
+            </h2>
+            <div className="space-y-6">
+              {children.map((child) => {
+                const notes = therapistNotes[child.id] ?? [];
+                if (notes.length === 0) return null;
+                return (
+                  <div key={child.id}>
+                    <h3
+                      className="text-lg font-bold text-gray-700 mb-3 flex items-center gap-2"
+                      style={{ color: child.avatarColor }}
+                    >
+                      <div
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                        style={{ backgroundColor: child.avatarColor }}
+                      >
+                        {child.name.charAt(0)}
+                      </div>
+                      {child.name}
+                    </h3>
+                    <div className="space-y-3">
+                      {notes.map((note) => (
+                        <div
+                          key={note.id}
+                          className={`rounded-2xl p-4 border ${
+                            note.noteType === 'milestone'
+                              ? 'bg-green-50 border-green-200'
+                              : note.noteType === 'recommendation'
+                              ? 'bg-purple-50 border-purple-200'
+                              : 'bg-blue-50 border-blue-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-bold uppercase tracking-wide opacity-70">
+                              {note.noteType === 'milestone' ? '🏆 Milestone' : note.noteType === 'recommendation' ? '💡 Recommendation' : '👁 Observation'}
+                            </span>
+                            <span className="text-xs opacity-50 ml-auto">{note.therapist.name} · {new Date(note.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <p className="text-gray-800 leading-relaxed">{note.content}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Autism Support Tips */}
         <div className="bg-white rounded-3xl shadow-xl p-8">
