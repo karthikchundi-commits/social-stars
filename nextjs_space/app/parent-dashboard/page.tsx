@@ -534,8 +534,8 @@ export default function ParentDashboard() {
           </div>
         )}
 
-        {/* Therapist Notes */}
-        <div className="bg-white rounded-3xl shadow-xl p-8 mb-8">
+        {/* Therapist Notes — only shown when a therapist is linked */}
+        {isTherapistLinked && <div className="bg-white rounded-3xl shadow-xl p-8 mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
             <MessageSquare className="w-7 h-7 text-purple-500" /> Notes from Your Therapist
           </h2>
@@ -584,7 +584,7 @@ export default function ParentDashboard() {
               })}
             </div>
           )}
-        </div>
+        </div>}
 
         {/* Tips */}
         <div className="bg-white rounded-3xl shadow-xl p-8">
