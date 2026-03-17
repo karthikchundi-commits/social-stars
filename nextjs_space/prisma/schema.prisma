@@ -79,6 +79,9 @@ model ChildProfile {
   assignments         ActivityAssignment[]
   therapyPlans        TherapyPlan[]
   therapistNotes      TherapistNote[]
+  emotionEvents       EmotionDetectionEvent[]
+  confusionEvents     ConfusionEvent[]
+  learningAdaptation  LearningAdaptation?
 }
 
 model Activity {
@@ -201,4 +204,40 @@ model TherapistNote {
   noteType    String       @default("observation") // "observation" | "recommendation" | "milestone"
   isShared    Boolean      @default(true)
   createdAt   DateTime     @default(now())
+}
+
+model EmotionDetectionEvent {
+  id              String       @id @default(cuid())
+  childId         String
+  child           ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+  activityId      String?
+  sessionId       String
+  detectedEmotion String
+  confidence      Float        @default(0.8)
+  source          String
+  timestamp       DateTime     @default(now())
+}
+
+model ConfusionEvent {
+  id            String       @id @default(cuid())
+  childId       String
+  child         ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+  activityId    String
+  activityType  String
+  eventType     String
+  hesitationMs  Int?
+  attemptNumber Int          @default(1)
+  questionCtx   String?
+  timestamp     DateTime     @default(now())
+}
+
+model LearningAdaptation {
+  id              String       @id @default(cuid())
+  childId         String       @unique
+  child           ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+  difficultyLevel Float        @default(0.5)
+  preferredTypes  String       @default("[]")
+  confusionAreas  String       @default("{}")
+  totalHints      Int          @default(0)
+  lastUpdated     DateTime     @updatedAt
 }

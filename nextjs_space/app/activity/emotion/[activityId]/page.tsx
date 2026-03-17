@@ -1,11 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Volume2, Star, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import confetti from 'canvas-confetti';
 import { EMOTION_IMAGES } from '@/lib/constants';
+import { useConfusionTracker } from '@/hooks/useConfusionTracker';
+import { EmotionDetector } from '@/components/EmotionDetector';
+import { CoachingHint } from '@/components/CoachingHint';
 
 export default function EmotionActivityPage() {
   const router = useRouter();
@@ -20,6 +23,8 @@ export default function EmotionActivityPage() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [coachingHint, setCoachingHint] = useState<{ hint: string; encouragement: string } | null>(null);
+  const [sessionId] = useState(() => crypto.randomUUID());
 
   const emotions = [
     { id: 'happy', label: 'Happy', image: EMOTION_IMAGES.happy },
@@ -30,10 +35,10 @@ export default function EmotionActivityPage() {
     { id: 'excited', label: 'Excited', image: EMOTION_IMAGES.excited },
   ];
 
+  const confusion = useConfusionTracker({ childId, activityId, activityType: 'emotion' });
+
   useEffect(() => {
-    if (activityId) {
-      fetchActivity();
-    }
+    if (activityId) fetchActivity();
   }, [activityId]);
 
   const fetchActivity = async () => {
@@ -58,9 +63,45 @@ export default function EmotionActivityPage() {
     }
   };
 
-  const handleEmotionSelect = (emotionId: string) => {
+  const fetchCoachingHint = useCallback(async (attemptCount: number) => {
+    if (attemptCount < 2) return; // Only show hint after 2nd wrong answer
+    try {
+      const response = await fetch('/api/coaching', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          childId,
+          activityType: 'emotion',
+          activityTitle: activity?.title,
+          question: `Find the ${activity?.category} face`,
+          wrongAnswers: attemptCount,
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setCoachingHint({ hint: data.hint, encouragement: data.encouragement });
+      }
+    } catch (error) {
+      // Silent fail
+    }
+  }, [childId, activity]);
+
+  // Start hesitation timer when activity loads
+  useEffect(() => {
+    if (activity && !completed) {
+      confusion.resetForNewQuestion();
+      confusion.startHesitationTimer(
+        `emotion:${activity?.category}`,
+        () => fetchCoachingHint(1),
+      );
+    }
+    return () => confusion.stopHesitationTimer();
+  }, [activity]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleEmotionSelect = async (emotionId: string) => {
     if (completed) return;
 
+    confusion.stopHesitationTimer();
     setSelectedEmotion(emotionId);
     const correct = emotionId === activity?.category;
     setIsCorrect(correct);
@@ -68,20 +109,17 @@ export default function EmotionActivityPage() {
 
     if (correct) {
       playAudio('Great job! You got it right!');
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-      });
-
-      setTimeout(() => {
-        markAsComplete();
-      }, 2000);
+      await confusion.trackCorrectAnswer(`emotion:${activity?.category}`);
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      setTimeout(() => markAsComplete(), 2000);
     } else {
       playAudio('Try again!');
+      const attemptCount = await confusion.trackWrongAnswer(`emotion:${activity?.category}`);
+      fetchCoachingHint(attemptCount);
       setTimeout(() => {
         setShowFeedback(false);
         setSelectedEmotion(null);
+        confusion.startHesitationTimer(`emotion:${activity?.category}`, () => fetchCoachingHint(confusion.getAttemptCount()));
       }, 1500);
     }
   };
@@ -92,21 +130,11 @@ export default function EmotionActivityPage() {
       const response = await fetch('/api/progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          childId,
-          activityId,
-          score: 100,
-        }),
+        body: JSON.stringify({ childId, activityId, score: 100 }),
       });
-
       const data = await response.json();
-      if (data?.achievement) {
-        playAudio(`Wow! You earned a new badge: ${data.achievement.title}`);
-      }
-
-      setTimeout(() => {
-        router.push(`/dashboard/${childId}`);
-      }, 3000);
+      if (data?.achievement) playAudio(`Wow! You earned a new badge: ${data.achievement.title}`);
+      setTimeout(() => router.push(`/dashboard/${childId}`), 3000);
     } catch (error) {
       console.error('Error marking complete:', error);
     }
@@ -123,7 +151,6 @@ export default function EmotionActivityPage() {
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
         <button
           onClick={() => router.push(`/dashboard/${childId}`)}
           className="mb-6 px-6 py-3 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2 font-semibold text-gray-700"
@@ -132,17 +159,13 @@ export default function EmotionActivityPage() {
           Back
         </button>
 
-        {/* Main Content */}
         <div className="bg-white rounded-3xl shadow-2xl p-8 mb-6">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-purple-600 mb-4 flex items-center justify-center gap-3">
               <Sparkles className="w-10 h-10" />
               {activity?.title ?? 'Emotion Game'}
             </h1>
-            <p className="text-2xl text-gray-700 mb-6">
-              {activity?.description ?? 'Find the emotion!'}
-            </p>
-
+            <p className="text-2xl text-gray-700 mb-6">{activity?.description ?? 'Find the emotion!'}</p>
             <button
               onClick={() => playAudio(`Can you find the ${activity?.category ?? 'emotion'}?`)}
               className="px-8 py-4 bg-blue-500 text-white font-bold text-xl rounded-2xl hover:bg-blue-600 transition-all flex items-center gap-3 mx-auto"
@@ -152,31 +175,20 @@ export default function EmotionActivityPage() {
             </button>
           </div>
 
-          {/* Emotion Options */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             {emotions.map((emotion) => {
               const isSelected = selectedEmotion === emotion.id;
               const isThisCorrect = isCorrect && isSelected;
               const isThisWrong = !isCorrect && isSelected && showFeedback;
-
               return (
                 <button
                   key={emotion.id}
                   onClick={() => handleEmotionSelect(emotion.id)}
                   disabled={completed || showFeedback}
-                  className={`child-card bg-white relative ${
-                    isThisCorrect ? 'ring-8 ring-green-400' : ''
-                  } ${
-                    isThisWrong ? 'ring-8 ring-red-400' : ''
-                  } disabled:opacity-50`}
+                  className={`child-card bg-white relative ${isThisCorrect ? 'ring-8 ring-green-400' : ''} ${isThisWrong ? 'ring-8 ring-red-400' : ''} disabled:opacity-50`}
                 >
                   <div className="relative w-full aspect-square mb-4">
-                    <Image
-                      src={emotion.image}
-                      alt={emotion.label}
-                      fill
-                      className="object-cover rounded-2xl"
-                    />
+                    <Image src={emotion.image} alt={emotion.label} fill className="object-cover rounded-2xl" />
                   </div>
                   <h3 className="text-2xl font-bold text-gray-800">{emotion.label}</h3>
                 </button>
@@ -184,7 +196,6 @@ export default function EmotionActivityPage() {
             })}
           </div>
 
-          {/* Feedback */}
           {showFeedback && isCorrect && (
             <div className="mt-8 text-center">
               <div className="inline-flex items-center gap-3 bg-green-100 border-4 border-green-400 px-8 py-4 rounded-3xl">
@@ -195,6 +206,18 @@ export default function EmotionActivityPage() {
           )}
         </div>
       </div>
+
+      {/* AI Coaching hint overlay */}
+      {coachingHint && (
+        <CoachingHint
+          hint={coachingHint.hint}
+          encouragement={coachingHint.encouragement}
+          onDismiss={() => setCoachingHint(null)}
+        />
+      )}
+
+      {/* Multimodal emotion detector */}
+      <EmotionDetector childId={childId} activityId={activityId} sessionId={sessionId} />
     </div>
   );
 }

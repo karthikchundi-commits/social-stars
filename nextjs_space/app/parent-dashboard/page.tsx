@@ -14,6 +14,7 @@ import {
 } from 'recharts';
 import { signOut } from 'next-auth/react';
 import { AVATAR_COLORS } from '@/lib/constants';
+import { ConfusionMapChart } from '@/components/ConfusionMapChart';
 
 interface Child {
   id: string;
@@ -129,6 +130,10 @@ export default function ParentDashboard() {
   const [aiInsights, setAiInsights] = useState<AiInsights | null>(null);
   const [aiPlan, setAiPlan] = useState<AiPlan | null>(null);
 
+  // Adaptive learning state
+  const [confusionData, setConfusionData] = useState<any>(null);
+  const [adaptationData, setAdaptationData] = useState<any>(null);
+
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/auth/login');
     if (status === 'authenticated') fetchDashboardData();
@@ -167,6 +172,11 @@ export default function ParentDashboard() {
 
       const allProgress = await Promise.all(progressPromises);
       setProgressData(allProgress);
+
+      // Fetch adaptive learning data for first child
+      if (childrenList.length > 0) {
+        fetchConfusionData(childrenList[0].id);
+      }
 
       // Fetch therapist notes for each child
       const notesResults = await Promise.all(
@@ -263,6 +273,19 @@ export default function ParentDashboard() {
       fetchDashboardData();
     }
     setConnectingId(null);
+  };
+
+  const fetchConfusionData = async (childId: string) => {
+    try {
+      const response = await fetch(`/api/adaptive?childId=${childId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setConfusionData(data.recommendations);
+        setAdaptationData(data.adaptation);
+      }
+    } catch (error) {
+      // Silent fail
+    }
   };
 
   const openAiModal = (type: 'insights' | 'plan') => {
@@ -531,6 +554,20 @@ export default function ParentDashboard() {
                 </PieChart>
               </ResponsiveContainer>
             </div>
+          </div>
+        )}
+
+        {/* Adaptive Learning Map */}
+        {confusionData && (
+          <div className="bg-white rounded-3xl shadow-lg p-6 mb-8">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+              🧠 Adaptive Learning Map
+            </h3>
+            <ConfusionMapChart
+              data={confusionData}
+              difficultyLevel={adaptationData?.difficultyLevel}
+              totalHints={adaptationData?.totalHints}
+            />
           </div>
         )}
 
