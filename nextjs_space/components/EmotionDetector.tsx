@@ -12,7 +12,7 @@ const EXPRESSION_MAP: Record<string, string> = {
   happy: 'happy',
   sad: 'sad',
   angry: 'frustrated',
-  fearful: 'anxious',
+  fearful: 'scared',
   disgusted: 'frustrated',
   surprised: 'surprised',
   neutral: 'neutral',
@@ -41,6 +41,7 @@ export function EmotionDetector({ childId, activityId, sessionId, targetEmotion,
   const emotionEmoji: Record<string, string> = {
     happy: '😊', sad: '😢', confused: '😕', frustrated: '😤',
     focused: '🧐', neutral: '😐', anxious: '😰', surprised: '😲',
+    scared: '😨',
   };
   const emotionColors: Record<string, string> = {
     happy: 'bg-yellow-100 border-yellow-300',
@@ -51,6 +52,7 @@ export function EmotionDetector({ childId, activityId, sessionId, targetEmotion,
     neutral: 'bg-gray-100 border-gray-300',
     anxious: 'bg-purple-100 border-purple-300',
     surprised: 'bg-pink-100 border-pink-300',
+    scared: 'bg-indigo-100 border-indigo-300',
   };
 
   // Load face-api.js models once on mount
@@ -109,7 +111,8 @@ export function EmotionDetector({ childId, activityId, sessionId, targetEmotion,
       const emotionMatches = (detected: string, target: string) => {
         if (detected === target) return true;
         if (target === 'excited') return detected === 'happy' || detected === 'surprised';
-        if (target === 'scared') return detected === 'fearful' || detected === 'anxious';
+        // fearful is rare in tiny model — also accept surprised/sad/anxious for scared
+        if (target === 'scared') return ['fearful', 'anxious', 'surprised', 'sad'].includes(detected);
         if (target === 'angry') return detected === 'frustrated' || detected === 'angry';
         return false;
       };
