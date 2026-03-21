@@ -18,6 +18,18 @@ interface StoryPage {
   correctAnswer?: number;
 }
 
+// Extract an emotion keyword from an option string, e.g. "She feels happy" → "happy"
+const EMOTION_KEYWORDS = [
+  'happy', 'sad', 'angry', 'surprised', 'scared', 'excited',
+  'confused', 'frustrated', 'anxious', 'worried', 'upset',
+  'afraid', 'calm', 'nervous', 'joyful',
+];
+
+function extractEmotion(text: string): string | null {
+  const lower = text.toLowerCase();
+  return EMOTION_KEYWORDS.find(e => lower.includes(e)) ?? null;
+}
+
 export default function StoryActivityPage() {
   const router = useRouter();
   const params = useParams();
@@ -246,7 +258,23 @@ export default function StoryActivityPage() {
         />
       )}
 
-      <EmotionDetector childId={childId} activityId={activityId} sessionId={sessionId} />
+      <EmotionDetector
+        childId={childId}
+        activityId={activityId}
+        sessionId={sessionId}
+        targetEmotion={
+          // Only set target when current page has an emotion question with a correct answer
+          page?.question && page?.correctAnswer !== undefined && page?.options
+            ? extractEmotion(page.options[page.correctAnswer])?? undefined
+            : undefined
+        }
+        onEmotionMatch={() => {
+          // Auto-select the correct answer when face matches the emotion
+          if (page?.correctAnswer !== undefined && selectedAnswer === null) {
+            handleAnswerSelect(page.correctAnswer);
+          }
+        }}
+      />
     </div>
   );
 }
