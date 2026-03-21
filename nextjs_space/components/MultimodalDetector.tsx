@@ -104,40 +104,36 @@ export function MultimodalDetector({
     setDetectedAction(null);
   }, [targetAction]);
 
-  // Load both models on mount
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      setStatus('⏳ Loading models...');
-      try {
-        const [faceapi, tf, poseDetection] = await Promise.all([
-          import('face-api.js'),
-          import('@tensorflow/tfjs'),
-          import('@tensorflow-models/pose-detection'),
-        ]);
-        await tf.setBackend('webgl');
-        await tf.ready();
-        await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri(FACE_MODEL_URL),
-          faceapi.nets.faceExpressionNet.loadFromUri(FACE_MODEL_URL),
-        ]);
-        const detector = await poseDetection.createDetector(
-          poseDetection.SupportedModels.MoveNet,
-          { modelType: (poseDetection as any).movenet.modelType.SINGLEPOSE_LIGHTNING }
-        );
-        if (!cancelled) {
-          faceApiRef.current = faceapi;
-          poseDetectorRef.current = detector;
-          setModelsReady(true);
-          setStatus('✅ Ready');
-        }
-      } catch (err: any) {
-        if (!cancelled) setStatus(`❌ ${err.message}`);
-      }
-    };
-    load();
-    return () => { cancelled = true; };
-  }, []);
+  // Load models lazily — only when first needed (called from handleToggle)
+  const loadModels = useCallback(async (): Promise<boolean> => {
+    if (modelsReady) return true;
+    setStatus('⏳ Loading models...');
+    try {
+      const [faceapi, tf, poseDetection] = await Promise.all([
+        import('face-api.js'),
+        import('@tensorflow/tfjs'),
+        import('@tensorflow-models/pose-detection'),
+      ]);
+      await tf.setBackend('webgl');
+      await tf.ready();
+      await Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri(FACE_MODEL_URL),
+        faceapi.nets.faceExpressionNet.loadFromUri(FACE_MODEL_URL),
+      ]);
+      const detector = await poseDetection.createDetector(
+        poseDetection.SupportedModels.MoveNet,
+        { modelType: (poseDetection as any).movenet.modelType.SINGLEPOSE_LIGHTNING }
+      );
+      faceApiRef.current = faceapi;
+      poseDetectorRef.current = detector;
+      setModelsReady(true);
+      setStatus('✅ Ready');
+      return true;
+    } catch (err: any) {
+      setStatus(`❌ ${err.message}`);
+      return false;
+    }
+  }, [modelsReady]);
 
   const runFaceDetection = useCallback(async () => {
     const video = videoRef.current;
@@ -242,10 +238,12 @@ export function MultimodalDetector({
       streamRef.current = null;
       if (videoRef.current) videoRef.current.srcObject = null;
       setIsActive(false); setShowCamera(false);
-      setStatus(modelsReady ? '✅ Ready' : '');
+      setStatus('');
       return;
     }
-    if (!modelsReady) { setStatus('⏳ Still loading...'); return; }
+    // Load models on first use
+    const ready = await loadModels();
+    if (!ready) return;
     setShowCamera(true);
     setStatus('🎥 Starting camera...');
     try {
