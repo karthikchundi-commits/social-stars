@@ -114,8 +114,8 @@ export default function StoryActivityPage() {
     return () => confusion.stopHesitationTimer();
   }, [currentPage, page?.question]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleNext = () => {
-    if (page?.question && selectedAnswer === null) return;
+  const handleNext = (answerProvided?: boolean) => {
+    if (page?.question && !answerProvided && selectedAnswer === null) return;
     if (currentPage < pages.length - 1) {
       setCurrentPage(currentPage + 1);
       setSelectedAnswer(null);
@@ -134,7 +134,7 @@ export default function StoryActivityPage() {
       playAudio('Great job!');
       await confusion.trackCorrectAnswer(`story:page${currentPage}`);
       confetti({ particleCount: 50, spread: 50, origin: { y: 0.7 } });
-      setTimeout(() => handleNext(), 1500);
+      setTimeout(() => handleNext(true), 1500);
     } else {
       playAudio('Try again!');
       const attemptCount = await confusion.trackWrongAnswer(`story:page${currentPage}:${page?.question}`);
