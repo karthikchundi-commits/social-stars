@@ -216,12 +216,15 @@ export default function EmotionActivityPage() {
         />
       )}
 
-      {/* Multimodal emotion detector — celebrates when child shows the target emotion */}
+      {/* Multimodal emotion detector — auto-completes when child shows the target emotion */}
       <EmotionDetector
         childId={childId}
         activityId={activityId}
         sessionId={sessionId}
         targetEmotion={activity?.category}
+        onEmotionMatch={() => {
+          if (!completed) handleEmotionSelect(activity?.category);
+        }}
       />
     </div>
   );

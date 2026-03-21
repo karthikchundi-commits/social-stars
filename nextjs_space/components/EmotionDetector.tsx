@@ -120,7 +120,7 @@ export function EmotionDetector({ childId, activityId, sessionId, targetEmotion,
         confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
         if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
           window.speechSynthesis.cancel();
-          const u = new SpeechSynthesisUtterance(`You're showing ${emotion}! Great job! ⭐`);
+          const u = new SpeechSynthesisUtterance(`You're showing ${targetEmotion}! Great job! ⭐`);
           u.rate = 0.9; u.pitch = 1.3;
           window.speechSynthesis.speak(u);
         }
@@ -189,7 +189,7 @@ export function EmotionDetector({ childId, activityId, sessionId, targetEmotion,
       {matched && (
         <div className="bg-yellow-400 text-white text-sm font-bold px-3 py-2 rounded-2xl shadow-lg flex items-center gap-1 animate-bounce">
           <Star className="w-4 h-4 fill-white" />
-          You showed {targetEmotion}!
+          You showed {targetEmotion}! ⭐
         </div>
       )}
 
