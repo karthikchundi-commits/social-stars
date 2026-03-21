@@ -115,6 +115,8 @@ export function MultimodalDetector({
           import('@tensorflow/tfjs'),
           import('@tensorflow-models/pose-detection'),
         ]);
+        await import('@tensorflow/tfjs-backend-webgl');
+        await tf.setBackend('webgl');
         await tf.ready();
         await Promise.all([
           faceapi.nets.tinyFaceDetector.loadFromUri(FACE_MODEL_URL),
