@@ -13,7 +13,7 @@ const EXPRESSION_MAP: Record<string, string> = {
   angry: 'frustrated',
   fearful: 'anxious',
   disgusted: 'frustrated',
-  surprised: 'confused',
+  surprised: 'surprised',
   neutral: 'neutral',
 };
 
@@ -36,7 +36,7 @@ export function EmotionDetector({ childId, activityId, sessionId }: EmotionDetec
 
   const emotionEmoji: Record<string, string> = {
     happy: '😊', sad: '😢', confused: '😕', frustrated: '😤',
-    focused: '🧐', neutral: '😐', anxious: '😰',
+    focused: '🧐', neutral: '😐', anxious: '😰', surprised: '😲',
   };
   const emotionColors: Record<string, string> = {
     happy: 'bg-yellow-100 border-yellow-300',
@@ -46,6 +46,7 @@ export function EmotionDetector({ childId, activityId, sessionId }: EmotionDetec
     focused: 'bg-green-100 border-green-300',
     neutral: 'bg-gray-100 border-gray-300',
     anxious: 'bg-purple-100 border-purple-300',
+    surprised: 'bg-pink-100 border-pink-300',
   };
 
   // Load face-api.js models once on mount
