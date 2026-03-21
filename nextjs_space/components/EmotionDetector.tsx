@@ -105,8 +105,17 @@ export function EmotionDetector({ childId, activityId, sessionId, targetEmotion,
       setCurrentEmotion(emotion);
       setStatus(`✅ ${emotion} (${Math.round(topScore * 100)}%)`);
 
+      // Some emotions need fuzzy matching since face-api.js has no 'excited' class
+      const emotionMatches = (detected: string, target: string) => {
+        if (detected === target) return true;
+        if (target === 'excited') return detected === 'happy' || detected === 'surprised';
+        if (target === 'scared') return detected === 'fearful' || detected === 'anxious';
+        if (target === 'angry') return detected === 'frustrated' || detected === 'angry';
+        return false;
+      };
+
       // Celebrate if detected emotion matches the activity's target emotion
-      if (targetEmotion && emotion === targetEmotion && !matched) {
+      if (targetEmotion && emotionMatches(emotion, targetEmotion) && !matched) {
         setMatched(true);
         confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
         if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
