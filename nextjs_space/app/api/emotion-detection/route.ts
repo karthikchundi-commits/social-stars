@@ -66,9 +66,9 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ detectedEmotion, confidence });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Emotion detection error:', error);
-    return NextResponse.json({ error: 'Detection failed' }, { status: 500 });
+    return NextResponse.json({ error: error?.message ?? 'Detection failed' }, { status: 500 });
   }
 }
 
