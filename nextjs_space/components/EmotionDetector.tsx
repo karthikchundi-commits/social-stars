@@ -46,18 +46,16 @@ export function EmotionDetector({ childId, activityId, sessionId }: EmotionDetec
         </div>
       )}
 
-      {/* Camera preview */}
-      {showCamera && (
-        <div className="rounded-2xl overflow-hidden shadow-xl border-4 border-white w-20 h-16">
-          <video
-            ref={videoRef}
-            autoPlay
-            muted
-            playsInline
-            className="w-full h-full object-cover scale-x-[-1]"
-          />
-        </div>
-      )}
+      {/* Camera preview — always mounted so videoRef is available when stream starts */}
+      <div className={`rounded-2xl overflow-hidden shadow-xl border-4 border-white w-20 h-16 ${showCamera ? 'block' : 'hidden'}`}>
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          playsInline
+          className="w-full h-full object-cover scale-x-[-1]"
+        />
+      </div>
 
       {/* Toggle button */}
       <button
