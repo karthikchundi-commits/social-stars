@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Camera, Smile, Zap } from 'lucide-react';
 
 // Models hosted on jsDelivr CDN — no cost, no API key needed
-const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
+const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
 
 // Map face-api.js expressions → our emotion labels
 const EXPRESSION_MAP: Record<string, string> = {
