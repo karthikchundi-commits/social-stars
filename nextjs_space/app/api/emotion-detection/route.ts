@@ -1,15 +1,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import Anthropic from '@anthropic-ai/sdk';
 
 export const dynamic = 'force-dynamic';
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { childId, activityId, sessionId, source, imageData, transcript } = body;
+    const { childId, activityId, sessionId, source, transcript, detectedEmotion: clientEmotion, confidence: clientConfidence } = body;
 
     if (!childId || !sessionId || !source) {
       return NextResponse.json({ error: 'childId, sessionId, source required' }, { status: 400 });
@@ -18,33 +15,10 @@ export async function POST(request: Request) {
     let detectedEmotion = 'neutral';
     let confidence = 0.7;
 
-    if (source === 'face' && imageData && process.env.ANTHROPIC_API_KEY) {
-      // Use Claude Vision to detect emotion from webcam frame
-      const base64Data = imageData.replace(/^data:image\/[a-z]+;base64,/, '');
-      const response = await client.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 100,
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: 'image/jpeg', data: base64Data },
-            },
-            {
-              type: 'text',
-              text: 'Look at this child\'s face. Respond with ONLY a JSON object: {"emotion": "happy|sad|confused|frustrated|focused|neutral|anxious", "confidence": 0.0-1.0}. No other text.',
-            },
-          ],
-        }],
-      });
-      const text = response.content[0].type === 'text' ? response.content[0].text : '';
-      const match = text.match(/\{[^}]+\}/);
-      if (match) {
-        const parsed = JSON.parse(match[0]);
-        detectedEmotion = parsed.emotion ?? 'neutral';
-        confidence = parsed.confidence ?? 0.7;
-      }
+    if (source === 'face' && clientEmotion) {
+      // Emotion already detected client-side via face-api.js — just save it
+      detectedEmotion = clientEmotion;
+      confidence = clientConfidence ?? 0.8;
     } else if (source === 'voice' && transcript) {
       // Detect emotion from voice transcript keywords
       const lower = transcript.toLowerCase();

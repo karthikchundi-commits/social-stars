@@ -1,7 +1,21 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Camera, Smile, Zap } from 'lucide-react';
+
+// Models hosted on jsDelivr CDN — no cost, no API key needed
+const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
+
+// Map face-api.js expressions → our emotion labels
+const EXPRESSION_MAP: Record<string, string> = {
+  happy: 'happy',
+  sad: 'sad',
+  angry: 'frustrated',
+  fearful: 'anxious',
+  disgusted: 'frustrated',
+  surprised: 'confused',
+  neutral: 'neutral',
+};
 
 interface EmotionDetectorProps {
   childId: string;
@@ -14,15 +28,16 @@ export function EmotionDetector({ childId, activityId, sessionId }: EmotionDetec
   const [isActive, setIsActive] = useState(false);
   const [currentEmotion, setCurrentEmotion] = useState('neutral');
   const [status, setStatus] = useState('');
+  const [modelsLoaded, setModelsLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const faceApiRef = useRef<any>(null);
 
   const emotionEmoji: Record<string, string> = {
     happy: '😊', sad: '😢', confused: '😕', frustrated: '😤',
     focused: '🧐', neutral: '😐', anxious: '😰',
   };
-
   const emotionColors: Record<string, string> = {
     happy: 'bg-yellow-100 border-yellow-300',
     sad: 'bg-blue-100 border-blue-300',
@@ -33,35 +48,69 @@ export function EmotionDetector({ childId, activityId, sessionId }: EmotionDetec
     anxious: 'bg-purple-100 border-purple-300',
   };
 
+  // Load face-api.js models once on mount
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        setStatus('⏳ Loading models...');
+        const faceapi = await import('face-api.js');
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+          faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
+        ]);
+        if (!cancelled) {
+          faceApiRef.current = faceapi;
+          setModelsLoaded(true);
+          setStatus('✅ Ready');
+        }
+      } catch (err: any) {
+        if (!cancelled) setStatus(`❌ Model load failed: ${err.message}`);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
   const captureAndAnalyze = async () => {
+    const faceapi = faceApiRef.current;
     const video = videoRef.current;
-    if (!video) { setStatus('❌ No video element'); return; }
-    if (video.videoWidth === 0) { setStatus('❌ Video not ready'); return; }
+    if (!faceapi || !video || video.videoWidth === 0) {
+      setStatus('⏳ Video not ready yet...');
+      return;
+    }
 
-    setStatus('📸 Capturing...');
+    setStatus('🔍 Detecting...');
     try {
-      const canvas = document.createElement('canvas');
-      canvas.width = 320;
-      canvas.height = 240;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) { setStatus('❌ Canvas error'); return; }
-      ctx.drawImage(video, 0, 0, 320, 240);
-      const imageData = canvas.toDataURL('image/jpeg', 0.7);
+      const detections = await faceapi
+        .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+        .withFaceExpressions();
 
-      setStatus('🤖 Analyzing...');
-      const response = await fetch('/api/emotion-detection', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ childId, activityId, sessionId, source: 'face', imageData }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        setStatus(`❌ API error: ${data.error}`);
+      if (!detections || detections.length === 0) {
+        setStatus('👤 No face detected');
         return;
       }
-      setCurrentEmotion(data.detectedEmotion ?? 'neutral');
-      setStatus(`✅ ${data.detectedEmotion} (${Math.round((data.confidence ?? 0) * 100)}%)`);
+
+      const expressions = detections[0].expressions as Record<string, number>;
+      // Find the dominant expression
+      const [topExpression, topScore] = Object.entries(expressions).reduce((a, b) =>
+        a[1] > b[1] ? a : b
+      );
+      const emotion = EXPRESSION_MAP[topExpression] ?? 'neutral';
+      setCurrentEmotion(emotion);
+      setStatus(`✅ ${emotion} (${Math.round(topScore * 100)}%)`);
+
+      // Save to DB (no Claude needed — just store the result)
+      await fetch('/api/emotion-detection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          childId, activityId, sessionId,
+          source: 'face',
+          detectedEmotion: emotion,
+          confidence: topScore,
+        }),
+      }).catch(() => {});
     } catch (err: any) {
       setStatus(`❌ ${err.message}`);
     }
@@ -75,7 +124,12 @@ export function EmotionDetector({ childId, activityId, sessionId }: EmotionDetec
       if (videoRef.current) videoRef.current.srcObject = null;
       setIsActive(false);
       setShowCamera(false);
-      setStatus('');
+      setStatus(modelsLoaded ? '✅ Ready' : '');
+      return;
+    }
+
+    if (!modelsLoaded) {
+      setStatus('⏳ Still loading models, please wait...');
       return;
     }
 
@@ -84,18 +138,15 @@ export function EmotionDetector({ childId, activityId, sessionId }: EmotionDetec
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
       streamRef.current = stream;
-      // Wait for next render so video element is visible, then attach stream
+      // Small delay so the video element renders before attaching stream
       setTimeout(async () => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           await videoRef.current.play().catch(() => {});
           setIsActive(true);
-          setStatus('✅ Camera ready');
-          // First capture after 2s, then every 15s
-          setTimeout(captureAndAnalyze, 2000);
-          intervalRef.current = setInterval(captureAndAnalyze, 15000);
-        } else {
-          setStatus('❌ Video ref missing');
+          setStatus('✅ Camera on — detecting...');
+          setTimeout(captureAndAnalyze, 1500);
+          intervalRef.current = setInterval(captureAndAnalyze, 5000); // every 5s
         }
       }, 200);
     } catch (err: any) {
@@ -105,9 +156,9 @@ export function EmotionDetector({ childId, activityId, sessionId }: EmotionDetec
 
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
-      {/* Status/debug line */}
+      {/* Status line */}
       {status && (
-        <div className="bg-black/70 text-white text-xs px-2 py-1 rounded-xl max-w-48 text-right">
+        <div className="bg-black/70 text-white text-xs px-2 py-1 rounded-xl max-w-52 text-right">
           {status}
         </div>
       )}
@@ -120,12 +171,12 @@ export function EmotionDetector({ childId, activityId, sessionId }: EmotionDetec
         </div>
       )}
 
-      {/* Camera preview */}
+      {/* Camera preview — always mounted so ref is ready */}
       <div className={`rounded-2xl overflow-hidden shadow-xl border-4 border-white w-24 h-18 ${showCamera ? 'block' : 'hidden'}`}>
         <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover scale-x-[-1]" />
       </div>
 
-      {/* Detect Now button */}
+      {/* Detect now button */}
       {isActive && (
         <button
           onClick={captureAndAnalyze}
