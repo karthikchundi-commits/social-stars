@@ -132,9 +132,9 @@ export default function StoryActivityPage() {
 
     if (index === page?.correctAnswer) {
       playAudio('Great job!');
-      await confusion.trackCorrectAnswer(`story:page${currentPage}`);
       confetti({ particleCount: 50, spread: 50, origin: { y: 0.7 } });
       setTimeout(() => handleNext(true), 1500);
+      confusion.trackCorrectAnswer(`story:page${currentPage}`).catch(() => {});
     } else {
       playAudio('Try again!');
       const attemptCount = await confusion.trackWrongAnswer(`story:page${currentPage}:${page?.question}`);
