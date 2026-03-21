@@ -15,12 +15,15 @@ const nextConfig = {
   },
   images: { unoptimized: true },
   webpack: (config) => {
-    // Stub optional TF.js backends/deps we don't use (avoids build errors)
     config.resolve.alias = {
       ...config.resolve.alias,
+      // Stub unused optional backends
       '@mediapipe/pose': false,
       '@tensorflow/tfjs-backend-webgpu': false,
       '@tensorflow/tfjs-backend-wasm': false,
+      // Force all TF.js packages to share ONE copy of core — prevents
+      // the "n.incRef is not a function" error caused by dual instances
+      '@tensorflow/tfjs-core': require.resolve('@tensorflow/tfjs-core'),
     };
     return config;
   },
