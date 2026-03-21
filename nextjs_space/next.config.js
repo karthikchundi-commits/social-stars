@@ -14,6 +14,16 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   images: { unoptimized: true },
+  webpack: (config) => {
+    // Stub optional TF.js backends/deps we don't use (avoids build errors)
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@mediapipe/pose': false,
+      '@tensorflow/tfjs-backend-webgpu': false,
+      '@tensorflow/tfjs-backend-wasm': false,
+    };
+    return config;
+  },
 };
 
 module.exports = nextConfig;
