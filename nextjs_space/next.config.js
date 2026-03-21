@@ -21,9 +21,11 @@ const nextConfig = {
       '@mediapipe/pose': false,
       '@tensorflow/tfjs-backend-webgpu': false,
       '@tensorflow/tfjs-backend-wasm': false,
-      // Force all TF.js packages to share ONE copy of core — prevents
-      // the "n.incRef is not a function" error caused by dual instances
-      '@tensorflow/tfjs-core': require.resolve('@tensorflow/tfjs-core'),
+      // Force all TF.js packages to share ONE copy of core (prevents
+      // "n.incRef is not a function" from duplicate module instances).
+      // Must point to the package directory, not a file, so that
+      // sub-path imports like @tensorflow/tfjs-core/dist/... still resolve.
+      '@tensorflow/tfjs-core': path.resolve(__dirname, 'node_modules/@tensorflow/tfjs-core'),
     };
     return config;
   },

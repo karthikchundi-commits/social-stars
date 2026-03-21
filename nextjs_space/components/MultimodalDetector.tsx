@@ -110,14 +110,13 @@ export function MultimodalDetector({
     const load = async () => {
       setStatus('⏳ Loading models...');
       try {
-        const [faceapi, tfCore, , poseDetection] = await Promise.all([
+        const [faceapi, tf, poseDetection] = await Promise.all([
           import('face-api.js'),
-          import('@tensorflow/tfjs-core'),
-          import('@tensorflow/tfjs-backend-webgl'),
+          import('@tensorflow/tfjs'),
           import('@tensorflow-models/pose-detection'),
         ]);
-        await tfCore.setBackend('webgl');
-        await tfCore.ready();
+        await tf.setBackend('webgl');
+        await tf.ready();
         await Promise.all([
           faceapi.nets.tinyFaceDetector.loadFromUri(FACE_MODEL_URL),
           faceapi.nets.faceExpressionNet.loadFromUri(FACE_MODEL_URL),
