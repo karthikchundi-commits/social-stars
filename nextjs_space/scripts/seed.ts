@@ -249,26 +249,74 @@ async function main() {
     },
     {
       title: 'Circle Time at School',
-      description: 'Learning to listen and share',
+      description: 'Learning to listen, share feelings, and be kind in class',
       type: 'story',
       category: 'classroom',
       imageUrl: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
       content: JSON.stringify({
         pages: [
-          { text: 'It was circle time at school. Everyone sat together on the colorful rug.', image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg' },
+          // Page 1 — scene setter
           {
-            text: 'The teacher asked, "Who wants to share their weekend story?" Many hands went up!',
+            text: 'It was Monday morning at Maple Leaf School. Sam walked into class and sat on the colourful rug. Circle time was about to begin!',
             image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
-            question: 'What should you do when you want to talk?',
-            options: ['Raise your hand', 'Shout loudly', 'Talk over others'],
+          },
+          // Page 2 — emotion: happy (camera detects happy face)
+          {
+            text: 'The teacher smiled at everyone. "Good morning, friends! How is everyone feeling today?" Sam loved school and had a big smile on his face.',
+            image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
+            question: 'How does Sam feel this morning?',
+            options: ['Sam feels happy and excited to be at school!', 'Sam feels sad and wants to go home.', 'Sam feels scared and worried.'],
             correctAnswer: 0,
           },
-          { text: 'Sam raised his hand and waited. The teacher called on him. Sam felt proud!', image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg' },
-          { text: 'Everyone listened to Sam\'s story. Then it was someone else\'s turn. Taking turns is important!', image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg' },
+          // Page 3 — action: raise_hand
+          {
+            text: 'The teacher asked, "Who can tell me what day it is today?" Sam knew the answer — it was Monday! He really wanted to tell the class.',
+            image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
+            question: 'Sam knows the answer! What should he do?',
+            options: ['Raise your hand and wait for the teacher', 'Shout the answer across the room', 'Look at the floor and say nothing'],
+            correctAnswer: 0,
+          },
+          // Page 4 — scene (no question)
+          {
+            text: '"Monday!" said Sam proudly when the teacher called his name. "Well done, Sam!" said the teacher. Sam felt so proud. The whole class clapped!',
+            image: 'https://cdn.abacus.ai/images/a694cc55-9041-4e3a-b6f1-8b18cb56ef73.jpg',
+          },
+          // Page 5 — scenario choice (kind behaviour)
+          {
+            text: 'Next, the teacher asked everyone to share one thing they did at the weekend. Sam\'s friend Maya looked nervous — it was nearly her turn to speak!',
+            image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
+            question: 'Maya looks nervous. What is the kind thing to do?',
+            options: ['Give Maya a thumbs up and a smile to encourage her', 'Tell her she is doing it wrong', 'Talk loudly while she is speaking'],
+            correctAnswer: 0,
+          },
+          // Page 6 — emotion: scared (camera detects scared face)
+          {
+            text: 'Then a brand new student walked in. She had never been to this school before. She stood at the door and looked all around the room.',
+            image: 'https://cdn.abacus.ai/images/b0785242-a22c-4999-950c-4845cddfca02.jpg',
+            question: 'How is the new student feeling?',
+            options: ['She feels scared and worried about being somewhere new.', 'She feels happy and excited to jump in.', 'She feels angry and frustrated.'],
+            correctAnswer: 0,
+          },
+          // Page 7 — action: raise_hand (to offer to help)
+          {
+            text: 'The teacher said, "Who would like to be a buddy and help our new friend find a seat?" Sam really wanted to help her feel welcome.',
+            image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
+            question: 'Sam wants to volunteer to help. What should he do?',
+            options: ['Raise your hand to show the teacher you want to help', 'Push in front of everyone to get there first', 'Wait and do nothing'],
+            correctAnswer: 0,
+          },
+          // Page 8 — emotion: happy (end of story)
+          {
+            text: 'Sam showed the new student to a seat and whispered, "Don\'t worry, circle time is really fun!" She smiled back. By the end of class they were already friends.',
+            image: 'https://cdn.abacus.ai/images/ce62a709-3173-4af2-bb1d-966a5b6cabb8.jpg',
+            question: 'How do Sam and his new friend feel at the end of circle time?',
+            options: ['Happy and proud — making a friend feels wonderful!', 'Sad because the day is over.', 'Angry because class was too long.'],
+            correctAnswer: 0,
+          },
         ],
       }),
       difficulty: 2,
-      starsReward: 3,
+      starsReward: 5,
     },
     {
       title: 'The Dragon Who Felt Angry',
