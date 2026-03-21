@@ -216,8 +216,13 @@ export default function EmotionActivityPage() {
         />
       )}
 
-      {/* Multimodal emotion detector */}
-      <EmotionDetector childId={childId} activityId={activityId} sessionId={sessionId} />
+      {/* Multimodal emotion detector — celebrates when child shows the target emotion */}
+      <EmotionDetector
+        childId={childId}
+        activityId={activityId}
+        sessionId={sessionId}
+        targetEmotion={activity?.category}
+      />
     </div>
   );
 }

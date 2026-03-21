@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Camera, Smile, Zap } from 'lucide-react';
+import { Camera, Smile, Zap, Star } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
-// Models hosted on jsDelivr CDN — no cost, no API key needed
+// Models hosted on GitHub raw — no cost, no API key needed
 const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
 
 // Map face-api.js expressions → our emotion labels
@@ -21,14 +22,17 @@ interface EmotionDetectorProps {
   childId: string;
   activityId?: string;
   sessionId: string;
+  targetEmotion?: string;       // e.g. "happy" — celebrate when face matches
+  onEmotionMatch?: () => void;  // optional callback when match fires
 }
 
-export function EmotionDetector({ childId, activityId, sessionId }: EmotionDetectorProps) {
+export function EmotionDetector({ childId, activityId, sessionId, targetEmotion, onEmotionMatch }: EmotionDetectorProps) {
   const [showCamera, setShowCamera] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [currentEmotion, setCurrentEmotion] = useState('neutral');
   const [status, setStatus] = useState('');
   const [modelsLoaded, setModelsLoaded] = useState(false);
+  const [matched, setMatched] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -101,6 +105,21 @@ export function EmotionDetector({ childId, activityId, sessionId }: EmotionDetec
       setCurrentEmotion(emotion);
       setStatus(`✅ ${emotion} (${Math.round(topScore * 100)}%)`);
 
+      // Celebrate if detected emotion matches the activity's target emotion
+      if (targetEmotion && emotion === targetEmotion && !matched) {
+        setMatched(true);
+        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(`You're showing ${emotion}! Great job! ⭐`);
+          u.rate = 0.9; u.pitch = 1.3;
+          window.speechSynthesis.speak(u);
+        }
+        onEmotionMatch?.();
+        // Allow re-triggering after 10 seconds
+        setTimeout(() => setMatched(false), 10000);
+      }
+
       // Save to DB (no Claude needed — just store the result)
       await fetch('/api/emotion-detection', {
         method: 'POST',
@@ -157,6 +176,21 @@ export function EmotionDetector({ childId, activityId, sessionId }: EmotionDetec
 
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
+      {/* Match celebration banner */}
+      {matched && (
+        <div className="bg-yellow-400 text-white text-sm font-bold px-3 py-2 rounded-2xl shadow-lg flex items-center gap-1 animate-bounce">
+          <Star className="w-4 h-4 fill-white" />
+          You showed {targetEmotion}!
+        </div>
+      )}
+
+      {/* Target emotion hint */}
+      {isActive && targetEmotion && !matched && (
+        <div className="bg-purple-100 border border-purple-300 text-purple-700 text-xs px-2 py-1 rounded-xl text-right">
+          Show your <strong>{targetEmotion}</strong> face! 😄
+        </div>
+      )}
+
       {/* Status line */}
       {status && (
         <div className="bg-black/70 text-white text-xs px-2 py-1 rounded-xl max-w-52 text-right">
