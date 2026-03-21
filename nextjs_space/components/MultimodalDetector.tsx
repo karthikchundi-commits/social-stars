@@ -179,13 +179,26 @@ export function MultimodalDetector({
 
     try {
       const poses = await detector.estimatePoses(video);
-      if (!poses?.length) return;
+      if (!poses?.length) { setStatus('👤 No pose detected'); return; }
+
       const kp = poses[0].keypoints;
       const get = (name: string) => kp.find((k: any) => k.name === name);
-      const conf = (k: any) => (k?.score ?? 0) > 0.3;
 
-      const lw = get('left_wrist'), rw = get('right_wrist');
+      const lw = get('left_wrist'),  rw = get('right_wrist');
       const ls = get('left_shoulder'), rs = get('right_shoulder');
+
+      // Show debug info so we can see what MoveNet sees
+      const rwConf = Math.round((rw?.score ?? 0) * 100);
+      const rsConf = Math.round((rs?.score ?? 0) * 100);
+      const lwConf = Math.round((lw?.score ?? 0) * 100);
+      const lsConf = Math.round((ls?.score ?? 0) * 100);
+      setStatus(
+        `RW:${rwConf}% y${Math.round(rw?.y??0)} RS:${rsConf}% y${Math.round(rs?.y??0)} | ` +
+        `LW:${lwConf}% y${Math.round(lw?.y??0)} LS:${lsConf}% y${Math.round(ls?.y??0)}`
+      );
+
+      // Lower confidence threshold to 0.15 for better detection
+      const conf = (k: any) => (k?.score ?? 0) > 0.15;
 
       let action: DetectableAction | null = null;
       if ((conf(rw) && conf(rs) && rw.y < rs.y) || (conf(lw) && conf(ls) && lw.y < ls.y)) {
@@ -194,7 +207,7 @@ export function MultimodalDetector({
 
       if (action) {
         setDetectedAction(action);
-        setStatus(`✅ ${action.replace('_', ' ')}`);
+        setStatus(`✅ raise_hand detected!`);
         if (targetAction && action === targetAction && !actionMatchedRef.current) {
           actionMatchedRef.current = true;
           setActionMatched(true);
@@ -206,7 +219,9 @@ export function MultimodalDetector({
       } else {
         setDetectedAction(null);
       }
-    } catch { /* silent */ }
+    } catch (err: any) {
+      setStatus(`❌ Pose err: ${err.message}`);
+    }
   }, [targetAction, targetActionLabel]);
 
   const speak = (text: string) => {
