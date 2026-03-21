@@ -92,6 +92,11 @@ export function MultimodalDetector({
   useEffect(() => { onEmotionMatchRef.current = onEmotionMatch; }, [onEmotionMatch]);
   useEffect(() => { onActionMatchRef.current = onActionMatch; }, [onActionMatch]);
 
+  // Keep detection function refs fresh so intervals always call the latest
+  // version (which has the current targetEmotion/targetAction in its closure)
+  const runFaceRef = useRef<() => Promise<void>>(async () => {});
+  const runPoseRef = useRef<() => Promise<void>>(async () => {});
+
   // Reset match flags when targets change (e.g. story page changes)
   useEffect(() => {
     emotionMatchedRef.current = false;
@@ -221,6 +226,10 @@ export function MultimodalDetector({
     }
   }, [targetAction, targetActionLabel]);
 
+  // Keep refs pointing at the latest versions so setInterval always uses them
+  useEffect(() => { runFaceRef.current = runFaceDetection; }, [runFaceDetection]);
+  useEffect(() => { runPoseRef.current = runPoseDetection; }, [runPoseDetection]);
+
   const speak = (text: string) => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
@@ -255,18 +264,20 @@ export function MultimodalDetector({
         await videoRef.current.play().catch(() => {});
         setIsActive(true);
         setStatus('🔍 Detecting...');
-        // Run face detection every 5s, pose every 2s — same camera feed
-        setTimeout(runFaceDetection, 1500);
-        setTimeout(runPoseDetection, 1500);
-        faceIntervalRef.current = setInterval(runFaceDetection, 5000);
-        poseIntervalRef.current = setInterval(runPoseDetection, 2000);
+        // Run face detection every 5s, pose every 2s — same camera feed.
+        // Call via refs so intervals always use the latest callback even
+        // when targetEmotion/targetAction change as story pages advance.
+        setTimeout(() => runFaceRef.current(), 1500);
+        setTimeout(() => runPoseRef.current(), 1500);
+        faceIntervalRef.current = setInterval(() => runFaceRef.current(), 5000);
+        poseIntervalRef.current = setInterval(() => runPoseRef.current(), 2000);
       }, 200);
     } catch (err: any) {
       setStatus(`❌ Camera: ${err.message}`);
     }
   };
 
-  const runNow = () => { runFaceDetection(); runPoseDetection(); };
+  const runNow = () => { runFaceRef.current(); runPoseRef.current(); };
 
   const hasTarget = targetEmotion || targetAction;
 
