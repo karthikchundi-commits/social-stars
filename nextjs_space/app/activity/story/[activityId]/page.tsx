@@ -231,7 +231,7 @@ export default function StoryActivityPage() {
           {!page?.question && (
             <div className="flex justify-end">
               <button
-                onClick={handleNext}
+                onClick={() => handleNext()}
                 className="child-button bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 flex items-center gap-3"
               >
                 {currentPage < pages.length - 1 ? 'Next' : 'Finish'}
