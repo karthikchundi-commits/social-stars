@@ -22,9 +22,11 @@ export function useEmotionDetection({
   const streamRef = useRef<MediaStream | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  // Use a ref so captureAndAnalyze always reads the latest value without stale closure
+  const isActiveRef = useRef(false);
 
   const captureAndAnalyze = useCallback(async () => {
-    if (!videoRef.current || !isActive) return;
+    if (!videoRef.current || !isActiveRef.current) return;
 
     try {
       const canvas = canvasRef.current ?? document.createElement('canvas');
@@ -49,7 +51,7 @@ export function useEmotionDetection({
     } catch (error) {
       // Silent fail - don't disrupt child experience
     }
-  }, [childId, activityId, sessionId, isActive]);
+  }, [childId, activityId, sessionId]);
 
   const startDetection = useCallback(async () => {
     try {
@@ -60,11 +62,14 @@ export function useEmotionDetection({
         await videoRef.current.play();
       }
       setPermissionGranted(true);
+      isActiveRef.current = true;
       setIsActive(true);
+      // Capture immediately instead of waiting for first interval
+      setTimeout(captureAndAnalyze, 1500);
     } catch (error) {
       console.log('Camera not available');
     }
-  }, []);
+  }, [captureAndAnalyze]);
 
   const stopDetection = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -73,6 +78,7 @@ export function useEmotionDetection({
       streamRef.current = null;
     }
     if (videoRef.current) videoRef.current.srcObject = null;
+    isActiveRef.current = false;
     setIsActive(false);
   }, []);
 
