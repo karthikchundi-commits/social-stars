@@ -7,7 +7,7 @@ import Image from 'next/image';
 import confetti from 'canvas-confetti';
 import { EMOTION_IMAGES } from '@/lib/constants';
 import { useConfusionTracker } from '@/hooks/useConfusionTracker';
-import { EmotionDetector } from '@/components/EmotionDetector';
+import { MultimodalDetector } from '@/components/MultimodalDetector';
 import { CoachingHint } from '@/components/CoachingHint';
 
 export default function EmotionActivityPage() {
@@ -216,8 +216,7 @@ export default function EmotionActivityPage() {
         />
       )}
 
-      {/* Multimodal emotion detector — auto-completes when child shows the target emotion */}
-      <EmotionDetector
+      <MultimodalDetector
         childId={childId}
         activityId={activityId}
         sessionId={sessionId}

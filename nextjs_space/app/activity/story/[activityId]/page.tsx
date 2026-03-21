@@ -7,8 +7,8 @@ import Image from 'next/image';
 import confetti from 'canvas-confetti';
 import { STORY_IMAGES } from '@/lib/constants';
 import { useConfusionTracker } from '@/hooks/useConfusionTracker';
-import { EmotionDetector } from '@/components/EmotionDetector';
-import { ActionDetector, extractAction } from '@/components/ActionDetector';
+
+import { MultimodalDetector, extractAction } from '@/components/MultimodalDetector';
 import { CoachingHint } from '@/components/CoachingHint';
 
 interface StoryPage {
@@ -259,39 +259,33 @@ export default function StoryActivityPage() {
         />
       )}
 
-      <EmotionDetector
+      {/* Single camera handles both emotion + action detection */}
+      <MultimodalDetector
         childId={childId}
         activityId={activityId}
         sessionId={sessionId}
         targetEmotion={
-          // Only set target when current page has an emotion question with a correct answer
           page?.question && page?.correctAnswer !== undefined && page?.options
-            ? extractEmotion(page.options[page.correctAnswer])?? undefined
+            ? extractEmotion(page.options[page.correctAnswer]) ?? undefined
             : undefined
         }
-        onEmotionMatch={() => {
-          if (page?.correctAnswer !== undefined && selectedAnswer === null) {
-            handleAnswerSelect(page.correctAnswer);
-          }
-        }}
-      />
-
-      {/* Action detector — bottom-left, for behaviour questions like "raise your hand" */}
-      <ActionDetector
         targetAction={
           page?.question && page?.correctAnswer !== undefined && page?.options
             ? extractAction(page.options[page.correctAnswer]) ?? undefined
             : undefined
         }
-        targetLabel={
+        targetActionLabel={
           page?.correctAnswer !== undefined && page?.options
             ? page.options[page.correctAnswer]
             : undefined
         }
-        onActionMatch={() => {
-          if (page?.correctAnswer !== undefined && selectedAnswer === null) {
+        onEmotionMatch={() => {
+          if (page?.correctAnswer !== undefined && selectedAnswer === null)
             handleAnswerSelect(page.correctAnswer);
-          }
+        }}
+        onActionMatch={() => {
+          if (page?.correctAnswer !== undefined && selectedAnswer === null)
+            handleAnswerSelect(page.correctAnswer);
         }}
       />
     </div>

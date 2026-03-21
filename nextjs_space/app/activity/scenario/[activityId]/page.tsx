@@ -7,7 +7,7 @@ import Image from 'next/image';
 import confetti from 'canvas-confetti';
 import { SCENARIO_IMAGES } from '@/lib/constants';
 import { useConfusionTracker } from '@/hooks/useConfusionTracker';
-import { EmotionDetector } from '@/components/EmotionDetector';
+import { MultimodalDetector } from '@/components/MultimodalDetector';
 import { CoachingHint } from '@/components/CoachingHint';
 
 interface Choice {
@@ -226,7 +226,7 @@ export default function ScenarioActivityPage() {
         />
       )}
 
-      <EmotionDetector childId={childId} activityId={activityId} sessionId={sessionId} />
+      <MultimodalDetector childId={childId} activityId={activityId} sessionId={sessionId} />
     </div>
   );
 }
