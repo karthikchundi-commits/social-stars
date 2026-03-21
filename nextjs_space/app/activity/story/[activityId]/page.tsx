@@ -8,6 +8,7 @@ import confetti from 'canvas-confetti';
 import { STORY_IMAGES } from '@/lib/constants';
 import { useConfusionTracker } from '@/hooks/useConfusionTracker';
 import { EmotionDetector } from '@/components/EmotionDetector';
+import { ActionDetector, extractAction } from '@/components/ActionDetector';
 import { CoachingHint } from '@/components/CoachingHint';
 
 interface StoryPage {
@@ -269,7 +270,25 @@ export default function StoryActivityPage() {
             : undefined
         }
         onEmotionMatch={() => {
-          // Auto-select the correct answer when face matches the emotion
+          if (page?.correctAnswer !== undefined && selectedAnswer === null) {
+            handleAnswerSelect(page.correctAnswer);
+          }
+        }}
+      />
+
+      {/* Action detector — bottom-left, for behaviour questions like "raise your hand" */}
+      <ActionDetector
+        targetAction={
+          page?.question && page?.correctAnswer !== undefined && page?.options
+            ? extractAction(page.options[page.correctAnswer]) ?? undefined
+            : undefined
+        }
+        targetLabel={
+          page?.correctAnswer !== undefined && page?.options
+            ? page.options[page.correctAnswer]
+            : undefined
+        }
+        onActionMatch={() => {
           if (page?.correctAnswer !== undefined && selectedAnswer === null) {
             handleAnswerSelect(page.correctAnswer);
           }
