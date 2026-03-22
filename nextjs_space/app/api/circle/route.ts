@@ -1,23 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { pusher } from '@/lib/pusher';
+import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
 function generateCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
-  const bytes = require('crypto').randomBytes(6);
+  const bytes = crypto.randomBytes(6);
   for (let i = 0; i < 6; i++) code += chars[bytes[i] % chars.length];
   return code;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { activityId, hostName } = await req.json();
     if (!activityId) return NextResponse.json({ error: 'activityId required' }, { status: 400 });
