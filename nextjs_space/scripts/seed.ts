@@ -249,74 +249,147 @@ async function main() {
     },
     {
       title: 'Circle Time at School',
-      description: 'Learning to listen, share feelings, and be kind in class',
+      description: 'A full day of feelings, choices and friendship with Sam and his class',
       type: 'story',
       category: 'classroom',
       imageUrl: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
       content: JSON.stringify({
         pages: [
-          // Page 1 — scene setter
+          // ── Part 1: Morning Arrival ───────────────────────────────────────────
+          // Page 1 — scene
           {
-            text: 'It was Monday morning at Maple Leaf School. Sam walked into class and sat on the colourful rug. Circle time was about to begin!',
+            text: 'It was Monday morning at Maple Leaf School. Sam put on his backpack, kissed his mum goodbye, and walked through the big blue doors. Today was going to be a great day!',
             image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
           },
-          // Page 2 — emotion: happy (camera detects happy face)
+          // Page 2 — emotion: excited/happy
           {
-            text: 'The teacher smiled at everyone. "Good morning, friends! How is everyone feeling today?" Sam loved school and had a big smile on his face.',
+            text: 'Sam stepped into the classroom. The colourful rug was laid out in the middle of the room. His friends were already sitting down. He LOVED circle time!',
             image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
-            question: 'How does Sam feel this morning?',
-            options: ['Sam feels happy and excited to be at school!', 'Sam feels sad and wants to go home.', 'Sam feels scared and worried.'],
+            question: 'How does Sam feel walking into circle time?',
+            options: ['He feels happy and excited — circle time is his favourite!', 'He feels sad and tired and wants to sleep.', 'He feels angry because he did not want to come to school.'],
             correctAnswer: 0,
           },
-          // Page 3 — action: raise_hand
+          // Page 3 — action: raise_hand (good morning question)
           {
-            text: 'The teacher asked, "Who can tell me what day it is today?" Sam knew the answer — it was Monday! He really wanted to tell the class.',
+            text: '"Good morning everyone!" said the teacher, Miss Kim. "Who can tell me what the weather is like outside today?" Sam had looked out the window — it was sunny!',
             image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
-            question: 'Sam knows the answer! What should he do?',
-            options: ['Raise your hand and wait for the teacher', 'Shout the answer across the room', 'Look at the floor and say nothing'],
+            question: 'Sam wants to answer. What is the right thing to do?',
+            options: ['Raise your hand and wait for Miss Kim to call your name', 'Shout "SUNNY!" as loudly as possible', 'Nudge the person next to you and whisper the answer'],
             correctAnswer: 0,
           },
-          // Page 4 — scene (no question)
+          // Page 4 — scene (reward for raising hand)
           {
-            text: '"Monday!" said Sam proudly when the teacher called his name. "Well done, Sam!" said the teacher. Sam felt so proud. The whole class clapped!',
+            text: 'Sam raised his hand and waited patiently. Miss Kim smiled and called on him. "It\'s sunny today!" said Sam. "Perfect answer, Sam — a gold star for you!" The class cheered.',
+            image: 'https://cdn.abacus.ai/images/97cca0a3-bcab-4e6c-b861-9585254062db.jpg',
+          },
+          // ── Part 2: Show and Tell ─────────────────────────────────────────────
+          // Page 5 — emotion: surprised
+          {
+            text: 'Miss Kim clapped her hands. "Class — today is a very special day! It\'s Show and Tell!" She held up a mystery box with a big question mark on it. Nobody knew what was inside!',
+            image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
+            question: 'How does Sam feel when he hears the big surprise?',
+            options: ['Surprised and excited — he did not expect that at all!', 'Bored and sleepy — he has seen it all before.', 'Scared and upset — surprises are never good.'],
+            correctAnswer: 0,
+          },
+          // Page 6 — scenario: Sam forgot his item
+          {
+            text: 'Sam\'s tummy did a little flip. He had completely forgotten to bring something for Show and Tell! His special toy was still sitting on his bed at home.',
+            image: 'https://cdn.abacus.ai/images/b0785242-a22c-4999-950c-4845cddfca02.jpg',
+            question: 'Sam forgot his Show and Tell item. What is the best thing to do?',
+            options: ['Tell Miss Kim honestly and ask if he can share a story instead', 'Pretend he never forgot and sit quietly hoping nobody notices', 'Cry loudly and refuse to take part'],
+            correctAnswer: 0,
+          },
+          // Page 7 — action: raise_hand (to tell teacher)
+          {
+            text: 'Sam decided to be honest. He wanted to let Miss Kim know before it was his turn so she would not be confused. He knew exactly what he had to do.',
+            image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
+            question: 'How does Sam get Miss Kim\'s attention politely?',
+            options: ['Raise your hand and wait quietly until she looks over', 'Walk straight up to her desk while she is talking to someone else', 'Tug on her sleeve over and over again'],
+            correctAnswer: 0,
+          },
+          // Page 8 — scene
+          {
+            text: '"Miss Kim, I forgot my toy at home," Sam whispered. "That\'s okay, Sam — you can tell us your favourite story about it!" Sam took a big breath and felt much better.',
             image: 'https://cdn.abacus.ai/images/a694cc55-9041-4e3a-b6f1-8b18cb56ef73.jpg',
           },
-          // Page 5 — scenario choice (kind behaviour)
+          // ── Part 3: A New Friend Arrives ─────────────────────────────────────
+          // Page 9 — scene
           {
-            text: 'Next, the teacher asked everyone to share one thing they did at the weekend. Sam\'s friend Maya looked nervous — it was nearly her turn to speak!',
+            text: 'Just as Show and Tell was finishing, the classroom door opened slowly. A girl with a purple backpack peeked in. It was her very first day at Maple Leaf School.',
             image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
-            question: 'Maya looks nervous. What is the kind thing to do?',
-            options: ['Give Maya a thumbs up and a smile to encourage her', 'Tell her she is doing it wrong', 'Talk loudly while she is speaking'],
-            correctAnswer: 0,
           },
-          // Page 6 — emotion: scared (camera detects scared face)
+          // Page 10 — emotion: scared
           {
-            text: 'Then a brand new student walked in. She had never been to this school before. She stood at the door and looked all around the room.',
+            text: 'The girl\'s name was Lily. She stood in the doorway looking at all the new faces staring back at her. Her hands were shaking and she did not move.',
             image: 'https://cdn.abacus.ai/images/b0785242-a22c-4999-950c-4845cddfca02.jpg',
-            question: 'How is the new student feeling?',
-            options: ['She feels scared and worried about being somewhere new.', 'She feels happy and excited to jump in.', 'She feels angry and frustrated.'],
+            question: 'How is Lily feeling right now?',
+            options: ['Scared and worried — everything is new and she does not know anyone', 'Happy and confident — she loves meeting strangers', 'Angry and frustrated — she did not want to come to school'],
             correctAnswer: 0,
           },
-          // Page 7 — action: raise_hand (to offer to help)
+          // Page 11 — scenario: how to welcome Lily
           {
-            text: 'The teacher said, "Who would like to be a buddy and help our new friend find a seat?" Sam really wanted to help her feel welcome.',
+            text: 'Miss Kim said to the class, "Let\'s all make Lily feel welcome!" Sam looked over at Lily. He remembered how nervous HE felt on his first day last year.',
             image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
-            question: 'Sam wants to volunteer to help. What should he do?',
-            options: ['Raise your hand to show the teacher you want to help', 'Push in front of everyone to get there first', 'Wait and do nothing'],
+            question: 'What is the kindest thing Sam\'s class can do for Lily?',
+            options: ['Smile warmly and say "Welcome, Lily! You can sit with us!"', 'Stare at her in silence and wait for her to figure things out', 'Laugh and point because she looks nervous'],
             correctAnswer: 0,
           },
-          // Page 8 — emotion: happy (end of story)
+          // Page 12 — action: raise_hand (volunteer as buddy)
           {
-            text: 'Sam showed the new student to a seat and whispered, "Don\'t worry, circle time is really fun!" She smiled back. By the end of class they were already friends.',
-            image: 'https://cdn.abacus.ai/images/ce62a709-3173-4af2-bb1d-966a5b6cabb8.jpg',
-            question: 'How do Sam and his new friend feel at the end of circle time?',
-            options: ['Happy and proud — making a friend feels wonderful!', 'Sad because the day is over.', 'Angry because class was too long.'],
+            text: '"Who would like to be Lily\'s special buddy today and show her around?" asked Miss Kim. Sam\'s heart jumped. He really wanted to help Lily feel safe and happy.',
+            image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
+            question: 'Sam wants to volunteer to be Lily\'s buddy. What should he do?',
+            options: ['Raise your hand proudly to show Miss Kim you want to help', 'Run to the front of the room before anyone else can get there', 'Look away and hope someone else does it'],
             correctAnswer: 0,
+          },
+          // Page 13 — scene
+          {
+            text: '"Thank you, Sam!" said Miss Kim. Sam walked over to Lily and said, "Hi! I\'m Sam. Don\'t worry — circle time is really fun. You can sit next to me." Lily\'s shoulders relaxed.',
+            image: 'https://cdn.abacus.ai/images/ce62a709-3173-4af2-bb1d-966a5b6cabb8.jpg',
+          },
+          // ── Part 4: Paint Activity ────────────────────────────────────────────
+          // Page 14 — scenario: Maya spills paint
+          {
+            text: 'After circle time the class did a painting activity. Sam\'s friend Maya reached over for the blue paint and — whoops! — the whole pot tipped and splashed across the table.',
+            image: 'https://cdn.abacus.ai/images/9924338c-9cb3-482e-bf9e-de1970eef82d.jpg',
+            question: 'Maya spilled the paint by accident. What should Sam do?',
+            options: ['Say "It\'s okay! Accidents happen — let\'s clean it up together!"', 'Point at Maya and shout "Maya made a mess!" to the whole class', 'Ignore it completely and keep painting'],
+            correctAnswer: 0,
+          },
+          // Page 15 — emotion: sad (Maya embarrassed)
+          {
+            text: 'Maya\'s cheeks went bright red. She put her hands over her face. She felt terrible about making a mess in front of everyone, especially Lily on her first day.',
+            image: 'https://cdn.abacus.ai/images/449d23ac-d94d-4502-8095-e1d985ecb1bd.jpg',
+            question: 'How is Maya feeling right now?',
+            options: ['Sad and embarrassed — she wishes the floor would swallow her up', 'Happy and proud — she thinks spilling paint is funny', 'Surprised and excited — she loves making messes'],
+            correctAnswer: 0,
+          },
+          // Page 16 — scenario: what to say
+          {
+            text: 'Sam picked up the cloth from the sink and brought it over to Maya. He wanted to say something to make her feel better. He thought carefully about the right words.',
+            image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
+            question: 'What is the best thing Sam can say to Maya?',
+            options: ['"Don\'t worry, Maya — everyone has accidents. You are still my best friend!"', '"You are so clumsy. You always do things like this."', '"I am not helping you — you should have been more careful."'],
+            correctAnswer: 0,
+          },
+          // ── Part 5: End of Day ────────────────────────────────────────────────
+          // Page 17 — emotion: happy (everyone feels better)
+          {
+            text: 'Maya dried her eyes and smiled at Sam. Lily helped wipe down the table too. Miss Kim told the class she was proud of everyone for working as a team.',
+            image: 'https://cdn.abacus.ai/images/a694cc55-9041-4e3a-b6f1-8b18cb56ef73.jpg',
+            question: 'How does Sam feel seeing his friends smile again?',
+            options: ['Happy and proud — helping others feels really good!', 'Bored — he just wanted to finish his painting', 'Angry — it took up too much of his time'],
+            correctAnswer: 0,
+          },
+          // Page 18 — scene (finale)
+          {
+            text: 'At home time Sam, Maya, and Lily walked out together. "Same time tomorrow?" said Sam. "Same time tomorrow!" they both said. Sam smiled all the way home. What a wonderful day.',
+            image: 'https://cdn.abacus.ai/images/97cca0a3-bcab-4e6c-b861-9585254062db.jpg',
           },
         ],
       }),
-      difficulty: 2,
-      starsReward: 5,
+      difficulty: 3,
+      starsReward: 8,
     },
     {
       title: 'The Dragon Who Felt Angry',
