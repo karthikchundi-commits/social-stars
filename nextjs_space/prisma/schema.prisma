@@ -99,6 +99,7 @@ model Activity {
   createdAt           DateTime             @default(now())
   completedActivities CompletedActivity[]
   assignments         ActivityAssignment[]
+  liveSessions        LiveSession[]        @relation("LiveSessions")
 }
 
 model CompletedActivity {
@@ -240,4 +241,31 @@ model LearningAdaptation {
   confusionAreas  String       @default("{}")
   totalHints      Int          @default(0)
   lastUpdated     DateTime     @updatedAt
+}
+
+model LiveSession {
+  id           String           @id @default(cuid())
+  joinCode     String           @unique
+  activityId   String
+  activity     Activity         @relation("LiveSessions", fields: [activityId], references: [id], onDelete: Cascade)
+  status       String           @default("waiting")
+  currentPage  Int              @default(0)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  participants LiveParticipant[]
+}
+
+model LiveParticipant {
+  id             String      @id @default(cuid())
+  sessionId      String
+  session        LiveSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  displayName    String
+  childId        String?
+  avatarColor    String      @default("#818CF8")
+  isHost         Boolean     @default(false)
+  currentEmotion String      @default("neutral")
+  joinedAt       DateTime    @default(now())
+  lastSeen       DateTime    @default(now())
+
+  @@index([sessionId])
 }
