@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
   Copy, Check, Users, Star, Award,
-  Plus, Trash2, BookOpen, ClipboardList, Quote, LogOut, Sparkles, TrendingUp, Calendar, PenLine,
+  Plus, Trash2, BookOpen, ClipboardList, Quote, LogOut, Sparkles, TrendingUp, Calendar, PenLine, Play,
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 
@@ -136,6 +136,12 @@ export default function TherapistPage() {
           </div>
           <div className="flex gap-3 flex-wrap">
             <button
+              onClick={() => router.push('/circle/host')}
+              className="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
+            >
+              <Play className="w-5 h-5" /> Live Circle Time
+            </button>
+            <button
               onClick={() => router.push('/therapist/create')}
               className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
             >
@@ -196,6 +202,26 @@ export default function TherapistPage() {
               {copied ? 'Copied!' : 'Copy'}
             </button>
           </div>
+        </div>
+
+        {/* Live Circle Time Banner */}
+        <div className="bg-gradient-to-r from-pink-500 to-rose-500 rounded-3xl shadow-xl p-6 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <Users className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-white">Live Circle Time</h2>
+              <p className="text-pink-100 text-sm mt-0.5">Start a live group story session — children join with a code on their device</p>
+            </div>
+          </div>
+          <button
+            onClick={() => router.push('/circle/host')}
+            className="px-6 py-3 bg-white text-pink-600 font-bold rounded-2xl hover:bg-pink-50 transition-all flex items-center gap-2 shadow-md flex-shrink-0"
+          >
+            <Play className="w-5 h-5" />
+            Start Session
+          </button>
         </div>
 
         {/* Stats */}
