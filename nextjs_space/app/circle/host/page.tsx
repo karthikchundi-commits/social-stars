@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Play } from 'lucide-react';
 
 interface Activity {
@@ -12,13 +13,15 @@ interface Activity {
 
 export default function CircleHostPage() {
   const router = useRouter();
+  const { data: authSession } = useSession();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [selectedId, setSelectedId] = useState('');
-  const [hostName, setHostName] = useState('Teacher');
+  const [hostName, setHostName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (authSession?.user?.name) setHostName(authSession.user.name);
     fetch('/api/activities')
       .then(r => r.json())
       .then(d => {
@@ -26,16 +29,17 @@ export default function CircleHostPage() {
         setActivities(stories);
         if (stories.length > 0) setSelectedId(stories[0].id);
       });
-  }, []);
+  }, [authSession]);
 
   const handleCreate = async () => {
     if (!selectedId) { setError('Please select a story.'); return; }
     setLoading(true); setError('');
     try {
+      const therapistId = (authSession?.user as any)?.id;
       const res = await fetch('/api/circle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ activityId: selectedId, hostName }),
+        body: JSON.stringify({ activityId: selectedId, hostName, therapistId }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? 'Could not create session.'); return; }

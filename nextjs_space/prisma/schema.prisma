@@ -62,6 +62,8 @@ model User {
   enrollments      ProspectEnrollment[] @relation("TherapistEnrollments")
   therapyPlans     TherapyPlan[]        @relation("TherapistPlans")
   therapistNotes   TherapistNote[]      @relation("TherapistNotes")
+  hostedSessions   LiveSession[]        @relation("TherapistSessions")
+  circleSchedules  CircleTimeSchedule[] @relation("TherapistSchedules")
 }
 
 model ChildProfile {
@@ -248,11 +250,27 @@ model LiveSession {
   joinCode     String           @unique
   activityId   String
   activity     Activity         @relation("LiveSessions", fields: [activityId], references: [id], onDelete: Cascade)
+  therapistId  String?
+  therapist    User?            @relation("TherapistSessions", fields: [therapistId], references: [id], onDelete: SetNull)
   status       String           @default("waiting")
   currentPage  Int              @default(0)
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
   participants LiveParticipant[]
+}
+
+model CircleTimeSchedule {
+  id          String   @id @default(cuid())
+  therapistId String
+  therapist   User     @relation("TherapistSchedules", fields: [therapistId], references: [id], onDelete: Cascade)
+  dayOfWeek   Int      // 0=Sun 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat
+  timeOfDay   String   // "14:30" HH:mm
+  title       String
+  activityId  String?
+  notes       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model LiveParticipant {

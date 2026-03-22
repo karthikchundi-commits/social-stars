@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import {
   TrendingUp, Award, Activity, Flame, Heart, MessageSquare,
   Plus, LogOut, Play, Star, BarChart2, Sparkles, Brain,
-  CalendarDays, UserCheck, Search, Users,
+  CalendarDays, UserCheck, Search, Users, Clock, Radio,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -15,6 +15,7 @@ import {
 import { signOut } from 'next-auth/react';
 import { AVATAR_COLORS } from '@/lib/constants';
 import { ConfusionMapChart } from '@/components/ConfusionMapChart';
+import { getPusherClient } from '@/lib/pusherClient';
 
 interface Child {
   id: string;
@@ -65,6 +66,23 @@ interface MoodCheckIn {
   id: string;
   mood: string;
   checkedAt: string;
+}
+
+interface LiveSessionInfo {
+  id: string;
+  joinCode: string;
+  activityTitle: string;
+  status: string;
+  therapistName: string;
+}
+
+interface ScheduleEntry {
+  id: string;
+  dayOfWeek: number;
+  timeOfDay: string;
+  title: string;
+  activityId?: string | null;
+  notes?: string | null;
 }
 
 interface ChildProgress {
@@ -134,6 +152,11 @@ export default function ParentDashboard() {
   const [confusionData, setConfusionData] = useState<any>(null);
   const [adaptationData, setAdaptationData] = useState<any>(null);
 
+  // Circle Time state
+  const [liveSession, setLiveSession] = useState<LiveSessionInfo | null>(null);
+  const [circleSchedule, setCircleSchedule] = useState<ScheduleEntry[]>([]);
+  const [linkedTherapistId, setLinkedTherapistId] = useState<string | null>(null);
+
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/auth/login');
     if (status === 'authenticated') fetchDashboardData();
@@ -177,6 +200,9 @@ export default function ParentDashboard() {
       if (childrenList.length > 0) {
         fetchConfusionData(childrenList[0].id);
       }
+
+      // Fetch Circle Time data
+      fetchCircleTimeData();
 
       // Fetch therapist notes for each child
       const notesResults = await Promise.all(
@@ -287,6 +313,47 @@ export default function ParentDashboard() {
       // Silent fail
     }
   };
+
+  const fetchCircleTimeData = async () => {
+    try {
+      // Get live session (if any)
+      const liveRes = await fetch('/api/circle/active');
+      const liveData = await liveRes.json();
+      if (liveData.session) setLiveSession(liveData.session);
+
+      // Get linked therapist then their schedule
+      const therapistRes = await fetch('/api/circle/therapist');
+      const therapistData = await therapistRes.json();
+      if (therapistData.therapist) {
+        setLinkedTherapistId(therapistData.therapist.id);
+        const schedRes = await fetch(`/api/circle/schedule?therapistId=${therapistData.therapist.id}`);
+        const schedData = await schedRes.json();
+        setCircleSchedule(schedData.schedule ?? []);
+      }
+    } catch {
+      // Silent fail
+    }
+  };
+
+  // Subscribe to Pusher for live session notifications
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+    const userId = (session?.user as any)?.id;
+    if (!userId) return;
+
+    let channel: any;
+    getPusherClient().then((client) => {
+      if (!client) return;
+      channel = client.subscribe(`parent-${userId}`);
+      channel.bind('circle:live', (data: LiveSessionInfo) => {
+        setLiveSession(data);
+      });
+    });
+
+    return () => {
+      if (channel) channel.unbind_all();
+    };
+  }, [status, session]);
 
   const openAiModal = (type: 'insights' | 'plan') => {
     setAiModalType(type);
@@ -517,6 +584,66 @@ export default function ParentDashboard() {
               <Star className="w-8 h-8 mb-2" />
               <div className="text-3xl font-bold">{children.length}</div>
               <div className="text-purple-100 text-sm">Children</div>
+            </div>
+          </div>
+        )}
+
+        {/* Live Circle Time Banner */}
+        {liveSession && (
+          <div className="bg-gradient-to-r from-pink-500 to-rose-500 rounded-3xl shadow-xl p-6 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 animate-pulse-slow">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0">
+                <Radio className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="bg-white text-pink-600 text-xs font-black px-2 py-0.5 rounded-full uppercase tracking-wide">Live Now</span>
+                </div>
+                <h2 className="text-xl font-black text-white">{liveSession.activityTitle}</h2>
+                <p className="text-pink-100 text-sm mt-0.5">
+                  {liveSession.therapistName} has started Circle Time — join now!
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => router.push(`/circle/join?code=${liveSession.joinCode}`)}
+              className="px-6 py-3 bg-white text-pink-600 font-bold rounded-2xl hover:bg-pink-50 transition-all flex items-center gap-2 shadow-md flex-shrink-0"
+            >
+              <Play className="w-5 h-5" />
+              Join Now ({liveSession.joinCode})
+            </button>
+          </div>
+        )}
+
+        {/* Weekly Circle Time Schedule */}
+        {circleSchedule.length > 0 && (
+          <div className="bg-white rounded-3xl shadow-xl p-8 mb-8">
+            <h2 className="text-2xl font-bold text-gray-700 mb-5 flex items-center gap-2">
+              <Clock className="w-6 h-6 text-pink-500" /> Weekly Circle Time Schedule
+            </h2>
+            <p className="text-sm text-gray-500 mb-4">Recurring sessions set by your therapist — join from the Live banner when they go live.</p>
+            <div className="space-y-2">
+              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, idx) => {
+                const dayNum = idx + 1 === 7 ? 0 : idx + 1;
+                const entries = circleSchedule.filter((e) => e.dayOfWeek === dayNum);
+                if (entries.length === 0) return null;
+                return (
+                  <div key={day}>
+                    <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{day}</div>
+                    {entries.map((entry) => (
+                      <div key={entry.id} className="flex items-center justify-between bg-pink-50 border border-pink-100 rounded-2xl px-4 py-3 mb-1">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-gray-800">{entry.timeOfDay}</span>
+                            <span className="text-sm font-semibold text-purple-700">{entry.title}</span>
+                          </div>
+                          {entry.notes && <p className="text-xs text-gray-400 mt-0.5">{entry.notes}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

@@ -8,6 +8,7 @@ import {
   Plus, Trash2, BookOpen, ClipboardList, Quote, LogOut, Sparkles, TrendingUp, Calendar, PenLine, Play,
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
+import { ScheduleManager } from '@/components/circle/ScheduleManager';
 
 interface AssignedActivity {
   id: string;
@@ -43,6 +44,15 @@ interface Activity {
   type: string;
 }
 
+interface ScheduleEntry {
+  id: string;
+  dayOfWeek: number;
+  timeOfDay: string;
+  title: string;
+  activityId?: string | null;
+  notes?: string | null;
+}
+
 const MOOD_EMOJI: Record<string, string> = {
   happy: '😊', excited: '🤩', calm: '😌', tired: '😴',
   sad: '😢', anxious: '😟', angry: '😠', silly: '😜',
@@ -61,6 +71,7 @@ export default function TherapistPage() {
   const [assignActivityId, setAssignActivityId] = useState('');
   const [assignNote, setAssignNote] = useState('');
   const [assigning, setAssigning] = useState(false);
+  const [schedule, setSchedule] = useState<ScheduleEntry[]>([]);
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/auth/login');
@@ -82,7 +93,30 @@ export default function TherapistPage() {
     setInviteCode(inviteData.inviteCode ?? '');
     setClients(clientsData.clients ?? []);
     setActivities(activitiesData.activities ?? []);
+
+    const therapistId = (session?.user as any)?.id;
+    if (therapistId) {
+      const scheduleRes = await fetch(`/api/circle/schedule?therapistId=${therapistId}`);
+      const scheduleData = await scheduleRes.json();
+      setSchedule(scheduleData.schedule ?? []);
+    }
+
     setLoading(false);
+  };
+
+  const handleScheduleAdd = async (entry: Omit<ScheduleEntry, 'id'>) => {
+    const res = await fetch('/api/circle/schedule', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(entry),
+    });
+    const data = await res.json();
+    if (data.entry) setSchedule((prev) => [...prev, data.entry]);
+  };
+
+  const handleScheduleDelete = async (id: string) => {
+    await fetch(`/api/circle/schedule?id=${id}`, { method: 'DELETE' });
+    setSchedule((prev) => prev.filter((e) => e.id !== id));
   };
 
   const copyCode = () => {
@@ -222,6 +256,16 @@ export default function TherapistPage() {
             <Play className="w-5 h-5" />
             Start Session
           </button>
+        </div>
+
+        {/* Weekly Schedule Manager */}
+        <div className="bg-white rounded-3xl shadow-xl p-8 mb-8">
+          <ScheduleManager
+            schedule={schedule}
+            activities={activities}
+            onAdd={handleScheduleAdd}
+            onDelete={handleScheduleDelete}
+          />
         </div>
 
         {/* Stats */}

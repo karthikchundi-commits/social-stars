@@ -15,8 +15,7 @@ function generateCode(): string {
 
 export async function POST(req: NextRequest) {
   try {
-
-    const { activityId, hostName } = await req.json();
+    const { activityId, hostName, therapistId } = await req.json();
     if (!activityId) return NextResponse.json({ error: 'activityId required' }, { status: 400 });
 
     const activity = await prisma.activity.findUnique({ where: { id: activityId } });
@@ -36,6 +35,7 @@ export async function POST(req: NextRequest) {
       data: {
         joinCode,
         activityId,
+        therapistId: therapistId || null,
         status: 'waiting',
         currentPage: 0,
       },
@@ -50,14 +50,19 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    await pusher.trigger(`circle-${joinCode}`, 'participant:joined', {
-      id: host.id,
-      displayName: host.displayName,
-      avatarColor: host.avatarColor,
-      isHost: true,
-      currentEmotion: 'neutral',
-      childId: null,
-    });
+    // Notify all parents linked to this therapist via their personal Pusher channel
+    if (therapistId) {
+      const links = await prisma.therapistFamily.findMany({ where: { therapistId } });
+      const notifications = links.map(link =>
+        pusher.trigger(`parent-${link.parentId}`, 'circle:live', {
+          sessionId: liveSession.id,
+          joinCode,
+          activityTitle: activity.title,
+          therapistName: hostName || 'Your Therapist',
+        }).catch(() => {})
+      );
+      await Promise.all(notifications);
+    }
 
     return NextResponse.json({
       sessionId: liveSession.id,
