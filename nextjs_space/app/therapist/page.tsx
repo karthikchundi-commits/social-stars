@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { ScheduleManager } from '@/components/circle/ScheduleManager';
+import { ProgressReportModal } from '@/components/ProgressReportModal';
+import { EmotionVelocityChart } from '@/components/EmotionVelocityChart';
 
 interface AssignedActivity {
   id: string;
@@ -366,9 +368,13 @@ export default function TherapistPage() {
                             <div className="text-sm text-gray-500">Age {child.age}</div>
                           </div>
                         </div>
-                        <button onClick={() => openAssign(child)} className="p-2 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 transition-all">
-                          <Plus className="w-5 h-5" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          {/* PC-14: Progress Report */}
+                          <ProgressReportModal childId={child.id} childName={child.name} />
+                          <button onClick={() => openAssign(child)} className="p-2 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 transition-all">
+                            <Plus className="w-5 h-5" />
+                          </button>
+                        </div>
                       </div>
 
                       <div className="flex gap-4 mb-3 text-sm">
@@ -382,6 +388,12 @@ export default function TherapistPage() {
                           <div className="flex gap-1">{child.recentMoods.map((m, i) => <span key={i} className="text-lg">{MOOD_EMOJI[m] ?? '😐'}</span>)}</div>
                         </div>
                       )}
+
+                      {/* PC-08: Emotion Transition Velocity */}
+                      <div className="mb-3">
+                        <div className="text-xs text-gray-500 mb-2">Emotion velocity:</div>
+                        <EmotionVelocityChart childId={child.id} />
+                      </div>
 
                       {child.assignedActivities.length > 0 && (
                         <div>

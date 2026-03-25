@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useReducer, useRef, useCallback } from 'react';
+import { useEffect, useReducer, useRef, useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import confetti from 'canvas-confetti';
 import { CircleParticipant, CircleSessionState, AnsweredPayload } from '@/lib/circleTime';
@@ -38,7 +38,9 @@ type Action =
   | { type: 'ANSWER_RECEIVED'; answer: AnsweredPayload }
   | { type: 'MY_ANSWER'; answerIndex: number }
   | { type: 'ADVANCING'; value: boolean }
-  | { type: 'STARTING'; value: boolean };
+  | { type: 'STARTING'; value: boolean }
+  // PC-13: activity push
+  | { type: 'ACTIVITY_PUSHED'; pages: StoryPage[]; activityTitle: string };
 
 function reducer(state: ClientState, action: Action): ClientState {
   switch (action.type) {
@@ -72,6 +74,15 @@ function reducer(state: ClientState, action: Action): ClientState {
       return { ...state, advancing: action.value };
     case 'STARTING':
       return { ...state, starting: action.value };
+    case 'ACTIVITY_PUSHED':
+      return {
+        ...state,
+        pages: action.pages,
+        activityTitle: action.activityTitle,
+        session: { ...state.session, currentPage: 0 },
+        answers: [],
+        myAnswer: null,
+      };
     default:
       return state;
   }
@@ -88,6 +99,16 @@ interface Props {
 export function CircleSessionClient({ initialSession, activityContent, activityTitle, participantId, isHost }: Props) {
   const router = useRouter();
   const pages: StoryPage[] = JSON.parse(activityContent)?.pages ?? [];
+
+  // PC-13: load available activities for host push picker
+  const [availableActivities, setAvailableActivities] = useState<{ id: string; title: string; type: string }[]>([]);
+  const [pushedBanner, setPushedBanner] = useState<string | null>(null); // activity title for participant banner
+
+  useEffect(() => {
+    if (isHost) {
+      fetch('/api/activities').then(r => r.json()).then(d => setAvailableActivities(d.activities ?? []));
+    }
+  }, [isHost]);
 
   const [state, dispatch] = useReducer(reducer, {
     session: initialSession,
@@ -136,6 +157,12 @@ export function CircleSessionClient({ initialSession, activityContent, activityT
         if (data.isCorrect) {
           confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
         }
+      });
+      // PC-13: therapist pushed a new activity — switch all devices immediately
+      channel.bind('host:push-activity', (data: { activityId: string; activityTitle: string; activityType: string; activityContent: string }) => {
+        const newPages: StoryPage[] = JSON.parse(data.activityContent)?.pages ?? [];
+        dispatch({ type: 'ACTIVITY_PUSHED', pages: newPages, activityTitle: data.activityTitle });
+        if (!isHost) setPushedBanner(data.activityTitle);
       });
     };
     subscribe();
@@ -208,7 +235,7 @@ export function CircleSessionClient({ initialSession, activityContent, activityT
     }
   }, [state.myAnswer, state.session.currentPage, state.session.id, pages, participantId, myParticipant]);
 
-  const currentPage = pages[state.session.currentPage];
+  const currentPage = state.pages[state.session.currentPage];
 
   if (state.session.status === 'ended') {
     return (
@@ -238,9 +265,16 @@ export function CircleSessionClient({ initialSession, activityContent, activityT
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 pb-24">
+      {/* PC-13: pushed activity banner for participants */}
+      {pushedBanner && (
+        <div className="fixed top-0 left-0 right-0 bg-yellow-400 text-yellow-900 text-center py-2 font-bold text-sm z-50 flex items-center justify-center gap-2">
+          <span>⚡ Therapist switched to: {pushedBanner}</span>
+          <button onClick={() => setPushedBanner(null)} className="ml-4 text-yellow-700 hover:text-yellow-900">✕</button>
+        </div>
+      )}
       <div className="max-w-2xl mx-auto p-4">
         <div className="text-center mb-4">
-          <h1 className="text-2xl font-black text-purple-700">{activityTitle}</h1>
+          <h1 className="text-2xl font-black text-purple-700">{state.activityTitle}</h1>
         </div>
 
         <div className="mb-4">
@@ -251,7 +285,7 @@ export function CircleSessionClient({ initialSession, activityContent, activityT
           <StoryPageView
             page={currentPage}
             pageIndex={state.session.currentPage}
-            totalPages={pages.length}
+            totalPages={state.pages.length}
             myAnswer={state.myAnswer}
             onAnswer={handleAnswer}
             answers={state.answers}
@@ -268,10 +302,13 @@ export function CircleSessionClient({ initialSession, activityContent, activityT
       {isHost && (
         <HostControls
           currentPage={state.session.currentPage}
-          totalPages={pages.length}
+          totalPages={state.pages.length}
           onAdvance={handleAdvance}
           onEnd={handleEnd}
           advancing={state.advancing}
+          sessionId={state.session.id}
+          participantId={participantId}
+          activities={availableActivities}
         />
       )}
     </div>

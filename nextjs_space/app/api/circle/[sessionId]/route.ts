@@ -98,6 +98,32 @@ export async function PATCH(req: NextRequest, { params }: { params: { sessionId:
       return NextResponse.json({ ok: true });
     }
 
+    // PC-13: Therapist-directed synchronised activity push
+    if (action === 'push-activity') {
+      const participant = await prisma.liveParticipant.findUnique({ where: { id: participantId } });
+      if (!participant?.isHost) return NextResponse.json({ error: 'Only host can push activities' }, { status: 403 });
+
+      const { activityId: pushActivityId } = body;
+      if (!pushActivityId) return NextResponse.json({ error: 'activityId required' }, { status: 400 });
+
+      const activity = await prisma.activity.findUnique({ where: { id: pushActivityId } });
+      if (!activity) return NextResponse.json({ error: 'Activity not found' }, { status: 404 });
+
+      // Update session to new activity and reset page
+      await prisma.liveSession.update({
+        where: { id: params.sessionId },
+        data: { activityId: pushActivityId, currentPage: 0 },
+      });
+
+      await pusher.trigger(channel, 'host:push-activity', {
+        activityId: pushActivityId,
+        activityTitle: activity.title,
+        activityType: activity.type,
+        activityContent: activity.content,
+      });
+      return NextResponse.json({ ok: true });
+    }
+
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

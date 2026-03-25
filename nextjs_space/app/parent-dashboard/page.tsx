@@ -16,6 +16,7 @@ import { signOut } from 'next-auth/react';
 import { AVATAR_COLORS } from '@/lib/constants';
 import { ConfusionMapChart } from '@/components/ConfusionMapChart';
 import { getPusherClient } from '@/lib/pusherClient';
+import { ParentQueryChat } from '@/components/ParentQueryChat';
 
 interface Child {
   id: string;
@@ -694,6 +695,16 @@ export default function ParentDashboard() {
               data={confusionData}
               difficultyLevel={adaptationData?.difficultyLevel}
               totalHints={adaptationData?.totalHints}
+            />
+          </div>
+        )}
+
+        {/* PC-11: Natural Language Query Chat */}
+        {selectedChildForAi && (
+          <div className="mb-8">
+            <ParentQueryChat
+              childId={selectedChildForAi}
+              childName={progressData.find(p => p.child.id === selectedChildForAi)?.child.name ?? 'your child'}
             />
           </div>
         )}
