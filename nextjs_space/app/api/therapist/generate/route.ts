@@ -2,11 +2,9 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { geminiJSON, isGeminiConfigured } from '@/lib/gemini';
 
 export const dynamic = 'force-dynamic';
-
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY ?? '');
 
 // ── Content schema descriptions for the prompt ──────────────────────────────
 
@@ -83,8 +81,8 @@ Example: { "scenario": "You see a new friend sitting alone at lunch.", "characte
 // ── Route handler ────────────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
-  if (!process.env.GOOGLE_AI_API_KEY) {
-    return NextResponse.json({ error: 'GOOGLE_AI_API_KEY is not configured on the server.' }, { status: 500 });
+  if (!isGeminiConfigured()) {
+    return NextResponse.json({ error: 'GROQ_API_KEY is not configured on the server.' }, { status: 500 });
   }
 
   const session = await getServerSession(authOptions);
@@ -165,20 +163,9 @@ ${schemaDocs}
 Respond with ONLY the JSON object. No markdown, no explanation.`;
 
   try {
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-      generationConfig: {
-        responseMimeType: 'application/json', // forces pure JSON output — no markdown fences
-        maxOutputTokens: 2048,
-        temperature: 0.7,
-      },
-    });
-
-    const result = await model.generateContent(userPrompt);
-    const raw = result.response.text().trim();
     let parsed: { title: string; description: string; content: unknown };
     try {
-      parsed = JSON.parse(raw);
+      parsed = await geminiJSON<{ title: string; description: string; content: unknown }>(userPrompt, 2048);
     } catch {
       return NextResponse.json({ error: 'AI returned invalid JSON. Please try again.' }, { status: 500 });
     }

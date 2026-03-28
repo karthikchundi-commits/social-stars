@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   if (!isGeminiConfigured()) {
-    return NextResponse.json({ error: 'GOOGLE_AI_API_KEY not configured' }, { status: 500 });
+    return NextResponse.json({ error: 'GROQ_API_KEY not configured' }, { status: 500 });
   }
 
   const session = await getServerSession(authOptions);

@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 // POST — AI-generate a new therapy plan
 export async function POST(request: Request) {
   if (!isGeminiConfigured()) {
-    return NextResponse.json({ error: 'GOOGLE_AI_API_KEY not configured' }, { status: 500 });
+    return NextResponse.json({ error: 'GROQ_API_KEY not configured' }, { status: 500 });
   }
 
   const session = await getServerSession(authOptions);
