@@ -193,17 +193,25 @@ export default function ScenarioActivityPage() {
               const showCorrect = isSelected && showFeedback && isCorrect;
               const showWrong = isSelected && showFeedback && !isCorrect;
               return (
-                <button
-                  key={index}
-                  onClick={() => handleChoiceSelect(index, choice)}
-                  disabled={completed || showFeedback}
-                  className={`w-full child-button text-left px-8 ${showCorrect ? 'bg-green-400 text-white' : ''} ${showWrong ? 'bg-red-400 text-white' : ''} ${!isSelected ? 'bg-gradient-to-r from-purple-400 to-pink-400 text-white' : ''} disabled:opacity-70`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span>{choice?.text ?? ''}</span>
-                    {showCorrect && <CheckCircle className="w-8 h-8" />}
-                  </div>
-                </button>
+                <div key={index} className="flex items-center gap-3">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); playAudio(choice?.text ?? ''); }}
+                    className="flex-shrink-0 w-12 h-12 bg-blue-100 hover:bg-blue-200 rounded-full flex items-center justify-center transition-all"
+                    aria-label="Listen to option"
+                  >
+                    <Volume2 className="w-5 h-5 text-blue-600" />
+                  </button>
+                  <button
+                    onClick={() => handleChoiceSelect(index, choice)}
+                    disabled={completed || showFeedback}
+                    className={`flex-1 child-button text-left px-8 ${showCorrect ? 'bg-green-400 text-white' : ''} ${showWrong ? 'bg-red-400 text-white' : ''} ${!isSelected ? 'bg-gradient-to-r from-purple-400 to-pink-400 text-white' : ''} disabled:opacity-70`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{choice?.text ?? ''}</span>
+                      {showCorrect && <CheckCircle className="w-8 h-8" />}
+                    </div>
+                  </button>
+                </div>
               );
             }) ?? null}
           </div>
