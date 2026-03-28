@@ -162,7 +162,7 @@ export default function ChildDashboard() {
       setAssignedActivities(
         (progressData?.assignments ?? []).map((a: any) => a.activity).filter(Boolean)
       );
-      setActivities(allActivities.filter((a) => !assignmentIds.has(a.id)));
+      setActivities(allActivities);
 
       const completedActivityIds: string[] =
         progressData?.completedActivities?.map((ca: any) => ca?.activityId ?? '') ?? [];
@@ -510,6 +510,11 @@ export default function ChildDashboard() {
                       {isCompleted && (
                         <div className="absolute top-4 right-4 bg-yellow-400 rounded-full p-2 z-10">
                           <Star className="w-6 h-6 text-white fill-white" />
+                        </div>
+                      )}
+                      {assignedIds.has(activity?.id ?? '') && (
+                        <div className="absolute top-3 left-3 bg-indigo-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10">
+                          ⭐ From Therapist
                         </div>
                       )}
                       <div
