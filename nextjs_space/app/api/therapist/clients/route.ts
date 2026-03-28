@@ -51,6 +51,7 @@ export async function GET() {
         activityId: a.activityId,
         title: a.activity.title,
         type: a.activity.type,
+        createdBy: a.activity.createdBy,
         note: a.note,
         assignedAt: a.assignedAt,
       })),

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
   Copy, Check, Users, Star, Award,
-  Plus, Trash2, BookOpen, ClipboardList, Quote, LogOut, Sparkles, TrendingUp, Calendar, PenLine, Play, AlertTriangle,
+  Plus, Trash2, BookOpen, ClipboardList, Quote, LogOut, Sparkles, TrendingUp, Calendar, PenLine, Play, AlertTriangle, Pencil,
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { ScheduleManager } from '@/components/circle/ScheduleManager';
@@ -17,6 +17,7 @@ interface AssignedActivity {
   activityId: string;
   title: string;
   type: string;
+  createdBy?: string;
   note: string | null;
   assignedAt: string;
 }
@@ -435,9 +436,16 @@ export default function TherapistPage() {
                             {child.assignedActivities.map((a) => (
                               <div key={a.id} className="flex items-center justify-between bg-purple-50 rounded-xl px-3 py-1">
                                 <span className="text-xs font-semibold text-purple-700 truncate">{a.title}</span>
-                                <button onClick={() => handleUnassign(child.id, a.activityId)} className="ml-2 text-red-400 hover:text-red-600">
-                                  <Trash2 className="w-3 h-3" />
-                                </button>
+                                <div className="flex items-center">
+                                  {a.createdBy === (session?.user as any)?.id && (
+                                    <button onClick={() => router.push(`/therapist/create?edit=${a.activityId}`)} className="ml-1 text-blue-400 hover:text-blue-600">
+                                      <Pencil className="w-3 h-3" />
+                                    </button>
+                                  )}
+                                  <button onClick={() => handleUnassign(child.id, a.activityId)} className="ml-2 text-red-400 hover:text-red-600">
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
                               </div>
                             ))}
                           </div>

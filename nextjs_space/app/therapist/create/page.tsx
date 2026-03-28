@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
   ArrowLeft, Sparkles, Plus, Trash2, CheckCircle,
@@ -90,6 +90,8 @@ const MOOD_EMOJI: Record<string, string> = {
 
 export default function CreateActivityPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get('edit');
   const { data: session, status } = useSession() || {};
 
   const [clients, setClients] = useState<Client[]>([]);
@@ -133,8 +135,9 @@ export default function CreateActivityPage() {
     }
   }, [status]);
 
-  // Reset content when activity type changes
+  // Reset content when activity type changes (skip in edit mode)
   useEffect(() => {
+    if (editId) return;
     setTitle('');
     setDescription('');
     setEmotion('happy');
@@ -158,6 +161,64 @@ export default function CreateActivityPage() {
     setClients(data.clients ?? []);
     setLoadingClients(false);
   };
+
+  // Load activity data when in edit mode
+  useEffect(() => {
+    if (!editId) return;
+    const loadActivity = async () => {
+      const res = await fetch('/api/activities');
+      const data = await res.json();
+      const activity = (data.activities ?? []).find((a: any) => a.id === editId);
+      if (!activity) return;
+      setActivityType(activity.type);
+      const parsed = {
+        title: activity.title,
+        description: activity.description,
+        content: typeof activity.content === 'string' ? JSON.parse(activity.content) : activity.content,
+      };
+      if (parsed.title) setTitle(parsed.title);
+      if (parsed.description) setDescription(parsed.description);
+      const c = parsed.content;
+      if (!c) return;
+      switch (activity.type) {
+        case 'emotion':
+          if (c.emotion) setEmotion(c.emotion);
+          break;
+        case 'scenario':
+          if (c.choices) setChoices(c.choices);
+          break;
+        case 'story':
+          if (c.pages) setPages(c.pages.map((p: any) => ({
+            text: p.text ?? '',
+            image: p.image ?? '',
+            question: p.question ?? '',
+            options: p.options ?? ['', '', ''],
+            correctAnswer: p.correctAnswer ?? 0,
+          })));
+          break;
+        case 'breathing':
+          if (c.instruction) setBreathingInstruction(c.instruction);
+          if (c.cycles) setBreathingCycles(c.cycles);
+          if (c.phases) setPhases(c.phases);
+          break;
+        case 'communication':
+          if (c.instruction) setCommInstruction(c.instruction);
+          if (c.targetTaps) setCommTargetTaps(c.targetTaps);
+          if (c.items) setCommItems(c.items);
+          break;
+        case 'social_coach':
+          if (c.scenario) setCoachScenario(c.scenario);
+          if (c.characterName) setCoachCharName(c.characterName);
+          if (c.characterEmoji) setCoachCharEmoji(c.characterEmoji);
+          if (c.turns) setCoachTurns(c.turns.map((t: any) => ({
+            prompt: t.prompt ?? '',
+            options: t.options ?? defaultTurns()[0].options,
+          })));
+          break;
+      }
+    };
+    loadActivity();
+  }, [editId]);
 
   const allChildren = clients.flatMap((c) => c.children);
   const selectedChild = allChildren.find((c) => c.id === selectedChildId);
@@ -275,23 +336,43 @@ export default function CreateActivityPage() {
     setSaving(true);
     setError('');
     try {
-      const res = await fetch('/api/therapist/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title,
-          description,
-          type: activityType,
-          content: buildContent(),
-          childId: selectedChildId || null,
-          assignToChild: selectedChildId ? assignToChild : false,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? 'Save failed');
+      if (editId) {
+        const res = await fetch('/api/therapist/create', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            activityId: editId,
+            title,
+            description,
+            type: activityType,
+            content: buildContent(),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error ?? 'Update failed');
+        } else {
+          setSaved(true);
+        }
       } else {
-        setSaved(true);
+        const res = await fetch('/api/therapist/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title,
+            description,
+            type: activityType,
+            content: buildContent(),
+            childId: selectedChildId || null,
+            assignToChild: selectedChildId ? assignToChild : false,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error ?? 'Save failed');
+        } else {
+          setSaved(true);
+        }
       }
     } catch {
       setError('Network error. Please try again.');
@@ -338,18 +419,22 @@ export default function CreateActivityPage() {
       <div className="min-h-screen flex items-center justify-center p-6">
         <div className="bg-white rounded-3xl shadow-2xl p-12 max-w-md w-full text-center">
           <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Activity Saved!</h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">{editId ? 'Activity Updated!' : 'Activity Saved!'}</h1>
           <p className="text-gray-500 mb-2">
-            "{title}" has been created{selectedChildId && assignToChild ? ` and assigned to ${selectedChild?.name}` : ''}.
+            {editId
+              ? `"${title}" has been updated.`
+              : `"${title}" has been created${selectedChildId && assignToChild ? ` and assigned to ${selectedChild?.name}` : ''}.`}
           </p>
-          <p className="text-gray-400 text-sm mb-8">It will appear in the activity grid on the child's dashboard.</p>
-          <div className="flex gap-3">
-            <button
-              onClick={() => { setSaved(false); setTitle(''); setDescription(''); }}
-              className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all"
-            >
-              Create Another
-            </button>
+          {!editId && <p className="text-gray-400 text-sm mb-8">It will appear in the activity grid on the child's dashboard.</p>}
+          <div className="flex gap-3 mt-8">
+            {!editId && (
+              <button
+                onClick={() => { setSaved(false); setTitle(''); setDescription(''); }}
+                className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all"
+              >
+                Create Another
+              </button>
+            )}
             <button
               onClick={() => router.push('/therapist')}
               className="flex-1 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:opacity-90 transition-all"
@@ -376,8 +461,8 @@ export default function CreateActivityPage() {
               <Eye className="w-8 h-8" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">Custom Activity Builder</h1>
-              <p className="text-purple-100">Build from scratch or let AI suggest — you review and edit before saving</p>
+              <h1 className="text-3xl font-bold">{editId ? 'Edit Activity' : 'Custom Activity Builder'}</h1>
+              <p className="text-purple-100">{editId ? 'Update the activity details and save your changes' : 'Build from scratch or let AI suggest — you review and edit before saving'}</p>
             </div>
           </div>
         </div>
@@ -782,7 +867,7 @@ export default function CreateActivityPage() {
                 disabled={saving || !title.trim() || !description.trim()}
                 className="flex-1 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-lg font-bold rounded-2xl hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-3 shadow-lg"
               >
-                {saving ? <><Loader2 className="w-5 h-5 animate-spin" /> Saving...</> : <><Save className="w-5 h-5" /> Save Activity</>}
+                {saving ? <><Loader2 className="w-5 h-5 animate-spin" /> {editId ? 'Updating...' : 'Saving...'}</> : <><Save className="w-5 h-5" /> {editId ? 'Update Activity' : 'Save Activity'}</>}
               </button>
             </div>
           </div>
