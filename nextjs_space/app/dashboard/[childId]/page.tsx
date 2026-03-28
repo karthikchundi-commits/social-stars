@@ -481,7 +481,9 @@ export default function ChildDashboard() {
 
         {/* Activity categories */}
         {(['breathing', 'emotion', 'scenario', 'story', 'communication'] as const).map((type) => {
-          const typeActivities = activities.filter((a) => a.type === type);
+          const typeActivities = activities
+            .filter((a) => a.type === type)
+            .sort((a, b) => (assignedIds.has(b.id) ? 1 : 0) - (assignedIds.has(a.id) ? 1 : 0));
           if (!typeActivities.length) return null;
 
           const typeLabels: Record<string, string> = {
