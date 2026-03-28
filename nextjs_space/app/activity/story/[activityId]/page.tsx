@@ -193,7 +193,16 @@ export default function StoryActivityPage() {
 
           {page?.question && (
             <div className="mb-6">
-              <h3 className="text-2xl font-bold text-gray-700 mb-4">{page?.question}</h3>
+              <div className="flex items-center gap-3 mb-4">
+                <h3 className="text-2xl font-bold text-gray-700">{page?.question}</h3>
+                <button
+                  onClick={() => playAudio(page?.question ?? '')}
+                  className="flex-shrink-0 w-10 h-10 bg-blue-100 hover:bg-blue-200 rounded-full flex items-center justify-center transition-all"
+                  aria-label="Listen to question"
+                >
+                  <Volume2 className="w-5 h-5 text-blue-600" />
+                </button>
+              </div>
               <div className="space-y-3">
                 {page?.options?.map?.((option, index) => {
                   const isSelected = selectedAnswer === index;
@@ -201,14 +210,22 @@ export default function StoryActivityPage() {
                   const showCorrect = isSelected && showFeedback && isCorrect;
                   const showWrong = isSelected && showFeedback && !isCorrect;
                   return (
-                    <button
-                      key={index}
-                      onClick={() => handleAnswerSelect(index)}
-                      disabled={showFeedback}
-                      className={`w-full text-xl font-semibold px-6 py-4 rounded-2xl transition-all ${showCorrect ? 'bg-green-400 text-white' : ''} ${showWrong ? 'bg-red-400 text-white' : ''} ${!isSelected ? 'bg-purple-100 hover:bg-purple-200 text-gray-800' : ''} disabled:opacity-70`}
-                    >
-                      {option}
-                    </button>
+                    <div key={index} className="flex items-center gap-3">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); playAudio(option); }}
+                        className="flex-shrink-0 w-12 h-12 bg-blue-100 hover:bg-blue-200 rounded-full flex items-center justify-center transition-all"
+                        aria-label="Listen to option"
+                      >
+                        <Volume2 className="w-5 h-5 text-blue-600" />
+                      </button>
+                      <button
+                        onClick={() => handleAnswerSelect(index)}
+                        disabled={showFeedback}
+                        className={`flex-1 text-xl font-semibold px-6 py-4 rounded-2xl transition-all ${showCorrect ? 'bg-green-400 text-white' : ''} ${showWrong ? 'bg-red-400 text-white' : ''} ${!isSelected ? 'bg-purple-100 hover:bg-purple-200 text-gray-800' : ''} disabled:opacity-70`}
+                      >
+                        {option}
+                      </button>
+                    </div>
                   );
                 }) ?? null}
               </div>

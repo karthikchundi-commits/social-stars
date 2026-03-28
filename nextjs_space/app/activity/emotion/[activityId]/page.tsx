@@ -181,17 +181,25 @@ export default function EmotionActivityPage() {
               const isThisCorrect = isCorrect && isSelected;
               const isThisWrong = !isCorrect && isSelected && showFeedback;
               return (
-                <button
-                  key={emotion.id}
-                  onClick={() => handleEmotionSelect(emotion.id)}
-                  disabled={completed || showFeedback}
-                  className={`child-card bg-white relative ${isThisCorrect ? 'ring-8 ring-green-400' : ''} ${isThisWrong ? 'ring-8 ring-red-400' : ''} disabled:opacity-50`}
-                >
-                  <div className="relative w-full aspect-square mb-4">
-                    <Image src={emotion.image} alt={emotion.label} fill className="object-cover rounded-2xl" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-800">{emotion.label}</h3>
-                </button>
+                <div key={emotion.id} className="relative">
+                  <button
+                    onClick={() => handleEmotionSelect(emotion.id)}
+                    disabled={completed || showFeedback}
+                    className={`child-card bg-white w-full ${isThisCorrect ? 'ring-8 ring-green-400' : ''} ${isThisWrong ? 'ring-8 ring-red-400' : ''} disabled:opacity-50`}
+                  >
+                    <div className="relative w-full aspect-square mb-4">
+                      <Image src={emotion.image} alt={emotion.label} fill className="object-cover rounded-2xl" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-800">{emotion.label}</h3>
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); playAudio(emotion.label); }}
+                    className="absolute top-2 right-2 w-10 h-10 bg-blue-100 hover:bg-blue-200 rounded-full flex items-center justify-center transition-all shadow-md"
+                    aria-label={`Listen to ${emotion.label}`}
+                  >
+                    <Volume2 className="w-5 h-5 text-blue-600" />
+                  </button>
+                </div>
               );
             })}
           </div>
