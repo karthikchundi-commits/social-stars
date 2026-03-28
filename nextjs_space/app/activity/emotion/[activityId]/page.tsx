@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Volume2, Star, Sparkles } from 'lucide-react';
 import Image from 'next/image';
@@ -16,6 +16,7 @@ export default function EmotionActivityPage() {
   const searchParams = useSearchParams();
   const activityId = params?.activityId as string;
   const childId = searchParams?.get('childId') ?? '';
+  const mood = searchParams?.get('mood') ?? '';
 
   const [activity, setActivity] = useState<any>(null);
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
@@ -25,6 +26,7 @@ export default function EmotionActivityPage() {
   const [loading, setLoading] = useState(true);
   const [coachingHint, setCoachingHint] = useState<{ hint: string; encouragement: string } | null>(null);
   const [sessionId] = useState(() => crypto.randomUUID());
+  const [wrongCount, setWrongCount] = useState(0);
 
   const emotions = [
     { id: 'happy', label: 'Happy', image: EMOTION_IMAGES.happy },
@@ -34,6 +36,18 @@ export default function EmotionActivityPage() {
     { id: 'scared', label: 'Scared', image: EMOTION_IMAGES.scared },
     { id: 'excited', label: 'Excited', image: EMOTION_IMAGES.excited },
   ];
+
+  const visibleEmotions = useMemo(() => {
+    if (wrongCount >= 2 && activity?.category) {
+      const correct = emotions.find((e) => e.id === activity.category);
+      const others = emotions.filter((e) => e.id !== activity.category);
+      // Pick 2 random wrong options
+      const shuffled = [...others].sort(() => Math.random() - 0.5).slice(0, 2);
+      return correct ? [correct, ...shuffled] : shuffled;
+    }
+    return emotions;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wrongCount, activity?.category]);
 
   const confusion = useConfusionTracker({ childId, activityId, activityType: 'emotion' });
 
@@ -114,6 +128,7 @@ export default function EmotionActivityPage() {
       setTimeout(() => markAsComplete(), 2000);
     } else {
       playAudio('Try again!');
+      setWrongCount((c) => c + 1);
       const attemptCount = await confusion.trackWrongAnswer(`emotion:${activity?.category}`);
       fetchCoachingHint(attemptCount);
       setTimeout(() => {
@@ -134,6 +149,14 @@ export default function EmotionActivityPage() {
       });
       const data = await response.json();
       if (data?.achievement) playAudio(`Wow! You earned a new badge: ${data.achievement.title}`);
+      await fetch('/api/adaptive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          childId,
+          sessionData: { activityType: activity?.type, correct: 1, total: 1, mood },
+        }),
+      }).catch(() => {});
       setTimeout(() => router.push(`/dashboard/${childId}`), 3000);
     } catch (error) {
       console.error('Error marking complete:', error);
@@ -175,8 +198,14 @@ export default function EmotionActivityPage() {
             </button>
           </div>
 
+          {wrongCount >= 2 && (
+            <div className="mb-4 px-6 py-3 bg-yellow-100 border-2 border-yellow-300 rounded-2xl text-center text-yellow-800 font-semibold text-lg">
+              Hint: Look carefully at the faces! 👀
+            </div>
+          )}
+
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-            {emotions.map((emotion) => {
+            {visibleEmotions.map((emotion) => {
               const isSelected = selectedEmotion === emotion.id;
               const isThisCorrect = isCorrect && isSelected;
               const isThisWrong = !isCorrect && isSelected && showFeedback;

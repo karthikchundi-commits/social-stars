@@ -25,6 +25,7 @@ export default function StoryActivityPage() {
   const searchParams = useSearchParams();
   const activityId = params?.activityId as string;
   const childId = searchParams?.get('childId') ?? '';
+  const mood = searchParams?.get('mood') ?? '';
 
   const [activity, setActivity] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -33,6 +34,7 @@ export default function StoryActivityPage() {
   const [completed, setCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [coachingHint, setCoachingHint] = useState<{ hint: string; encouragement: string } | null>(null);
+  const [wrongCount, setWrongCount] = useState(0);
 
   const confusion = useConfusionTracker({ childId, activityId, activityType: 'story' });
 
@@ -91,6 +93,7 @@ export default function StoryActivityPage() {
 
   // Reset confusion tracking when page changes
   useEffect(() => {
+    setWrongCount(0);
     if (page?.question && !completed) {
       confusion.resetForNewQuestion();
       confusion.startHesitationTimer(
@@ -124,6 +127,7 @@ export default function StoryActivityPage() {
       confusion.trackCorrectAnswer(`story:page${currentPage}`).catch(() => {});
     } else {
       playAudio('Try again!');
+      setWrongCount((c) => c + 1);
       const attemptCount = await confusion.trackWrongAnswer(`story:page${currentPage}:${page?.question}`);
       fetchCoachingHint(attemptCount);
       setTimeout(() => {
@@ -144,6 +148,14 @@ export default function StoryActivityPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ childId, activityId, score: 100 }),
       });
+      await fetch('/api/adaptive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          childId,
+          sessionData: { activityType: activity?.type, correct: 1, total: 1, mood },
+        }),
+      }).catch(() => {});
       setTimeout(() => router.push(`/dashboard/${childId}`), 3000);
     } catch (error) {
       console.error('Error marking complete:', error);
@@ -193,6 +205,11 @@ export default function StoryActivityPage() {
 
           {page?.question && (
             <div className="mb-6">
+              {wrongCount >= 2 && !showFeedback && (
+                <div className="mb-4 px-6 py-3 bg-yellow-100 border-2 border-yellow-300 rounded-2xl text-yellow-800 font-semibold text-lg">
+                  💡 Hint: Re-read the story — the answer is in there! 📖
+                </div>
+              )}
               <div className="flex items-center gap-3 mb-4">
                 <h3 className="text-2xl font-bold text-gray-700">{page?.question}</h3>
                 <button

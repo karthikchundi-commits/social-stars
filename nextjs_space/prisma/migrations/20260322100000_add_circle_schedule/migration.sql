@@ -1,9 +1,15 @@
-ALTER TABLE "LiveSession" ADD COLUMN "therapistId" TEXT;
+ALTER TABLE "LiveSession" ADD COLUMN IF NOT EXISTS "therapistId" TEXT;
 
-ALTER TABLE "LiveSession" ADD CONSTRAINT "LiveSession_therapistId_fkey"
-  FOREIGN KEY ("therapistId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'LiveSession_therapistId_fkey'
+  ) THEN
+    ALTER TABLE "LiveSession" ADD CONSTRAINT "LiveSession_therapistId_fkey"
+      FOREIGN KEY ("therapistId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+END $$;
 
-CREATE TABLE "CircleTimeSchedule" (
+CREATE TABLE IF NOT EXISTS "CircleTimeSchedule" (
     "id"          TEXT NOT NULL,
     "therapistId" TEXT NOT NULL,
     "dayOfWeek"   INTEGER NOT NULL,
@@ -17,5 +23,11 @@ CREATE TABLE "CircleTimeSchedule" (
     CONSTRAINT "CircleTimeSchedule_pkey" PRIMARY KEY ("id")
 );
 
-ALTER TABLE "CircleTimeSchedule" ADD CONSTRAINT "CircleTimeSchedule_therapistId_fkey"
-  FOREIGN KEY ("therapistId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'CircleTimeSchedule_therapistId_fkey'
+  ) THEN
+    ALTER TABLE "CircleTimeSchedule" ADD CONSTRAINT "CircleTimeSchedule_therapistId_fkey"
+      FOREIGN KEY ("therapistId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;

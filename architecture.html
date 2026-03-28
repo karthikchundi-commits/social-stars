@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Social Stars — Architecture</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --purple: #7c3aed;
+    --pink: #ec4899;
+    --teal: #0d9488;
+    --orange: #f97316;
+    --blue: #2563eb;
+    --gray: #6b7280;
+    --light: #f9fafb;
+    --border: #e5e7eb;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #f3f4f6;
+    color: #1f2937;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .page {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+
+  /* ── Print button (hidden in print) ── */
+  .print-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, var(--purple), var(--pink));
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+    z-index: 999;
+  }
+  .print-btn:hover { opacity: 0.9; }
+
+  /* ── Cover ── */
+  .cover {
+    background: linear-gradient(135deg, #7c3aed, #ec4899, #f97316);
+    border-radius: 20px;
+    padding: 56px 48px;
+    color: white;
+    margin-bottom: 32px;
+    text-align: center;
+  }
+  .cover .logo { font-size: 56px; margin-bottom: 12px; }
+  .cover h1 { font-size: 42px; font-weight: 800; margin-bottom: 8px; }
+  .cover .subtitle { font-size: 18px; opacity: 0.85; }
+  .cover .meta {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-top: 32px;
+    flex-wrap: wrap;
+  }
+  .cover .meta-item { font-size: 13px; opacity: 0.9; }
+  .cover .meta-item strong { display: block; font-size: 16px; }
+
+  /* ── Section ── */
+  .section {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.07);
+    page-break-inside: avoid;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--border);
+  }
+  .section-number {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--purple), var(--pink));
+    color: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .section h2 { font-size: 22px; font-weight: 700; color: #111827; }
+  .section h3 { font-size: 15px; font-weight: 700; color: #374151; margin: 20px 0 10px; }
+
+  /* ── Mermaid diagrams ── */
+  .mermaid { margin: 16px 0; text-align: center; }
+
+  /* ── Table ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    margin-top: 8px;
+  }
+  thead tr { background: var(--light); }
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: 700;
+    color: #374151;
+    border-bottom: 2px solid var(--border);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafafa; }
+
+  /* ── Code / pre ── */
+  pre, code {
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 12px;
+  }
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    padding: 20px;
+    border-radius: 12px;
+    overflow-x: auto;
+    line-height: 1.7;
+    margin: 12px 0;
+  }
+  code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; color: var(--purple); }
+
+  /* ── Badges / pills ── */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .badge-purple { background: #ede9fe; color: var(--purple); }
+  .badge-pink   { background: #fce7f3; color: #be185d; }
+  .badge-teal   { background: #ccfbf1; color: var(--teal); }
+  .badge-orange { background: #ffedd5; color: var(--orange); }
+  .badge-blue   { background: #dbeafe; color: var(--blue); }
+  .badge-gray   { background: #f3f4f6; color: var(--gray); }
+
+  /* ── Grid cards ── */
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-top: 12px; }
+  .card {
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .card .card-title { font-weight: 700; font-size: 13px; color: #111827; margin-bottom: 4px; }
+  .card .card-desc  { font-size: 12px; color: var(--gray); }
+  .card .card-icon  { font-size: 24px; margin-bottom: 8px; }
+
+  /* ── Env var block ── */
+  .env-block {
+    background: #0f172a;
+    color: #94a3b8;
+    border-radius: 12px;
+    padding: 20px 24px;
+    font-family: monospace;
+    font-size: 13px;
+    line-height: 2;
+  }
+  .env-key   { color: #7dd3fc; }
+  .env-val   { color: #86efac; }
+  .env-cmt   { color: #475569; }
+
+  /* ── Role table colours ── */
+  .role-public   { background: #f0fdf4; }
+  .role-parent   { background: #eff6ff; }
+  .role-therapist{ background: #faf5ff; }
+
+  /* ── Print overrides ── */
+  @media print {
+    body { background: white; font-size: 11.5px; }
+    .page { padding: 0; max-width: 100%; }
+    .print-btn { display: none; }
+    .cover { border-radius: 0; margin-bottom: 24px; padding: 40px 32px; }
+    .section { box-shadow: none; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; padding: 24px; }
+    table { page-break-inside: avoid; }
+    pre { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<button class="print-btn" onclick="window.print()">⬇ Save as PDF</button>
+
+<div class="page">
+
+  <!-- ── Cover ── -->
+  <div class="cover">
+    <div class="logo">⭐</div>
+    <h1>Social Stars</h1>
+    <div class="subtitle">System Architecture &amp; Technical Reference</div>
+    <div class="meta">
+      <div class="meta-item"><strong>Next.js 14</strong>App Router (SSR)</div>
+      <div class="meta-item"><strong>PostgreSQL</strong>Prisma ORM</div>
+      <div class="meta-item"><strong>Claude Opus 4.6</strong>AI Activity Generator</div>
+      <div class="meta-item"><strong>Vercel</strong>Deployment Platform</div>
+      <div class="meta-item"><strong>NextAuth</strong>JWT Authentication</div>
+    </div>
+  </div>
+
+  <!-- ── 1. Overview ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">1</div>
+      <h2>System Overview</h2>
+    </div>
+
+    <div class="mermaid">
+graph TB
+  Browser["🌐 Browser<br/>(React 18)"]
+  Vercel["☁️ Vercel Edge<br/>Next.js 14 SSR + API Routes"]
+  DB["🗄️ PostgreSQL<br/>(Prisma ORM)"]
+  Auth["🔐 NextAuth<br/>JWT Sessions"]
+  Claude["🤖 Claude Opus 4.6<br/>(Anthropic API)"]
+
+  Browser <-->|HTTPS| Vercel
+  Vercel <-->|TCP| DB
+  Vercel <-->|JWT| Auth
+  Vercel <-->|HTTPS| Claude
+
+  style Browser fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+  style Vercel fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+  style DB fill:#d1fae5,stroke:#059669,color:#064e3b
+  style Auth fill:#fce7f3,stroke:#ec4899,color:#831843
+  style Claude fill:#ffedd5,stroke:#f97316,color:#7c2d12
+    </div>
+
+    <p style="color:#6b7280;font-size:12.5px;margin-top:12px;">
+      Social Stars is a <strong>monorepo Next.js application</strong> deployed on Vercel. All server logic lives in API routes inside the <code>nextjs_space/app/api/</code> directory. The database is PostgreSQL accessed via Prisma ORM. Authentication uses NextAuth with a JWT strategy — the user's <code>id</code> and <code>role</code> are embedded in the token. The AI activity generator calls Anthropic's Claude Opus 4.6 model server-side.
+    </p>
+  </div>
+
+  <!-- ── 2. User Flow ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">2</div>
+      <h2>User Flow</h2>
+    </div>
+
+    <div class="mermaid">
+flowchart TD
+  Landing["/ Landing Page"] --> GS["/get-started\nRole Picker"]
+
+  GS --> PT["👨‍👩‍👧 Parent Tile\nBenefits + Auth"]
+  GS --> TT["🩺 Therapist Tile\nBenefits + Auth"]
+
+  PT --> PL["/auth/login?role=parent"]
+  PT --> PS["/auth/signup?role=parent"]
+  TT --> TL["/auth/login?role=therapist"]
+  TT --> TS["/auth/signup?role=therapist"]
+
+  PL --> SC["/select-child\nChild Picker"]
+  PS --> SC
+  TL --> TP["/therapist\nTherapist Portal"]
+  TS --> TP
+
+  SC --> CD["/dashboard/childId\nChild Dashboard"]
+  SC --> PD["/parent-dashboard\nProgress Charts"]
+
+  CD --> ACT["Activities\nEmotion / Scenario\nStory / Breathing\nCommunication"]
+
+  TP --> TE["/therapist/enroll\nEnroll Family"]
+  TP --> TG["/therapist/generate\nAI Generator"]
+  TP --> SB["/story-builder\nCustom Stories"]
+
+  TE --> ENR["/enroll?token=...\nParent Registers"]
+  ENR --> SC
+
+  style Landing fill:#f9fafb,stroke:#e5e7eb
+  style GS fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+  style TP fill:#faf5ff,stroke:#7c3aed,color:#4c1d95
+  style TG fill:#ffedd5,stroke:#f97316,color:#7c2d12
+  style CD fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    </div>
+  </div>
+
+  <!-- ── 3. Data Model ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">3</div>
+      <h2>Data Model (PostgreSQL / Prisma)</h2>
+    </div>
+
+    <div class="mermaid">
+erDiagram
+  User {
+    string id PK
+    string email
+    string password
+    string role
+    string inviteCode
+  }
+  ChildProfile {
+    string id PK
+    string name
+    int age
+    string avatarColor
+    string userId FK
+  }
+  Activity {
+    string id PK
+    string title
+    string type
+    string content
+    string createdBy FK
+  }
+  CompletedActivity {
+    string id PK
+    string childId FK
+    string activityId FK
+    int score
+  }
+  Achievement {
+    string id PK
+    string childId FK
+    string title
+    string badgeType
+  }
+  MoodCheckIn {
+    string id PK
+    string childId FK
+    string mood
+    datetime checkedAt
+  }
+  ActivityAssignment {
+    string id PK
+    string childId FK
+    string activityId FK
+    string assignedBy
+  }
+  TherapistFamily {
+    string id PK
+    string therapistId FK
+    string parentId FK
+  }
+  ProspectEnrollment {
+    string id PK
+    string therapistId FK
+    string token
+    string status
+  }
+  ProspectChild {
+    string id PK
+    string enrollmentId FK
+    string name
+    int age
+  }
+
+  User ||--o{ ChildProfile : "has"
+  User ||--o{ TherapistFamily : "therapist"
+  User ||--o{ TherapistFamily : "parent"
+  User ||--o{ ProspectEnrollment : "creates"
+  User ||--o{ Activity : "creates"
+  ChildProfile ||--o{ CompletedActivity : "has"
+  ChildProfile ||--o{ Achievement : "earns"
+  ChildProfile ||--o{ MoodCheckIn : "logs"
+  ChildProfile ||--o{ ActivityAssignment : "receives"
+  Activity ||--o{ CompletedActivity : "in"
+  Activity ||--o{ ActivityAssignment : "in"
+  ProspectEnrollment ||--o{ ProspectChild : "contains"
+    </div>
+  </div>
+
+  <!-- ── 4. API Routes ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">4</div>
+      <h2>API Routes</h2>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Route</th><th>Methods</th><th>Auth</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>/api/auth/[...nextauth]</code></td><td><span class="badge badge-blue">GET POST</span></td><td>—</td><td>NextAuth credentials provider + session handler</td></tr>
+        <tr><td><code>/api/signup</code></td><td><span class="badge badge-orange">POST</span></td><td>Public</td><td>Create parent or therapist account</td></tr>
+        <tr><td><code>/api/children</code></td><td><span class="badge badge-blue">GET</span> <span class="badge badge-orange">POST</span></td><td>Parent</td><td>List &amp; create child profiles</td></tr>
+        <tr><td><code>/api/activities</code></td><td><span class="badge badge-blue">GET</span></td><td>Public</td><td>Fetch all seeded + custom activities</td></tr>
+        <tr><td><code>/api/activities/custom</code></td><td><span class="badge badge-orange">POST</span> <span class="badge badge-pink">DELETE</span></td><td>Therapist</td><td>Create / delete custom activities</td></tr>
+        <tr><td><code>/api/progress</code></td><td><span class="badge badge-blue">GET</span> <span class="badge badge-orange">POST</span></td><td>Auth</td><td>Completions, achievements, streaks, assignments</td></tr>
+        <tr><td><code>/api/mood</code></td><td><span class="badge badge-blue">GET</span> <span class="badge badge-orange">POST</span></td><td>Auth</td><td>Daily mood check-ins per child</td></tr>
+        <tr><td><code>/api/enroll</code></td><td><span class="badge badge-blue">GET</span> <span class="badge badge-orange">POST</span></td><td>Public</td><td>GET: lookup by token · POST: parent registers via link</td></tr>
+        <tr><td><code>/api/therapist/invite</code></td><td><span class="badge badge-blue">GET</span> <span class="badge badge-orange">POST</span></td><td>Therapist / Auth</td><td>GET: therapist invite code · POST: parent links via code</td></tr>
+        <tr><td><code>/api/therapist/clients</code></td><td><span class="badge badge-blue">GET</span></td><td>Therapist</td><td>All linked families with children, moods &amp; assignments</td></tr>
+        <tr><td><code>/api/therapist/enroll</code></td><td><span class="badge badge-blue">GET</span> <span class="badge badge-orange">POST</span></td><td>Therapist</td><td>Create &amp; list prospect enrollments with token links</td></tr>
+        <tr><td><code>/api/therapist/assign</code></td><td><span class="badge badge-orange">POST</span> <span class="badge badge-pink">DELETE</span></td><td>Therapist</td><td>Assign / remove activities from children</td></tr>
+        <tr><td><code>/api/therapist/generate</code></td><td><span class="badge badge-orange">POST</span></td><td>Therapist</td><td>AI activity generation via Claude Opus 4.6</td></tr>
+        <tr><td><code>/api/seed</code></td><td><span class="badge badge-orange">POST</span></td><td>Dev only</td><td>Seed activities and test user</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── 5. Activity Types ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">5</div>
+      <h2>Activity Types &amp; Content Schemas</h2>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Type</th><th>Route</th><th>Content JSON Schema</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-orange">emotion</span></td>
+          <td><code>/activity/emotion/[id]</code></td>
+          <td><code>{ emotion: string }</code> — child picks correct face from 6 options</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-blue">scenario</span></td>
+          <td><code>/activity/scenario/[id]</code></td>
+          <td><code>{ choices: [{ text, isCorrect, feedback }] }</code></td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-teal">story</span></td>
+          <td><code>/activity/story/[id]</code></td>
+          <td><code>{ pages: [{ text, image, question?, options?, correctAnswer? }] }</code></td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-purple">breathing</span></td>
+          <td><code>/activity/breathing/[id]</code></td>
+          <td><code>{ instruction, cycles, phases: [{ label, duration, color, expand }] }</code></td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-pink">communication</span></td>
+          <td><code>/activity/communication/[id]</code></td>
+          <td><code>{ instruction, targetTaps, items: [{ label, emoji, audio }] }</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="margin-top:12px;color:#6b7280;font-size:12px;">All activity <code>content</code> is stored as a <strong>JSON string</strong> in the database and parsed client-side with <code>JSON.parse(activity.content)</code>.</p>
+  </div>
+
+  <!-- ── 6. AI Generator ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">6</div>
+      <h2>AI Activity Generator — Flow</h2>
+    </div>
+
+    <div class="mermaid">
+sequenceDiagram
+  participant T as Therapist UI
+  participant API as /api/therapist/generate
+  participant DB as PostgreSQL
+  participant AI as Claude Opus 4.6
+
+  T->>API: POST {childId, activityType, goals, challenges, moods, extraInstructions}
+  API->>DB: Verify therapist session + TherapistFamily link
+  DB-->>API: ✓ authorized
+  API->>AI: Prompt with child context + content schema
+  Note over AI: Adaptive thinking enabled<br/>Generates title, description, content JSON
+  AI-->>API: { title, description, content }
+  API->>DB: prisma.activity.create()
+  API->>DB: prisma.activityAssignment.upsert()
+  DB-->>API: { activity }
+  API-->>T: { activity } 201 Created
+  Note over T: Success card shown<br/>Activity appears on child dashboard
+    </div>
+
+    <h3>Prompt Engineering</h3>
+    <p style="color:#6b7280;font-size:12.5px;margin-bottom:12px;">The API constructs a prompt with the following child context before calling Claude:</p>
+    <table>
+      <thead><tr><th>Context Field</th><th>Source</th><th>Used For</th></tr></thead>
+      <tbody>
+        <tr><td>Name &amp; Age</td><td>ChildProfile DB record</td><td>Age-appropriate language</td></tr>
+        <tr><td>Recent Moods (7 days)</td><td>MoodCheckIn records</td><td>Emotional tone of activity</td></tr>
+        <tr><td>Completed Activity Types</td><td>ActivityAssignment records</td><td>Avoid repetition</td></tr>
+        <tr><td>Treatment Goals</td><td>Therapist input</td><td>Target skills</td></tr>
+        <tr><td>Clinical Challenges</td><td>Therapist input</td><td>Contraindications, preferences</td></tr>
+        <tr><td>Extra Instructions</td><td>Therapist input</td><td>Theme, style, specifics</td></tr>
+        <tr><td>Content Schema</td><td>Hardcoded per type</td><td>Guaranteed valid JSON structure</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── 7. Dashboard Personalisation ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">7</div>
+      <h2>Dashboard Personalisation Engine</h2>
+    </div>
+
+    <div class="mermaid">
+flowchart LR
+  Mood["Today's Mood\nCheck-in"] --> Map["Priority Map\n(per mood)"]
+  Map --> Rec["getRecommendations()\nclient-side"]
+  Streak["Streak Count"] --> Rec
+  Completed["Completed\nActivity IDs"] --> Rec
+  Assigned["Therapist\nAssigned IDs"] --> Rec
+
+  Rec --> R1["Pick uncompleted\nfrom priority type 1"]
+  Rec --> R2["Pick uncompleted\nfrom priority type 2"]
+  Rec --> R3["Pick uncompleted\nfrom priority type 3"]
+
+  R1 & R2 & R3 --> Banner["Mood Banner\n+ 3 Recommended Cards"]
+
+  style Mood fill:#fce7f3,stroke:#ec4899,color:#831843
+  style Banner fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    </div>
+
+    <table style="margin-top:16px;">
+      <thead><tr><th>Mood</th><th>Activity Priority Order</th></tr></thead>
+      <tbody>
+        <tr><td>😟 Anxious / 😠 Angry</td><td>Breathing → Emotion → Story → Scenario → Communication</td></tr>
+        <tr><td>😢 Sad / 😴 Tired</td><td>Emotion → Breathing → Story → Scenario → Communication</td></tr>
+        <tr><td>😌 Calm</td><td>Story → Scenario → Emotion → Communication → Breathing</td></tr>
+        <tr><td>😊 Happy / 🤩 Excited</td><td>Scenario → Communication → Story → Emotion → Breathing</td></tr>
+        <tr><td>😜 Silly</td><td>Communication → Scenario → Story → Emotion → Breathing</td></tr>
+        <tr><td>No mood yet</td><td>Breathing → Emotion → Scenario → Story → Communication</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── 8. Enrollment Flow ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">8</div>
+      <h2>Therapist → Parent Enrollment Flow</h2>
+    </div>
+
+    <div class="mermaid">
+sequenceDiagram
+  participant TH as Therapist
+  participant APP as App
+  participant DB as PostgreSQL
+  participant PA as Parent
+
+  TH->>APP: Fill enrollment form\n(parent name, email, children, goals)
+  APP->>DB: Create ProspectEnrollment\n+ ProspectChildren\n+ unique token
+  DB-->>APP: { token }
+  APP-->>TH: Show enrollment link\n/enroll?token=ENR-XXXX
+
+  TH->>PA: Share link (email / WhatsApp)
+  PA->>APP: Open /enroll?token=...
+  APP->>DB: GET ProspectEnrollment by token
+  DB-->>APP: Pre-filled details
+  APP-->>PA: Show name, email, children, goals (read-only)
+  PA->>APP: Set password → Submit
+  APP->>DB: Create User (parent)\n+ ChildProfiles\n+ TherapistFamily link\n+ Mark enrollment completed
+  DB-->>APP: ✓
+  APP-->>PA: Redirect to /auth/login
+    </div>
+  </div>
+
+  <!-- ── 9. Role-Based Access ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">9</div>
+      <h2>Role-Based Access Control</h2>
+    </div>
+    <table>
+      <thead><tr><th>Role</th><th>Pages &amp; Routes</th><th>Restrictions</th></tr></thead>
+      <tbody>
+        <tr class="role-public">
+          <td><span class="badge badge-gray">Public</span></td>
+          <td><code>/</code> &nbsp;<code>/get-started</code> &nbsp;<code>/auth/*</code> &nbsp;<code>/enroll</code> &nbsp;<code>/api/activities</code> &nbsp;<code>/api/signup</code></td>
+          <td>No session required</td>
+        </tr>
+        <tr class="role-parent">
+          <td><span class="badge badge-blue">Parent</span></td>
+          <td><code>/select-child</code> &nbsp;<code>/dashboard/[id]</code> &nbsp;<code>/activity/*</code> &nbsp;<code>/parent-dashboard</code></td>
+          <td>role = "parent"; childId passed via URL query param</td>
+        </tr>
+        <tr class="role-therapist">
+          <td><span class="badge badge-purple">Therapist</span></td>
+          <td><code>/therapist</code> &nbsp;<code>/therapist/enroll</code> &nbsp;<code>/therapist/generate</code> &nbsp;<code>/story-builder</code> &nbsp;<code>/api/therapist/*</code></td>
+          <td>role = "therapist"; TherapistFamily link verified on every data mutation</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="margin-top:12px;color:#6b7280;font-size:12px;">Role is embedded in the <strong>NextAuth JWT token</strong> on login via a custom <code>jwt()</code> callback and forwarded to <code>session.user.role</code>. All API routes re-fetch the DB record to verify role — they never trust the token alone for write operations.</p>
+  </div>
+
+  <!-- ── 10. Key Patterns ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">10</div>
+      <h2>Key Technical Patterns</h2>
+    </div>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">🔐</div>
+        <div class="card-title">JWT Auth</div>
+        <div class="card-desc">NextAuth with credentials provider. user.id and user.role embedded in JWT. No DB sessions needed.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">📦</div>
+        <div class="card-title">Prisma Singleton</div>
+        <div class="card-desc">lib/db.ts exports a single PrismaClient instance to prevent connection pool exhaustion in serverless.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔊</div>
+        <div class="card-title">Web Speech API</div>
+        <div class="card-desc">speechSynthesis used for audio feedback. No external audio files. Breathing pages cancel speech before speaking.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎨</div>
+        <div class="card-title">Tailwind + shadcn/ui</div>
+        <div class="card-desc">Radix UI primitives + Tailwind. Child-facing cards use .child-card and .child-button CSS classes.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎊</div>
+        <div class="card-title">Confetti</div>
+        <div class="card-desc">canvas-confetti fired on correct answers to reward children immediately with visual feedback.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <div class="card-title">Recharts</div>
+        <div class="card-desc">Bar and pie charts in parent dashboard showing per-child progress across all activity types.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🤖</div>
+        <div class="card-title">Claude Opus 4.6</div>
+        <div class="card-desc">Adaptive thinking enabled. Generates structured JSON activities server-side. API key never exposed to browser.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🌬️</div>
+        <div class="card-title">Breathing Animation</div>
+        <div class="card-desc">CSS transform: scale() with transition duration matching phase.duration. Expand/contract driven by phase state.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔥</div>
+        <div class="card-title">Streak Calculation</div>
+        <div class="card-desc">Server-side in progress/route.ts. Counts consecutive calendar days with activity. Resets after 2 idle days.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 11. Environment Variables ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">11</div>
+      <h2>Environment Variables</h2>
+    </div>
+    <div class="env-block">
+      <span class="env-cmt"># nextjs_space/.env (local) · Vercel Environment Variables (production)</span><br/><br/>
+      <span class="env-key">DATABASE_URL</span>=<span class="env-val">"postgresql://user:pass@host:5432/dbname"</span><br/>
+      <span class="env-cmt">  # PostgreSQL connection string (Supabase / Neon / Railway / self-hosted)</span><br/><br/>
+      <span class="env-key">NEXTAUTH_SECRET</span>=<span class="env-val">"random-32-char-secret"</span><br/>
+      <span class="env-cmt">  # Used to sign JWT tokens. Generate: openssl rand -base64 32</span><br/><br/>
+      <span class="env-key">NEXTAUTH_URL</span>=<span class="env-val">"https://your-app.vercel.app"</span><br/>
+      <span class="env-cmt">  # Must match your deployed URL exactly</span><br/><br/>
+      <span class="env-key">ANTHROPIC_API_KEY</span>=<span class="env-val">"sk-ant-..."</span><br/>
+      <span class="env-cmt">  # From console.anthropic.com — required for AI activity generator</span>
+    </div>
+  </div>
+
+  <!-- ── 12. Project Structure ── -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">12</div>
+      <h2>Project Structure</h2>
+    </div>
+    <pre>
+autism_social_app/
+└── nextjs_space/
+    ├── app/
+    │   ├── api/
+    │   │   ├── activities/          # GET all, POST/DELETE custom
+    │   │   ├── auth/[...nextauth]/  # NextAuth handler
+    │   │   ├── children/            # CRUD child profiles
+    │   │   ├── enroll/              # Public enrollment via token
+    │   │   ├── mood/                # Mood check-ins
+    │   │   ├── progress/            # Completions + achievements
+    │   │   ├── seed/                # Dev seed endpoint
+    │   │   ├── signup/              # Account creation
+    │   │   └── therapist/
+    │   │       ├── assign/          # Activity assignment
+    │   │       ├── clients/         # Linked families data
+    │   │       ├── enroll/          # Prospect enrollments
+    │   │       ├── generate/        # ★ AI activity generator
+    │   │       └── invite/          # Invite codes
+    │   ├── activity/
+    │   │   ├── breathing/[id]/      # Breathing exercise
+    │   │   ├── communication/[id]/  # Communication board
+    │   │   ├── emotion/[id]/        # Emotion recognition game
+    │   │   ├── scenario/[id]/       # Social scenario
+    │   │   └── story/[id]/          # Interactive story
+    │   ├── auth/login/              # Role-aware login page
+    │   ├── auth/signup/             # Role-aware signup page
+    │   ├── dashboard/[childId]/     # Child dashboard (personalised)
+    │   ├── enroll/                  # Parent enrollment page
+    │   ├── get-started/             # Role picker page
+    │   ├── parent-dashboard/        # Parent progress charts
+    │   ├── select-child/            # Child selector
+    │   ├── story-builder/           # Custom story creator
+    │   ├── therapist/               # Therapist portal
+    │   │   ├── enroll/              # Enroll family form
+    │   │   └── generate/            # ★ AI generator UI
+    │   ├── globals.css
+    │   ├── layout.tsx
+    │   └── page.tsx                 # Landing page
+    ├── lib/
+    │   ├── auth.ts                  # NextAuth config + JWT callbacks
+    │   ├── constants.ts             # Image CDN URLs, avatar colours
+    │   └── db.ts                    # Prisma singleton
+    ├── prisma/
+    │   └── schema.prisma            # Full DB schema
+    ├── scripts/
+    │   └── seed.ts                  # Activity seeder
+    └── components/ui/               # shadcn/ui components
+    </pre>
+  </div>
+
+  <!-- ── Footer ── -->
+  <div style="text-align:center;padding:24px;color:#9ca3af;font-size:12px;">
+    Social Stars · Architecture Document · Generated 2026-03-06
+  </div>
+
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#ede9fe',
+      primaryTextColor: '#4c1d95',
+      primaryBorderColor: '#7c3aed',
+      lineColor: '#7c3aed',
+      secondaryColor: '#fce7f3',
+      tertiaryColor: '#f9fafb',
+      fontSize: '13px',
+    },
+    flowchart: { curve: 'basis', padding: 20 },
+    sequence: { actorMargin: 80, messageMargin: 30 },
+    er: { layoutDirection: 'TB' },
+  });
+</script>
+</body>
+</html>

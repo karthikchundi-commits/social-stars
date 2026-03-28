@@ -26,6 +26,7 @@ export default function ScenarioActivityPage() {
   const searchParams = useSearchParams();
   const activityId = params?.activityId as string;
   const childId = searchParams?.get('childId') ?? '';
+  const mood = searchParams?.get('mood') ?? '';
 
   const [activity, setActivity] = useState<any>(null);
   const [scenes, setScenes] = useState<Scene[]>([]);
@@ -35,6 +36,7 @@ export default function ScenarioActivityPage() {
   const [completed, setCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [coachingHint, setCoachingHint] = useState<{ hint: string; encouragement: string } | null>(null);
+  const [wrongCount, setWrongCount] = useState(0);
 
   const confusion = useConfusionTracker({ childId, activityId, activityType: 'scenario' });
 
@@ -110,6 +112,7 @@ export default function ScenarioActivityPage() {
   }, [childId, activity, scenes, currentScene]);
 
   useEffect(() => {
+    setWrongCount(0);
     if (scenes.length > 0 && !completed) {
       confusion.resetForNewQuestion();
       confusion.startHesitationTimer(
@@ -145,6 +148,7 @@ export default function ScenarioActivityPage() {
       }
     } else {
       playAudio('Think about it. ' + (choice?.feedback ?? ''));
+      setWrongCount((c) => c + 1);
       const attemptCount = await confusion.trackWrongAnswer(`scenario:${activity?.category}`);
       fetchCoachingHint(attemptCount);
       setTimeout(() => {
@@ -163,6 +167,14 @@ export default function ScenarioActivityPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ childId, activityId, score: 100 }),
       });
+      await fetch('/api/adaptive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          childId,
+          sessionData: { activityType: activity?.type, correct: 1, total: 1, mood },
+        }),
+      }).catch(() => {});
       setTimeout(() => router.push(`/dashboard/${childId}`), 2000);
     } catch (error) {
       console.error('Error marking complete:', error);
@@ -230,6 +242,11 @@ export default function ScenarioActivityPage() {
             </div>
           ) : (
             <div className="space-y-4">
+              {wrongCount >= 2 && !showFeedback && (
+                <div className="px-6 py-3 bg-yellow-100 border-2 border-yellow-300 rounded-2xl text-yellow-800 font-semibold text-lg">
+                  💡 Hint: Think about what would make your friend feel happy and safe.
+                </div>
+              )}
               <div className="flex items-center gap-3 mb-4">
                 <h2 className="text-2xl font-bold text-gray-700">What should you do?</h2>
                 <button

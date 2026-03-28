@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
   Copy, Check, Users, Star, Award,
-  Plus, Trash2, BookOpen, ClipboardList, Quote, LogOut, Sparkles, TrendingUp, Calendar, PenLine, Play,
+  Plus, Trash2, BookOpen, ClipboardList, Quote, LogOut, Sparkles, TrendingUp, Calendar, PenLine, Play, AlertTriangle,
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { ScheduleManager } from '@/components/circle/ScheduleManager';
@@ -74,6 +74,7 @@ export default function TherapistPage() {
   const [assignNote, setAssignNote] = useState('');
   const [assigning, setAssigning] = useState(false);
   const [schedule, setSchedule] = useState<ScheduleEntry[]>([]);
+  const [struggles, setStruggles] = useState<any[]>([]);
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/auth/login');
@@ -84,17 +85,20 @@ export default function TherapistPage() {
   }, [status]);
 
   const fetchData = async () => {
-    const [inviteRes, clientsRes, activitiesRes] = await Promise.all([
+    const [inviteRes, clientsRes, activitiesRes, strugglesRes] = await Promise.all([
       fetch('/api/therapist/invite'),
       fetch('/api/therapist/clients'),
       fetch('/api/activities'),
+      fetch('/api/therapist/struggles'),
     ]);
     const inviteData = await inviteRes.json();
     const clientsData = await clientsRes.json();
     const activitiesData = await activitiesRes.json();
+    const strugglesData = await strugglesRes.json();
     setInviteCode(inviteData.inviteCode ?? '');
     setClients(clientsData.clients ?? []);
     setActivities(activitiesData.activities ?? []);
+    setStruggles(strugglesData.struggles ?? []);
 
     const therapistId = (session?.user as any)?.id;
     if (therapistId) {
@@ -332,6 +336,35 @@ export default function TherapistPage() {
             ))}
           </div>
         </div>
+
+        {/* Struggle Signals */}
+        {struggles.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-red-600 mb-4 flex items-center gap-2">
+              <AlertTriangle className="w-7 h-7" /> Children Needing Attention
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {struggles.map((s) => (
+                <div key={s.childId} className="bg-red-50 border-2 border-red-200 rounded-2xl p-5">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: s.avatarColor }}>
+                      {s.childName.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-800">{s.childName}</div>
+                      <div className="text-xs text-gray-500">Last 48 hours</div>
+                    </div>
+                  </div>
+                  <div className="space-y-1 text-sm">
+                    {s.wrongAnswers > 0 && <p className="text-red-600 font-semibold">❌ {s.wrongAnswers} wrong answers</p>}
+                    {s.hesitations > 0 && <p className="text-orange-600 font-semibold">⏳ {s.hesitations} hesitations</p>}
+                    <p className="text-gray-600">Activities: {s.activityTypes.join(', ')}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Clients List */}
         {clients.length === 0 ? (

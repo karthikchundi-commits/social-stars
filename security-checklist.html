@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Social Stars — Security Hardening Checklist</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f4f6f9;
+      color: #1a1a2e;
+      font-size: 11pt;
+      line-height: 1.6;
+    }
+
+    /* ── PRINT BAR ─────────────────────────────────────────── */
+    .print-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: #1a1a2e;
+      color: #fff;
+      padding: 11px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 999;
+      font-size: 12px;
+    }
+    .print-bar span { opacity: 0.65; }
+    .print-btn {
+      background: #fff;
+      color: #1a1a2e;
+      border: none;
+      padding: 7px 20px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    @media print {
+      .print-bar { display: none; }
+      body { padding-top: 0; background: #fff; }
+    }
+    body { padding-top: 48px; }
+
+    /* ── PAGE ──────────────────────────────────────────────── */
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 48px 48px 64px;
+    }
+
+    /* ── COVER ─────────────────────────────────────────────── */
+    .cover {
+      background: #1a1a2e;
+      color: #fff;
+      padding: 56px 48px 48px;
+      margin-bottom: 0;
+    }
+    .cover-eyebrow {
+      font-size: 9pt;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 16px;
+    }
+    .cover h1 {
+      font-size: 32pt;
+      font-weight: 900;
+      letter-spacing: -1px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    .cover h1 span { color: #f59e0b; }
+    .cover-sub {
+      font-size: 13pt;
+      color: rgba(255,255,255,0.65);
+      max-width: 580px;
+      margin-bottom: 40px;
+    }
+    .cover-meta {
+      display: flex;
+      gap: 40px;
+      flex-wrap: wrap;
+      padding-top: 28px;
+      border-top: 1px solid rgba(255,255,255,0.12);
+    }
+    .meta-item label {
+      display: block;
+      font-size: 8pt;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 3px;
+    }
+    .meta-item span {
+      font-size: 11pt;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    /* ── SUMMARY BAND ──────────────────────────────────────── */
+    .summary-band {
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 28px 48px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+    }
+    .summary-stat {
+      text-align: center;
+      padding: 0 16px;
+      border-right: 1px solid #e5e7eb;
+    }
+    .summary-stat:last-child { border-right: none; }
+    .summary-stat .s-num {
+      font-size: 28pt;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .s-red    { color: #dc2626; }
+    .s-orange { color: #ea580c; }
+    .s-yellow { color: #d97706; }
+    .s-total  { color: #1a1a2e; }
+    .summary-stat .s-label {
+      font-size: 9pt;
+      color: #888;
+      font-weight: 600;
+    }
+
+    /* ── SECTION HEADER ────────────────────────────────────── */
+    .section-block {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+    .section-head {
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .section-head.red    { background: #dc2626; }
+    .section-head.orange { background: #ea580c; }
+    .section-head.yellow { background: #d97706; }
+
+    .section-icon { font-size: 22px; }
+    .section-head-text h2 {
+      font-size: 14pt;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+    .section-head-text p {
+      font-size: 9.5pt;
+      color: rgba(255,255,255,0.75);
+    }
+    .section-badge {
+      margin-left: auto;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      font-size: 9pt;
+      font-weight: 700;
+      padding: 4px 14px;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+
+    /* ── TASK ROWS ─────────────────────────────────────────── */
+    .tasks { padding: 8px 0; }
+    .task-row {
+      display: grid;
+      grid-template-columns: 48px 1fr 100px 80px;
+      align-items: start;
+      padding: 14px 28px;
+      border-bottom: 1px solid #f3f4f6;
+      gap: 16px;
+    }
+    .task-row:last-child { border-bottom: none; }
+    .task-row:hover { background: #fafafa; }
+
+    /* checkbox */
+    .task-check {
+      width: 22px;
+      height: 22px;
+      border: 2px solid #d1d5db;
+      border-radius: 6px;
+      margin-top: 2px;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .task-check:hover { border-color: #6b7280; }
+    .task-check.done {
+      background: #16a34a;
+      border-color: #16a34a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .task-check.done::after {
+      content: '✓';
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .task-content { }
+    .task-title {
+      font-weight: 700;
+      font-size: 11pt;
+      color: #1a1a2e;
+      margin-bottom: 3px;
+    }
+    .task-desc {
+      font-size: 9.5pt;
+      color: #666;
+      line-height: 1.5;
+    }
+    .task-code {
+      display: inline-block;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 8.5pt;
+      padding: 1px 7px;
+      margin-top: 5px;
+      color: #374151;
+    }
+
+    .task-effort {
+      font-size: 9.5pt;
+      color: #6b7280;
+      font-weight: 600;
+      text-align: center;
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 4px 8px;
+      align-self: start;
+      margin-top: 2px;
+      text-align: center;
+    }
+    .task-effort .effort-label {
+      font-size: 8pt;
+      color: #aaa;
+      display: block;
+      font-weight: 400;
+    }
+
+    .task-status {
+      align-self: start;
+      margin-top: 2px;
+    }
+    .status-pill {
+      display: inline-block;
+      font-size: 8.5pt;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 100px;
+      text-align: center;
+      width: 100%;
+    }
+    .status-todo      { background: #f3f4f6; color: #6b7280; }
+    .status-inprogress{ background: #fef3c7; color: #92400e; }
+    .status-done      { background: #dcfce7; color: #166534; }
+
+    /* ── NOTES SECTION ─────────────────────────────────────── */
+    .notes-section {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      padding: 28px;
+      margin-bottom: 28px;
+    }
+    .notes-section h3 {
+      font-size: 13pt;
+      font-weight: 800;
+      color: #1a1a2e;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #f3f4f6;
+    }
+    .note-line {
+      border-bottom: 1px solid #e5e7eb;
+      height: 36px;
+      margin-bottom: 4px;
+    }
+
+    /* ── QUICK REF TABLE ───────────────────────────────────── */
+    .quick-ref {
+      background: #1a1a2e;
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 28px;
+      color: #fff;
+    }
+    .quick-ref h3 {
+      font-size: 13pt;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 18px;
+    }
+    .ref-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 600px) { .ref-grid { grid-template-columns: 1fr; } }
+    .ref-item {
+      background: rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .ref-item .ref-label {
+      font-size: 8.5pt;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 5px;
+    }
+    .ref-item .ref-value {
+      font-size: 10pt;
+      color: #fff;
+      word-break: break-all;
+    }
+    .ref-item .ref-value a { color: #f59e0b; text-decoration: none; }
+
+    /* ── FOOTER ────────────────────────────────────────────── */
+    .doc-footer {
+      margin-top: 40px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      font-size: 8.5pt;
+      color: #aaa;
+    }
+
+    /* ── PRINT ─────────────────────────────────────────────── */
+    @media print {
+      body { background: #fff; font-size: 10pt; }
+      .page { padding: 32px 40px; }
+      .section-block { box-shadow: none; border: 1px solid #e5e7eb; page-break-inside: avoid; }
+      .task-row:hover { background: transparent; }
+    }
+
+    /* ── PROGRESS BAR ──────────────────────────────────────── */
+    .progress-wrap {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      padding: 24px 28px;
+      margin-bottom: 28px;
+    }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10pt;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 10px;
+    }
+    .progress-bar-outer {
+      background: #f3f4f6;
+      border-radius: 100px;
+      height: 12px;
+      overflow: hidden;
+    }
+    .progress-bar-inner {
+      background: linear-gradient(90deg, #16a34a, #4ade80);
+      height: 100%;
+      border-radius: 100px;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+    .progress-sub {
+      font-size: 9pt;
+      color: #aaa;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="print-bar no-print">
+  <span>📄 File → Print → Save as PDF &nbsp;|&nbsp; Set Margins to None, enable Background Graphics</span>
+  <button class="print-btn" onclick="window.print()">🖨️ Save as PDF</button>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     COVER
+══════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="page" style="padding-top:0; padding-bottom:0;">
+    <div class="cover-eyebrow">Social Stars · Internal Security Document</div>
+    <h1>Security Hardening<br/><span>Action Checklist</span></h1>
+    <p class="cover-sub">
+      A prioritised task list to protect the Social Stars platform — covering source code,
+      database, API routes, authentication, deployment, and monitoring.
+    </p>
+    <div class="cover-meta">
+      <div class="meta-item"><label>Product</label><span>Social Stars</span></div>
+      <div class="meta-item"><label>Stack</label><span>Next.js · Neon · Vercel · Pusher</span></div>
+      <div class="meta-item"><label>Date</label><span>March 2026</span></div>
+      <div class="meta-item"><label>Total Tasks</label><span>15 Action Items</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SUMMARY BAND
+══════════════════════════════════════════════ -->
+<div class="summary-band">
+  <div class="summary-stat">
+    <div class="s-num s-red">5</div>
+    <div class="s-label">🔴 Critical — Do First</div>
+  </div>
+  <div class="summary-stat">
+    <div class="s-num s-orange">5</div>
+    <div class="s-label">🟠 High — This Week</div>
+  </div>
+  <div class="summary-stat">
+    <div class="s-num s-yellow">5</div>
+    <div class="s-label">🟡 Important — This Month</div>
+  </div>
+  <div class="summary-stat">
+    <div class="s-num s-total">15</div>
+    <div class="s-label">Total Action Items</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     MAIN PAGE
+══════════════════════════════════════════════ -->
+<div class="page">
+
+  <!-- Progress tracker -->
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>Overall Progress</span>
+      <span id="progress-text">0 / 15 completed</span>
+    </div>
+    <div class="progress-bar-outer">
+      <div class="progress-bar-inner" id="progress-bar"></div>
+    </div>
+    <div class="progress-sub">Check off tasks below as you complete them — progress saves in this session.</div>
+  </div>
+
+
+  <!-- ─── RED SECTION ───────────────────────────────────── -->
+  <div class="section-block">
+    <div class="section-head red">
+      <div class="section-icon">🔴</div>
+      <div class="section-head-text">
+        <h2>Critical — Do These First</h2>
+        <p>Active risk of data breach or system compromise if not addressed immediately</p>
+      </div>
+      <div class="section-badge">5 tasks · ~4 hrs total</div>
+    </div>
+    <div class="tasks">
+
+      <div class="task-row">
+        <div class="task-check" onclick="toggleCheck(this)"></div>
+        <div class="task-content">
+          <div class="task-title">Rotate All Secrets</div>
+          <div class="task-desc">
+            Regenerate every credential — assume they may have been exposed during development.<br/>
+            • <strong>Neon DB:</strong> Dashboard → Settings → Regenerate connection string password<br/>
+            • <strong>NextAuth:</strong> Run <span class="task-code">openssl rand -base64 32</span> → update in Vercel env vars<br/>
+            • <strong>Pusher:</strong> Dashboard → App Keys → Regenerate secret<br/>
+            • <strong>Anthropic API Key:</strong> console.anthropic.com → API Keys → Rotate
+          </div>
+        </div>
+        <div class="task-effort">20 min<span class="effort-label">effort</span></div>
+        <div class="task-status"><span class="status-pill status-todo">To Do</span></div>
+      </div>
+
+      <div class="task-row">
+        <div class="task-check" onclick="toggleCheck(this)"></div>
+        <div class="task-content">
+          <div class="task-title">Confirm .env Was Never Committed to Git</div>
+          <div class="task-desc">
+            Run this command to check git history for any accidentally committed secrets:<br/>
+            <span class="task-code">git log --all --full-history -- "**/.env" "**/.env.local"</span><br/>
+            If any results appear, the secrets in those commits must be rotated immediately (they are permanently in git history even if deleted).
+            Also verify <span class="task-code">.env</span> and <span class="task-code">.env.local</span> are listed in <span class="task-code">.gitignore</span>.
+          </div>
+        </div>
+        <div class="task-effort">5 min<span class="effort-label">effort</span></div>
+        <div class="task-status"><span class="status-pill status-todo">To Do</span></div>
+      </div>
+
+      <div class="task-row">
+        <div class="task-check" onclick="toggleCheck(this)"></div>
+        <div class="task-content">
+          <div class="task-title">Add Auth &amp; Role Checks to Every API Route</div>
+          <div class="task-desc">
+            Every route that reads or mutates data must verify the session and role. Priority routes to audit:<br/>
+            • <span class="task-code">/api/therapist/*</span> — must confirm <span class="task-code">role === 'therapist'</span><br/>
+            • <span class="task-code">/api/circle/schedule</span> POST/DELETE — confirm therapist owns the entry<br/>
+            • <span class="task-code">/api/therapist/assign</span> — confirm child belongs to a linked family<br/>
+            • <span class="task-code">/api/children</span> — confirm child belongs to the authenticated parent<br/>
+            Pattern: <span class="task-code">const session = await getServerSession(authOptions); if (!session?.user) return 401;</span>
+          </div>
+        </div>
+        <div class="task-effort">2 hrs<span class="effort-label">effort</span></div>
+        <div class="task-status"><span class="status-pill status-todo">To Do</span></div>
+      </div>
+
+      <div class="task-row">
+        <div class="task-check" onclick="toggleCheck(this)"></div>
+        <div class="task-content">
+          <div class="task-title">Add Rate Limiting to AI Endpoints</div>
+          <div class="task-desc">
+            Without rate limiting, anyone can spam AI routes and drain your Anthropic credits or perform brute-force attacks.<br/>
+            Install: <span class="task-code">npm install @upstash/ratelimit @upstash/redis</span><br/>
+            Apply to: <span class="task-code">/api/parent/ai-insights</span>, <span class="task-code">/api/parent/ai-plan</span>,
+            <span class="task-code">/api/coaching</span>, <span class="task-code">/api/therapist/generate</span>, <span class="task-code">/api/auth/signin</span><br/>
+            Recommended limit: 10 requests per minute per IP using sliding window algorithm.
+          </div>
+        </div>
+        <div class="task-effort">1 hr<span class="effort-label">effort</span></div>
+        <div class="task-status"><span class="status-pill status-todo">To Do</span></div>
+      </div>
+
+      <div class="task-row">
+        <div class="task-check" onclick="toggleCheck(this)"></div>
+        <div class="task-content">
+          <div class="task-title">Lock Down Neon Database Access</div>
+          <div class="task-desc">
+            Restrict who can connect to your database at the network level:<br/>
+            • Enable IP allowlist in Neon dashboard — allow only Vercel outbound IPs<br/>
+            • Use the <strong>pooled</strong> connection string only (<span class="task-code">-pooler.</span> in URL) — disable direct connections<br/>
+            • Create a read-only database user for any analytics or reporting queries<br/>
+            • Enable connection logging to detect unusual access patterns
+          </div>
+        </div>
+        <div class="task-effort">15 min<span class="effort-label">effort</span></div>
+        <div class="task-status"><span class="status-pill status-todo">To Do</span></div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ─── ORANGE SECTION ─────────────────────────────────── -->
+  <div class="section-block">
+    <div class="section-head orange">
+      <div class="section-icon">🟠</div>
+      <div class="section-head-text">
+        <h2>High Priority — Do This Week</h2>
+        <p>Significant vulnerabilities that could be exploited by a motivated attacker</p>
+      </div>
+      <div class="section-badge">5 tasks · ~5 hrs total</div>
+    </div>
+    <div class="tasks">
+
+      <div class="task-row">
+        <div class="task-check" onclick="toggleCheck(this)"></div>
+        <div class="task-content">
+          <div class="task-title">Validate Ownership on All API ID Parameters</div>
+          <div class="task-desc">
+            Never trust an ID from the client without confirming the authenticated user owns it.
+            An attacker can send any ID and access other users' data (Insecure Direct Object Reference — OWASP #1).<br/>
+            Pattern to apply to every route: query the database with both the ID <em>and</em> the authenticated user's ID as a
+            <span class="task-code">where</span> condition before operating on the record.
+            If no record found, return <span class="task-code">404</span> (not <span class="task-code">403</span> — don't confirm the record exists).
+          </div>
+        </div>
+        <div class="task-effort">2 hrs<span class="effort-label">effort</span></div>
+        <div class="task-status"><span class="status-pill status-todo">To Do</span></div>
+      </div>
+
+      <div class="task-row">
+        <div class="task-check" onclick="toggleCheck(this)"></div>
+        <div class="task-content">
+          <div class="task-title">Add HTTP Security Headers in next.config.js</div>
+          <div class="task-desc">
+            Security headers prevent a large class of browser-based attacks (XSS, clickjacking, MIME sniffing).<br/>
+            Add to <span class="task-code">next.config.js</span> → <span class="task-code">headers()</span> function:<br/>
+            • <span class="task-code">X-Frame-Options: SAMEORIGIN</span> — prevents clickjacking<br/>
+            • <span class="task-code">X-Content-Type-Options: nosniff</span> — prevents MIME sniffing<br/>
+            • <span class="task-code">Referrer-Policy: origin-when-cross-origin</span><br/>
+            • <span class="task-code">Permissions-Policy: camera=(self), microphone=()</span><br/>
+            • <span class="task-code">Content-Security-Policy</span> — restricts script/style/connect sources
+          </div>
+        </div>
+        <div class="task-effort">30 min<span class="effort-label">effort</span></div>
+        <div class="task-status"><span class="status-pill status-todo">To Do</span></div>
+      </div>
+
+      <div class="task-row">
+        <div class="task-check" onclick="toggleCheck(this)"></div>
+        <div class="task-content">
+          <div class="task-title">Harden NextAuth Session Configuration</div>
+          <div class="task-desc">
+            The default NextAuth config has weaker-than-necessary session settings.<br/>
+            Update <span class="task-code">lib/auth.ts</span> to add:<br/>
+            • Session <span class="task-code">maxAge: 7 * 24 * 60 * 60</span> (7 days, not indefinite)<br/>
+            • Cookie <span class="task-code">httpOnly: true</span> — prevents JS access to session cookie<br/>
+            • Cookie <span class="task-code">secure: true</span> in production — HTTPS only<br/>
+            • Cookie <span class="task-code">sameSite: 'lax'</span> — CSRF protection
+          </div>
+        </div>
+        <div class="task-effort">15 min<span class="effort-label">effort</span></div>
+        <div class="task-status"><span class="status-pill status-todo">To Do</span></div>
+      </div>
+
+      <div class="task-row">
+        <div class="task-check" onclick="toggleCheck(this)"></div>
+        <div class="task-content">
+          <div class="task-title">Sanitise User Input in AI Prompts (Prompt Injection)</div>
+          <div class="task-desc">
+            AI routes accept user-controlled text (child notes, therapist goals, activity descriptions) and
+            embed them directly into prompts sent to Claude. An attacker can craft input that manipulates
+            the AI's behaviour (prompt injection attack).<br/>
+            Mitigations: strip HTML tags, enforce hard character limits (max 500 chars per field),
+            and filter known injection phrases before including any user text in a prompt.
+          </div>
+        </div>
+        <div class="task-effort">30 min<span class="effort-label">effort</span></div>
+        <div class="task-status"><span class="status-pill status-todo">To Do</span></div>
+      </div>
+
+      <div class="task-row">
+        <div class="task-check" onclick="toggleCheck(this)"></div>
+        <div class="task-content">
+          <div class="task-title">Separate Production and Preview Environment Variables in Vercel</div>
+          <div class="task-desc">
+            Preview deployments (from pull requests) should never have access to the production database or live API keys.<br/>
+            In Vercel dashboard → Settings → Environment Variables:<br/>
+            • Set <span class="task-code">DATABASE_URL</span>, <span class="task-code">ANTHROPIC_API_KEY</span>, <span class="task-code">PUSHER_SECRET</span>
+            to <strong>Production only</strong><br/>
+            • Create a separate Neon database branch for Preview and use that connection string for non-Production environments<br/>
+            • Mark all secrets as <strong>Sensitive</strong> (write-only in Vercel UI)
+          </div>
+        </div>
+        <div class="task-effort">20 min<span class="effort-label">effort</span></div>
+        <div class="task-status"><span class="status-pill status-todo">To Do</span></div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ─── YELLOW SECTION ─────────────────────────────────── -->
+  <div class="section-block">
+    <div class="section-head yellow">
+      <div class="section-icon">🟡</div>
+      <div class="section-head-text">
+        <h2>Important — Do This Month</h2>
+        <p>Security hardening and monitoring that significantly reduces long-term risk</p>
+      </div>
+      <div class="section-badge">5 tasks · ~3 hrs total</div>
+    </div>
+    <div class="tasks">
+
+      <div class="task-row">
+        <div class="task-check" onclick="toggleCheck(this)"></div>
+        <div class="task-content">
+          <div class="task-title">Add CSRF Protection to Custom API Routes</div>
+          <div class="task-desc">
+            NextAuth handles CSRF for auth routes but your custom mutating API routes are unprotected.
+            A malicious website could trick a logged-in user's browser into making requests to your API.<br/>
+            Add an <span class="task-code">Origin</span> header check to all POST/PATCH/DELETE routes:
+            verify the origin matches your own domain before processing the request.
+          </div>
+        </div>
+        <div class="task-effort">45 min<span class="effort-label">effort</span></div>
+        <div class="task-status"><span class="status-pill status-todo">To Do</span></div>
+      </div>
+
+      <div class="task-row">
+        <div class="task-check" onclick="toggleCheck(this)"></div>
+        <div class="task-content">
+          <div class="task-title">Harden the Circle Time Join Code System</div>
+          <div class="task-desc">
+            The 6-character join code is currently valid indefinitely. Three improvements:<br/>
+            • <strong>Expiry:</strong> join code should auto-expire 2 hours after session ends<br/>
+            • <strong>Attempt limiting:</strong> max 5 wrong code attempts per IP per hour — return generic error, do not confirm code existence<br/>
+            • <strong>Status check:</strong> reject join requests if session status is anything other than <span class="task-code">waiting</span> or <span class="task-code">active</span>
+          </div>
+        </div>
+        <div class="task-effort">1 hr<span class="effort-label">effort</span></div>
+        <div class="task-status"><span class="status-pill status-todo">To Do</span></div>
+      </div>
+
+      <div class="task-row">
+        <div class="task-check" onclick="toggleCheck(this)"></div>
+        <div class="task-content">
+          <div class="task-title">Set Up Error Monitoring with Sentry</div>
+          <div class="task-desc">
+            Without monitoring, you won't know when your app is throwing errors or being attacked until a user reports it.<br/>
+            Install: <span class="task-code">npx @sentry/wizard@latest -i nextjs</span> (free tier available)<br/>
+            Sentry captures: runtime exceptions, API errors, performance issues, and can alert you by email or Slack.
+            Never log passwords, tokens, or children's personal data to Sentry — review the DSN configuration.
+          </div>
+        </div>
+        <div class="task-effort">30 min<span class="effort-label">effort</span></div>
+        <div class="task-status"><span class="status-pill status-todo">To Do</span></div>
+      </div>
+
+      <div class="task-row">
+        <div class="task-check" onclick="toggleCheck(this)"></div>
+        <div class="task-content">
+          <div class="task-title">Run Dependency Vulnerability Audit &amp; Enable Dependabot</div>
+          <div class="task-desc">
+            Outdated npm packages are a common attack vector. Known vulnerabilities are published publicly.<br/>
+            Run now: <span class="task-code">cd nextjs_space &amp;&amp; npm audit</span> — review and fix any high/critical findings<br/>
+            Auto-fix safe updates: <span class="task-code">npm audit fix</span><br/>
+            Enable Dependabot: GitHub repo → Settings → Security → Dependabot alerts → Enable.
+            This automatically creates PRs when packages have known vulnerabilities.
+          </div>
+        </div>
+        <div class="task-effort">20 min<span class="effort-label">effort</span></div>
+        <div class="task-status"><span class="status-pill status-todo">To Do</span></div>
+      </div>
+
+      <div class="task-row">
+        <div class="task-check" onclick="toggleCheck(this)"></div>
+        <div class="task-content">
+          <div class="task-title">Add Security Event Logging</div>
+          <div class="task-desc">
+            Log security-relevant events so you can detect patterns of abuse or breach attempts.
+            Events to log: failed authentication attempts, repeated 401/403 responses, unexpected role escalation attempts, unusual API usage patterns.<br/>
+            Important: <strong>never log passwords, session tokens, join codes, or any PII</strong> (children's names, ages, health data)
+            in logs — this itself would be a COPPA/HIPAA violation.
+          </div>
+        </div>
+        <div class="task-effort">30 min<span class="effort-label">effort</span></div>
+        <div class="task-status"><span class="status-pill status-todo">To Do</span></div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ─── QUICK REFERENCE ────────────────────────────────── -->
+  <div class="quick-ref">
+    <h3>🔗 Quick Reference — Where to Make Changes</h3>
+    <div class="ref-grid">
+      <div class="ref-item">
+        <div class="ref-label">Rotate DB Password</div>
+        <div class="ref-value"><a href="#">Neon Dashboard → Settings → Reset Password</a></div>
+      </div>
+      <div class="ref-item">
+        <div class="ref-label">Rotate Pusher Secret</div>
+        <div class="ref-value"><a href="#">Pusher Dashboard → App → App Keys → Rotate</a></div>
+      </div>
+      <div class="ref-item">
+        <div class="ref-label">Rotate Anthropic Key</div>
+        <div class="ref-value"><a href="#">console.anthropic.com → API Keys</a></div>
+      </div>
+      <div class="ref-item">
+        <div class="ref-label">Vercel Env Vars</div>
+        <div class="ref-value"><a href="#">Vercel Dashboard → Project → Settings → Environment Variables</a></div>
+      </div>
+      <div class="ref-item">
+        <div class="ref-label">Auth Config</div>
+        <div class="ref-value"><span class="task-code" style="background:rgba(255,255,255,0.1);border:none;color:#fff;">nextjs_space/lib/auth.ts</span></div>
+      </div>
+      <div class="ref-item">
+        <div class="ref-label">Security Headers</div>
+        <div class="ref-value"><span class="task-code" style="background:rgba(255,255,255,0.1);border:none;color:#fff;">nextjs_space/next.config.js</span></div>
+      </div>
+      <div class="ref-item">
+        <div class="ref-label">API Routes to Audit</div>
+        <div class="ref-value"><span class="task-code" style="background:rgba(255,255,255,0.1);border:none;color:#fff;">nextjs_space/app/api/</span></div>
+      </div>
+      <div class="ref-item">
+        <div class="ref-label">Dependabot (GitHub)</div>
+        <div class="ref-value"><a href="#">Repo → Settings → Security → Dependabot alerts</a></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ─── NOTES ──────────────────────────────────────────── -->
+  <div class="notes-section">
+    <h3>📝 Notes &amp; Observations</h3>
+    <div class="note-line"></div>
+    <div class="note-line"></div>
+    <div class="note-line"></div>
+    <div class="note-line"></div>
+    <div class="note-line"></div>
+    <div class="note-line"></div>
+    <div class="note-line"></div>
+  </div>
+
+
+  <div class="doc-footer">
+    <span>Social Stars — Security Hardening Checklist — Internal Use Only</span>
+    <span>Generated March 2026</span>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+  function toggleCheck(el) {
+    el.classList.toggle('done');
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const total = document.querySelectorAll('.task-check').length;
+    const done  = document.querySelectorAll('.task-check.done').length;
+    const pct   = Math.round((done / total) * 100);
+    document.getElementById('progress-text').textContent = done + ' / ' + total + ' completed (' + pct + '%)';
+    document.getElementById('progress-bar').style.width  = pct + '%';
+  }
+
+  updateProgress();
+</script>
+</body>
+</html>
