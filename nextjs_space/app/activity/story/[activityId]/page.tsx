@@ -8,7 +8,6 @@ import confetti from 'canvas-confetti';
 import { STORY_IMAGES } from '@/lib/constants';
 import { useConfusionTracker } from '@/hooks/useConfusionTracker';
 
-import { MultimodalDetector, extractAction } from '@/components/MultimodalDetector';
 import { CoachingHint } from '@/components/CoachingHint';
 
 interface StoryPage {
@@ -19,17 +18,6 @@ interface StoryPage {
   correctAnswer?: number;
 }
 
-// Extract an emotion keyword from an option string, e.g. "She feels happy" → "happy"
-const EMOTION_KEYWORDS = [
-  'happy', 'sad', 'angry', 'surprised', 'scared', 'excited',
-  'confused', 'frustrated', 'anxious', 'worried', 'upset',
-  'afraid', 'calm', 'nervous', 'joyful',
-];
-
-function extractEmotion(text: string): string | null {
-  const lower = text.toLowerCase();
-  return EMOTION_KEYWORDS.find(e => lower.includes(e)) ?? null;
-}
 
 export default function StoryActivityPage() {
   const router = useRouter();
@@ -45,7 +33,6 @@ export default function StoryActivityPage() {
   const [completed, setCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [coachingHint, setCoachingHint] = useState<{ hint: string; encouragement: string } | null>(null);
-  const [sessionId] = useState(() => crypto.randomUUID());
 
   const confusion = useConfusionTracker({ childId, activityId, activityType: 'story' });
 
@@ -259,35 +246,6 @@ export default function StoryActivityPage() {
         />
       )}
 
-      {/* Single camera handles both emotion + action detection */}
-      <MultimodalDetector
-        childId={childId}
-        activityId={activityId}
-        sessionId={sessionId}
-        targetEmotion={
-          page?.question && page?.correctAnswer !== undefined && page?.options
-            ? extractEmotion(page.options[page.correctAnswer]) ?? undefined
-            : undefined
-        }
-        targetAction={
-          page?.question && page?.correctAnswer !== undefined && page?.options
-            ? extractAction(page.options[page.correctAnswer]) ?? undefined
-            : undefined
-        }
-        targetActionLabel={
-          page?.correctAnswer !== undefined && page?.options
-            ? page.options[page.correctAnswer]
-            : undefined
-        }
-        onEmotionMatch={() => {
-          if (page?.correctAnswer !== undefined && selectedAnswer === null)
-            handleAnswerSelect(page.correctAnswer);
-        }}
-        onActionMatch={() => {
-          if (page?.correctAnswer !== undefined && selectedAnswer === null)
-            handleAnswerSelect(page.correctAnswer);
-        }}
-      />
     </div>
   );
 }

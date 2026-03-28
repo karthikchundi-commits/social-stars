@@ -14,13 +14,27 @@ The emotion must be one of: happy, sad, angry, surprised, scared, disgusted, cal
 The child will be shown 6 face images and must pick the one matching the emotion.
 Example: { "emotion": "happy" }`,
 
-  scenario: `Return content as: { "choices": [ { "text": "...", "isCorrect": true|false, "feedback": "..." }, ... ] }
-Provide exactly 3-4 choices. Exactly one must have isCorrect: true.
-feedback should be warm, encouraging (1-2 sentences), child-appropriate.
-Example: { "choices": [
-  { "text": "Wait patiently for your turn", "isCorrect": true, "feedback": "That's great! Waiting your turn is very kind." },
-  { "text": "Grab the toy anyway", "isCorrect": false, "feedback": "It's better to wait so everyone gets a turn." },
-  { "text": "Walk away and cry", "isCorrect": false, "feedback": "It's okay to feel sad, but try asking instead." }
+  scenario: `Return content as: { "scenes": [ { "situation": "...", "choices": [ { "text": "...", "isCorrect": true|false, "feedback": "..." } ] } ] }
+Provide exactly 3 scenes. Each scene is a different social situation related to the overall theme.
+Each scene must have exactly 3 choices. Exactly one must have isCorrect: true.
+situation: 1-2 sentences describing the scene (simple, child-appropriate language for ages 3-6).
+feedback should be warm, encouraging (1-2 sentences).
+Example: { "scenes": [
+  { "situation": "You want to play with a toy your friend has.", "choices": [
+    { "text": "Ask nicely to share", "isCorrect": true, "feedback": "Great asking! Sharing is caring." },
+    { "text": "Grab it away", "isCorrect": false, "feedback": "Try asking instead — your friend will be happier." },
+    { "text": "Walk away and cry", "isCorrect": false, "feedback": "It's okay to feel sad, but try asking nicely." }
+  ]},
+  { "situation": "A new child sits alone at snack time.", "choices": [
+    { "text": "Invite them to sit with you", "isCorrect": true, "feedback": "That's so kind! New friends are wonderful." },
+    { "text": "Ignore them", "isCorrect": false, "feedback": "Everyone likes to feel included. Try saying hello!" },
+    { "text": "Point and whisper", "isCorrect": false, "feedback": "That might hurt their feelings. Try being friendly instead." }
+  ]},
+  { "situation": "You accidentally bump into someone and they drop their snack.", "choices": [
+    { "text": "Say sorry and help pick it up", "isCorrect": true, "feedback": "Saying sorry is very grown-up! Well done." },
+    { "text": "Run away", "isCorrect": false, "feedback": "Accidents happen — saying sorry helps make it better." },
+    { "text": "Laugh at them", "isCorrect": false, "feedback": "That would hurt their feelings. A kind sorry is better." }
+  ]}
 ]}`,
 
   story: `Return content as: { "pages": [ { "text": "...", "image": "", "question": "...", "options": ["...", "...", "..."], "correctAnswer": 0 }, ... ] }
