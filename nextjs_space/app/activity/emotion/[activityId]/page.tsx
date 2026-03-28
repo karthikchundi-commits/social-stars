@@ -167,7 +167,7 @@ export default function EmotionActivityPage() {
             </h1>
             <p className="text-2xl text-gray-700 mb-6">{activity?.description ?? 'Find the emotion!'}</p>
             <button
-              onClick={() => playAudio(`Can you find the ${activity?.category ?? 'emotion'}?`)}
+              onClick={() => playAudio(`Can you find the ${activity?.category ?? 'emotion'}? The options are: ${emotions.map(e => e.label).join(', ')}.`)}
               className="px-8 py-4 bg-blue-500 text-white font-bold text-xl rounded-2xl hover:bg-blue-600 transition-all flex items-center gap-3 mx-auto"
             >
               <Volume2 className="w-6 h-6" />
@@ -181,25 +181,17 @@ export default function EmotionActivityPage() {
               const isThisCorrect = isCorrect && isSelected;
               const isThisWrong = !isCorrect && isSelected && showFeedback;
               return (
-                <div key={emotion.id} className="relative">
-                  <button
-                    onClick={() => handleEmotionSelect(emotion.id)}
-                    disabled={completed || showFeedback}
-                    className={`child-card bg-white w-full ${isThisCorrect ? 'ring-8 ring-green-400' : ''} ${isThisWrong ? 'ring-8 ring-red-400' : ''} disabled:opacity-50`}
-                  >
-                    <div className="relative w-full aspect-square mb-4">
-                      <Image src={emotion.image} alt={emotion.label} fill className="object-cover rounded-2xl" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-800">{emotion.label}</h3>
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); playAudio(emotion.label); }}
-                    className="absolute top-2 right-2 w-10 h-10 bg-blue-100 hover:bg-blue-200 rounded-full flex items-center justify-center transition-all shadow-md"
-                    aria-label={`Listen to ${emotion.label}`}
-                  >
-                    <Volume2 className="w-5 h-5 text-blue-600" />
-                  </button>
-                </div>
+                <button
+                  key={emotion.id}
+                  onClick={() => handleEmotionSelect(emotion.id)}
+                  disabled={completed || showFeedback}
+                  className={`child-card bg-white relative ${isThisCorrect ? 'ring-8 ring-green-400' : ''} ${isThisWrong ? 'ring-8 ring-red-400' : ''} disabled:opacity-50`}
+                >
+                  <div className="relative w-full aspect-square mb-4">
+                    <Image src={emotion.image} alt={emotion.label} fill className="object-cover rounded-2xl" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-800">{emotion.label}</h3>
+                </button>
               );
             })}
           </div>
