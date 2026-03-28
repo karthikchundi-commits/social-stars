@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import Anthropic from '@anthropic-ai/sdk';
+import { geminiJSON, isGeminiConfigured } from '@/lib/gemini';
 
 export const dynamic = 'force-dynamic';
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
 export async function POST(request: Request) {
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!isGeminiConfigured()) {
     return NextResponse.json({ hint: "You can do it! Try again! 🌟", encouragement: "Keep going!" });
   }
 
@@ -46,19 +44,7 @@ Generate a coaching hint as JSON:
   "strategy": "one word strategy: look|listen|think|point|remember"
 }`;
 
-    const response = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 200,
-      messages: [{ role: 'user', content: prompt }],
-    });
-
-    const text = response.content[0].type === 'text' ? response.content[0].text : '';
-    const match = text.match(/\{[\s\S]*\}/);
-    if (!match) {
-      return NextResponse.json({ hint: "Look carefully! You can do it! 🌟", encouragement: "Try again! 💪", strategy: "look" });
-    }
-
-    const result = JSON.parse(match[0]);
+    const result = await geminiJSON<{ hint: string; encouragement: string; strategy: string }>(prompt, 200);
 
     // Increment totalHints counter
     await prisma.learningAdaptation.upsert({

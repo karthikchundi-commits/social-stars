@@ -4,15 +4,13 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import Anthropic from '@anthropic-ai/sdk';
+import { geminiText, isGeminiConfigured } from '@/lib/gemini';
 
 export const dynamic = 'force-dynamic';
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
 export async function POST(request: Request) {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured' }, { status: 500 });
+  if (!isGeminiConfigured()) {
+    return NextResponse.json({ error: 'GOOGLE_AI_API_KEY not configured' }, { status: 500 });
   }
 
   const session = await getServerSession(authOptions);
@@ -90,17 +88,6 @@ Most recent activity: ${child.completedActivities[0]?.activity?.title ?? 'none'}
 
 Parent's question: ${question}`;
 
-  const response = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 400,
-    system: systemPrompt,
-    messages: [{ role: 'user', content: dataContext }],
-  });
-
-  const textBlock = response.content.find((b) => b.type === 'text');
-  if (!textBlock || textBlock.type !== 'text') {
-    return NextResponse.json({ error: 'No response from AI' }, { status: 500 });
-  }
-
-  return NextResponse.json({ answer: textBlock.text });
+  const answer = await geminiText(`${systemPrompt}\n\n${dataContext}`, 400);
+  return NextResponse.json({ answer });
 }

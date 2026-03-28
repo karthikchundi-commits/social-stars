@@ -2,11 +2,9 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import Anthropic from '@anthropic-ai/sdk';
+import { geminiJSON, isGeminiConfigured } from '@/lib/gemini';
 
 export const dynamic = 'force-dynamic';
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // GET — fetch plans for a child
 export async function GET(request: Request) {
@@ -30,8 +28,8 @@ export async function GET(request: Request) {
 
 // POST — AI-generate a new therapy plan
 export async function POST(request: Request) {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured' }, { status: 500 });
+  if (!isGeminiConfigured()) {
+    return NextResponse.json({ error: 'GOOGLE_AI_API_KEY not configured' }, { status: 500 });
   }
 
   const session = await getServerSession(authOptions);
@@ -118,25 +116,7 @@ Return ONLY a valid JSON object with these fields:
 Respond with ONLY the JSON object. No markdown, no explanation.`;
 
   try {
-    const message = await client.messages.create({
-      model: 'claude-opus-4-6',
-      max_tokens: 4096,
-      thinking: { type: 'adaptive' },
-      messages: [{ role: 'user', content: prompt }],
-    });
-
-    const textBlock = message.content.find((b) => b.type === 'text');
-    if (!textBlock || textBlock.type !== 'text') {
-      return NextResponse.json({ error: 'No text response from AI' }, { status: 500 });
-    }
-
-    const raw = textBlock.text.trim().replace(/^```json?\n?/, '').replace(/\n?```$/, '');
-    let parsed: { title: string; weeklyGoal: string; durationWeeks: number; weeks: any[]; overallTips: string[] };
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      return NextResponse.json({ error: 'AI returned invalid JSON. Please try again.' }, { status: 500 });
-    }
+    const parsed = await geminiJSON<{ title: string; weeklyGoal: string; durationWeeks: number; weeks: any[]; overallTips: string[] }>(prompt, 4096);
 
     // Archive previous active plans for this child by this therapist
     await prisma.therapyPlan.updateMany({
