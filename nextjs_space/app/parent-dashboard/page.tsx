@@ -455,12 +455,6 @@ export default function ParentDashboard() {
             >
               <Plus className="w-5 h-5" /> Add Child
             </button>
-            <button
-              onClick={() => signOut({ callbackUrl: '/' })}
-              className="px-5 py-3 bg-gray-500 text-white font-bold rounded-2xl hover:bg-gray-600 transition-all flex items-center gap-2 shadow-lg"
-            >
-              <LogOut className="w-5 h-5" /> Logout
-            </button>
           </div>
         </div>
 

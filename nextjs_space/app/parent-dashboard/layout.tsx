@@ -9,9 +9,8 @@ const PARENT_LINKS = [
 
 export default function ParentDashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <NavBar links={PARENT_LINKS} role="parent" />
-      <div>{children}</div>
-    </div>
+    <NavBar links={PARENT_LINKS} role="parent">
+      {children}
+    </NavBar>
   );
 }

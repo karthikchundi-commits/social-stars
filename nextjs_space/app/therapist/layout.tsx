@@ -15,9 +15,8 @@ const THERAPIST_LINKS = [
 
 export default function TherapistLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <NavBar links={THERAPIST_LINKS} role="therapist" />
-      <div>{children}</div>
-    </div>
+    <NavBar links={THERAPIST_LINKS} role="therapist">
+      {children}
+    </NavBar>
   );
 }
