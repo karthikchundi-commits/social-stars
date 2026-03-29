@@ -76,6 +76,7 @@ export default function TherapistPage() {
   const [assigning, setAssigning] = useState(false);
   const [schedule, setSchedule] = useState<ScheduleEntry[]>([]);
   const [struggles, setStruggles] = useState<any[]>([]);
+  const [myActivities, setMyActivities] = useState<any[]>([]);
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/auth/login');
@@ -86,20 +87,23 @@ export default function TherapistPage() {
   }, [status]);
 
   const fetchData = async () => {
-    const [inviteRes, clientsRes, activitiesRes, strugglesRes] = await Promise.all([
+    const [inviteRes, clientsRes, activitiesRes, strugglesRes, myActivitiesRes] = await Promise.all([
       fetch('/api/therapist/invite'),
       fetch('/api/therapist/clients'),
       fetch('/api/activities'),
       fetch('/api/therapist/struggles'),
+      fetch('/api/therapist/create'),
     ]);
     const inviteData = await inviteRes.json();
     const clientsData = await clientsRes.json();
     const activitiesData = await activitiesRes.json();
     const strugglesData = await strugglesRes.json();
+    const myActivitiesData = await myActivitiesRes.json();
     setInviteCode(inviteData.inviteCode ?? '');
     setClients(clientsData.clients ?? []);
     setActivities(activitiesData.activities ?? []);
     setStruggles(strugglesData.struggles ?? []);
+    setMyActivities(myActivitiesData.activities ?? []);
 
     const therapistId = (session?.user as any)?.id;
     if (therapistId) {
@@ -361,6 +365,31 @@ export default function TherapistPage() {
                     {s.hesitations > 0 && <p className="text-orange-600 font-semibold">⏳ {s.hesitations} hesitations</p>}
                     <p className="text-gray-600">Activities: {s.activityTypes.join(', ')}</p>
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* My Custom Activities */}
+        {myActivities.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-purple-600 mb-4 flex items-center gap-2">
+              <PenLine className="w-7 h-7" /> My Custom Activities
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {myActivities.map((a) => (
+                <div key={a.id} className="bg-white border-2 border-purple-100 rounded-2xl p-5 flex items-center justify-between gap-3 shadow-sm">
+                  <div className="min-w-0">
+                    <p className="font-bold text-gray-800 truncate">{a.title}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{a.type}</p>
+                  </div>
+                  <button
+                    onClick={() => router.push(`/therapist/create?edit=${a.id}`)}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 font-semibold text-sm rounded-xl transition-all"
+                  >
+                    <Pencil className="w-4 h-4" /> Edit
+                  </button>
                 </div>
               ))}
             </div>

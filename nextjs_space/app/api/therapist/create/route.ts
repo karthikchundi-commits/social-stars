@@ -5,6 +5,24 @@ import { prisma } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
+export async function GET() {
+  const session = await getServerSession(authOptions);
+  const userId = (session?.user as any)?.id;
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || user.role !== 'therapist') {
+    return NextResponse.json({ error: 'Therapist account required' }, { status: 403 });
+  }
+
+  const myActivities = await prisma.activity.findMany({
+    where: { createdBy: userId },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return NextResponse.json({ activities: myActivities });
+}
+
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
