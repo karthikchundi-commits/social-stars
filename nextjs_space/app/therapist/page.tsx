@@ -85,6 +85,21 @@ export default function TherapistPage() {
     }
   }, [status]);
 
+  // Poll struggle signals every 30 seconds
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/therapist/struggles');
+        const data = await res.json();
+        setStruggles(data.struggles ?? []);
+      } catch {
+        // silent fail
+      }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [status]);
+
   const fetchData = async () => {
     const [inviteRes, clientsRes, activitiesRes, strugglesRes, myActivitiesRes] = await Promise.all([
       fetch('/api/therapist/invite'),
