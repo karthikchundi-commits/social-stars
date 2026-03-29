@@ -5,9 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
   Copy, Check, Users, Star, Award,
-  Plus, Trash2, BookOpen, ClipboardList, Quote, LogOut, Sparkles, TrendingUp, Calendar, PenLine, Play, AlertTriangle, Pencil,
+  Plus, Trash2, BookOpen, ClipboardList, Quote, Sparkles, TrendingUp, Calendar, PenLine, Play, AlertTriangle, Pencil,
 } from 'lucide-react';
-import { signOut } from 'next-auth/react';
 import { ScheduleManager } from '@/components/circle/ScheduleManager';
 import { ProgressReportModal } from '@/components/ProgressReportModal';
 import { EmotionVelocityChart } from '@/components/EmotionVelocityChart';
@@ -221,12 +220,6 @@ export default function TherapistPage() {
               className="px-6 py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
             >
               <BookOpen className="w-5 h-5" /> Story Builder
-            </button>
-            <button
-              onClick={() => signOut({ callbackUrl: '/' })}
-              className="px-6 py-3 bg-gray-500 text-white font-bold rounded-2xl hover:bg-gray-600 transition-all flex items-center gap-2 shadow-lg"
-            >
-              <LogOut className="w-5 h-5" /> Logout
             </button>
           </div>
         </div>
