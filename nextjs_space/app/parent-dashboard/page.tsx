@@ -583,6 +583,54 @@ export default function ParentDashboard() {
           </div>
         )}
 
+        {/* Subscription Status */}
+        <div className="bg-white rounded-3xl shadow-md border border-gray-100 p-6 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-gray-300 to-gray-400 rounded-2xl flex items-center justify-center flex-shrink-0">
+                <Star className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="font-bold text-gray-900 text-lg">Free Plan</span>
+                  <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-semibold">Current</span>
+                </div>
+                <p className="text-sm text-gray-500">
+                  {children.length} / 1 child profile used &nbsp;·&nbsp; 10 starter activities &nbsp;·&nbsp; Basic tracking
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 flex-wrap">
+              {children.length >= 1 && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700 font-semibold">
+                  <Sparkles className="w-4 h-4" />
+                  Upgrade to add more children
+                </div>
+              )}
+              <a
+                href="/pricing"
+                className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl text-sm hover:opacity-90 transition-all shadow-md"
+              >
+                View Plans &amp; Upgrade
+              </a>
+            </div>
+          </div>
+
+          {/* Feature lock hints */}
+          <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              { locked: true, label: 'Unlimited children', plan: 'Family · $9/mo' },
+              { locked: true, label: 'All 50+ activities', plan: 'Family · $9/mo' },
+              { locked: true, label: 'PDF progress reports', plan: 'Premium · $19/mo' },
+            ].map((item) => (
+              <div key={item.label} className="flex items-center gap-2 text-sm text-gray-400">
+                <span className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-xs flex-shrink-0">🔒</span>
+                <span>{item.label} — <span className="text-purple-500 font-semibold">{item.plan}</span></span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Live Circle Time Banner */}
         {liveSession && (
           <div className="bg-gradient-to-r from-pink-500 to-rose-500 rounded-3xl shadow-xl p-6 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 animate-pulse-slow">
