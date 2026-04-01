@@ -1,11 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Volume2, Star } from 'lucide-react';
 import Image from 'next/image';
 import confetti from 'canvas-confetti';
 import { STORY_IMAGES } from '@/lib/constants';
+import { useConfusionTracker } from '@/hooks/useConfusionTracker';
+
+import { CoachingHint } from '@/components/CoachingHint';
 
 interface StoryPage {
   text: string;
@@ -15,12 +18,14 @@ interface StoryPage {
   correctAnswer?: number;
 }
 
+
 export default function StoryActivityPage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
   const activityId = params?.activityId as string;
   const childId = searchParams?.get('childId') ?? '';
+  const mood = searchParams?.get('mood') ?? '';
 
   const [activity, setActivity] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -28,11 +33,13 @@ export default function StoryActivityPage() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [coachingHint, setCoachingHint] = useState<{ hint: string; encouragement: string } | null>(null);
+  const [wrongCount, setWrongCount] = useState(0);
+
+  const confusion = useConfusionTracker({ childId, activityId, activityType: 'story' });
 
   useEffect(() => {
-    if (activityId) {
-      fetchActivity();
-    }
+    if (activityId) fetchActivity();
   }, [activityId]);
 
   const fetchActivity = async () => {
@@ -61,11 +68,44 @@ export default function StoryActivityPage() {
   const pages: StoryPage[] = content?.pages ?? [];
   const page = pages[currentPage];
 
-  const handleNext = () => {
-    if (page?.question && selectedAnswer === null) {
-      return;
+  const fetchCoachingHint = useCallback(async (attemptCount: number) => {
+    if (attemptCount < 2) return;
+    try {
+      const response = await fetch('/api/coaching', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          childId,
+          activityType: 'story',
+          activityTitle: activity?.title,
+          question: page?.question,
+          wrongAnswers: attemptCount,
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setCoachingHint({ hint: data.hint, encouragement: data.encouragement });
+      }
+    } catch (error) {
+      // Silent fail
     }
+  }, [childId, activity, page]);
 
+  // Reset confusion tracking when page changes
+  useEffect(() => {
+    setWrongCount(0);
+    if (page?.question && !completed) {
+      confusion.resetForNewQuestion();
+      confusion.startHesitationTimer(
+        `story:page${currentPage}:${page.question}`,
+        () => fetchCoachingHint(1),
+      );
+    }
+    return () => confusion.stopHesitationTimer();
+  }, [currentPage, page?.question]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleNext = (answerProvided?: boolean) => {
+    if (page?.question && !answerProvided && selectedAnswer === null) return;
     if (currentPage < pages.length - 1) {
       setCurrentPage(currentPage + 1);
       setSelectedAnswer(null);
@@ -75,25 +115,25 @@ export default function StoryActivityPage() {
     }
   };
 
-  const handleAnswerSelect = (index: number) => {
+  const handleAnswerSelect = async (index: number) => {
+    confusion.stopHesitationTimer();
     setSelectedAnswer(index);
     setShowFeedback(true);
 
     if (index === page?.correctAnswer) {
       playAudio('Great job!');
-      confetti({
-        particleCount: 50,
-        spread: 50,
-        origin: { y: 0.7 },
-      });
-      setTimeout(() => {
-        handleNext();
-      }, 1500);
+      confetti({ particleCount: 50, spread: 50, origin: { y: 0.7 } });
+      setTimeout(() => handleNext(true), 1500);
+      confusion.trackCorrectAnswer(`story:page${currentPage}`).catch(() => {});
     } else {
       playAudio('Try again!');
+      setWrongCount((c) => c + 1);
+      const attemptCount = await confusion.trackWrongAnswer(`story:page${currentPage}:${page?.question}`);
+      fetchCoachingHint(attemptCount);
       setTimeout(() => {
         setShowFeedback(false);
         setSelectedAnswer(null);
+        confusion.startHesitationTimer(`story:page${currentPage}`, () => fetchCoachingHint(confusion.getAttemptCount()));
       }, 1500);
     }
   };
@@ -101,26 +141,22 @@ export default function StoryActivityPage() {
   const markAsComplete = async () => {
     setCompleted(true);
     playAudio('You finished the story! Great work!');
-    confetti({
-      particleCount: 150,
-      spread: 100,
-      origin: { y: 0.6 },
-    });
-
+    confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
     try {
       await fetch('/api/progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ childId, activityId, score: 100 }),
+      });
+      await fetch('/api/adaptive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           childId,
-          activityId,
-          score: 100,
+          sessionData: { activityType: activity?.type, correct: 1, total: 1, mood },
         }),
-      });
-
-      setTimeout(() => {
-        router.push(`/dashboard/${childId}`);
-      }, 3000);
+      }).catch(() => {});
+      setTimeout(() => router.push(`/dashboard/${childId}`), 3000);
     } catch (error) {
       console.error('Error marking complete:', error);
     }
@@ -137,7 +173,6 @@ export default function StoryActivityPage() {
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
         <button
           onClick={() => router.push(`/dashboard/${childId}`)}
           className="mb-6 px-6 py-3 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2 font-semibold text-gray-700"
@@ -146,32 +181,18 @@ export default function StoryActivityPage() {
           Back
         </button>
 
-        {/* Story Content */}
         <div className="bg-white rounded-3xl shadow-2xl p-8">
           <div className="text-center mb-6">
-            <h1 className="text-4xl font-bold text-purple-600 mb-2">
-              {activity?.title ?? 'Story Time'}
-            </h1>
-            <p className="text-lg text-gray-600">
-              Page {currentPage + 1} of {pages?.length ?? 0}
-            </p>
+            <h1 className="text-4xl font-bold text-purple-600 mb-2">{activity?.title ?? 'Story Time'}</h1>
+            <p className="text-lg text-gray-600">Page {currentPage + 1} of {pages?.length ?? 0}</p>
           </div>
 
-          {/* Story Image */}
           <div className="relative w-full h-80 mb-6 rounded-2xl overflow-hidden bg-gray-100">
-            <Image
-              src={page?.image ?? STORY_IMAGES.playground}
-              alt="Story scene"
-              fill
-              className="object-cover"
-            />
+            <Image src={page?.image ?? STORY_IMAGES.playground} alt="Story scene" fill className="object-cover" />
           </div>
 
-          {/* Story Text */}
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 mb-6">
-            <p className="text-2xl text-gray-800 leading-relaxed">
-              {page?.text ?? ''}
-            </p>
+            <p className="text-2xl text-gray-800 leading-relaxed">{page?.text ?? ''}</p>
           </div>
 
           <button
@@ -182,31 +203,35 @@ export default function StoryActivityPage() {
             Read to Me
           </button>
 
-          {/* Question */}
           {page?.question && (
             <div className="mb-6">
-              <h3 className="text-2xl font-bold text-gray-700 mb-4">
-                {page?.question}
-              </h3>
+              {wrongCount >= 2 && !showFeedback && (
+                <div className="mb-4 px-6 py-3 bg-yellow-100 border-2 border-yellow-300 rounded-2xl text-yellow-800 font-semibold text-lg">
+                  💡 Hint: Re-read the story — the answer is in there! 📖
+                </div>
+              )}
+              <div className="flex items-center gap-3 mb-4">
+                <h3 className="text-2xl font-bold text-gray-700">{page?.question}</h3>
+                <button
+                  onClick={() => playAudio(`${page?.question} ${page?.options?.map?.((o, i) => `Option ${i + 1}: ${o}`).join('. ') ?? ''}`)}
+                  className="flex-shrink-0 w-10 h-10 bg-blue-100 hover:bg-blue-200 rounded-full flex items-center justify-center transition-all"
+                  aria-label="Listen to question and options"
+                >
+                  <Volume2 className="w-5 h-5 text-blue-600" />
+                </button>
+              </div>
               <div className="space-y-3">
                 {page?.options?.map?.((option, index) => {
                   const isSelected = selectedAnswer === index;
                   const isCorrect = index === page?.correctAnswer;
                   const showCorrect = isSelected && showFeedback && isCorrect;
                   const showWrong = isSelected && showFeedback && !isCorrect;
-
                   return (
                     <button
                       key={index}
                       onClick={() => handleAnswerSelect(index)}
                       disabled={showFeedback}
-                      className={`w-full text-xl font-semibold px-6 py-4 rounded-2xl transition-all ${
-                        showCorrect ? 'bg-green-400 text-white' : ''
-                      } ${
-                        showWrong ? 'bg-red-400 text-white' : ''
-                      } ${
-                        !isSelected ? 'bg-purple-100 hover:bg-purple-200 text-gray-800' : ''
-                      } disabled:opacity-70`}
+                      className={`w-full text-xl font-semibold px-6 py-4 rounded-2xl transition-all ${showCorrect ? 'bg-green-400 text-white' : ''} ${showWrong ? 'bg-red-400 text-white' : ''} ${!isSelected ? 'bg-purple-100 hover:bg-purple-200 text-gray-800' : ''} disabled:opacity-70`}
                     >
                       {option}
                     </button>
@@ -216,19 +241,14 @@ export default function StoryActivityPage() {
             </div>
           )}
 
-          {/* Navigation */}
           {!page?.question && (
             <div className="flex justify-end">
               <button
-                onClick={handleNext}
+                onClick={() => handleNext()}
                 className="child-button bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 flex items-center gap-3"
               >
                 {currentPage < pages.length - 1 ? 'Next' : 'Finish'}
-                {currentPage < pages.length - 1 ? (
-                  <ArrowRight className="w-6 h-6" />
-                ) : (
-                  <Star className="w-6 h-6" />
-                )}
+                {currentPage < pages.length - 1 ? <ArrowRight className="w-6 h-6" /> : <Star className="w-6 h-6" />}
               </button>
             </div>
           )}
@@ -243,6 +263,15 @@ export default function StoryActivityPage() {
           )}
         </div>
       </div>
+
+      {coachingHint && (
+        <CoachingHint
+          hint={coachingHint.hint}
+          encouragement={coachingHint.encouragement}
+          onDismiss={() => setCoachingHint(null)}
+        />
+      )}
+
     </div>
   );
 }

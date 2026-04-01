@@ -6,8 +6,62 @@ import { useSession } from 'next-auth/react';
 import {
   ArrowLeft, Heart, Star, BookOpen, BarChart2, Wind,
   Stethoscope, ClipboardList, Users, Link as LinkIcon,
-  ArrowRight, LogIn,
+  ArrowRight, LogIn, Check, Zap, Crown,
 } from 'lucide-react';
+
+const PARENT_PLANS = [
+  {
+    name: 'Free',
+    price: '$0',
+    period: 'forever',
+    highlight: false,
+    color: 'from-gray-400 to-gray-500',
+    features: ['1 child profile', '10 starter activities', 'Progress tracking', 'Stars & badges'],
+  },
+  {
+    name: 'Family',
+    price: '$9',
+    period: '/month',
+    highlight: true,
+    color: 'from-pink-500 to-orange-400',
+    features: ['Up to 3 children', 'All 50+ activities', 'Adaptive difficulty', 'Therapist connection', 'Weekly reports'],
+  },
+  {
+    name: 'Premium',
+    price: '$19',
+    period: '/month',
+    highlight: false,
+    color: 'from-purple-500 to-indigo-500',
+    features: ['Unlimited children', 'All Family features', 'PDF progress exports', 'Priority support', 'Early access'],
+  },
+];
+
+const THERAPIST_PLANS = [
+  {
+    name: 'Starter',
+    price: '$0',
+    period: 'forever',
+    highlight: false,
+    color: 'from-gray-400 to-gray-500',
+    features: ['Up to 3 families', 'Assign activities', 'View progress', 'Basic planning'],
+  },
+  {
+    name: 'Professional',
+    price: '$29',
+    period: '/month',
+    highlight: true,
+    color: 'from-purple-500 to-indigo-500',
+    features: ['Up to 20 families', 'AI activity generation', 'Custom activities', 'Struggle alerts', 'Insights & analytics'],
+  },
+  {
+    name: 'Practice',
+    price: '$79',
+    period: '/month',
+    highlight: false,
+    color: 'from-teal-500 to-emerald-500',
+    features: ['Unlimited families', 'Multi-therapist team', 'White-label reports', 'HIPAA data export', 'Dedicated support'],
+  },
+];
 
 type Role = 'parent' | 'therapist' | null;
 
@@ -121,6 +175,43 @@ export default function GetStartedPage() {
               </div>
               <h3 className="font-bold text-gray-800 mb-2">{b.title}</h3>
               <p className="text-sm text-gray-500">{b.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Pricing Plans */}
+        <h2 className="text-2xl font-bold text-gray-700 mb-6 mt-2">Choose a plan</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+          {(isParent ? PARENT_PLANS : THERAPIST_PLANS).map((plan, i) => (
+            <div
+              key={plan.name}
+              className={`bg-white rounded-2xl border-2 shadow-md flex flex-col overflow-hidden transition-all ${
+                plan.highlight ? 'border-purple-400 shadow-xl scale-105' : 'border-gray-100'
+              }`}
+            >
+              {plan.highlight && (
+                <div className={`text-center text-xs font-bold text-white py-2 bg-gradient-to-r ${plan.color}`}>
+                  Most Popular
+                </div>
+              )}
+              <div className="p-6 flex flex-col flex-1">
+                <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br ${plan.color} text-white mb-3`}>
+                  {i === 0 ? <Star className="w-5 h-5" /> : i === 1 ? <Zap className="w-5 h-5" /> : <Crown className="w-5 h-5" />}
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-1">{plan.name}</h3>
+                <div className="mb-4">
+                  <span className="text-3xl font-extrabold text-gray-900">{plan.price}</span>
+                  <span className="text-gray-400 text-sm ml-1">{plan.period}</span>
+                </div>
+                <ul className="space-y-2 flex-1">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-center gap-2 text-sm text-gray-600">
+                      <Check className="w-4 h-4 text-green-500 flex-shrink-0 stroke-[3]" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           ))}
         </div>

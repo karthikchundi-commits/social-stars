@@ -5,15 +5,18 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
   Copy, Check, Users, Star, Award,
-  Plus, Trash2, BookOpen, ClipboardList, Quote, LogOut, Sparkles, TrendingUp, Calendar, PenLine,
+  Plus, Trash2, BookOpen, ClipboardList, Quote, Sparkles, TrendingUp, Calendar, PenLine, Play, AlertTriangle, Pencil,
 } from 'lucide-react';
-import { signOut } from 'next-auth/react';
+import { ScheduleManager } from '@/components/circle/ScheduleManager';
+import { ProgressReportModal } from '@/components/ProgressReportModal';
+import { EmotionVelocityChart } from '@/components/EmotionVelocityChart';
 
 interface AssignedActivity {
   id: string;
   activityId: string;
   title: string;
   type: string;
+  createdBy?: string;
   note: string | null;
   assignedAt: string;
 }
@@ -43,6 +46,15 @@ interface Activity {
   type: string;
 }
 
+interface ScheduleEntry {
+  id: string;
+  dayOfWeek: number;
+  timeOfDay: string;
+  title: string;
+  activityId?: string | null;
+  notes?: string | null;
+}
+
 const MOOD_EMOJI: Record<string, string> = {
   happy: '😊', excited: '🤩', calm: '😌', tired: '😴',
   sad: '😢', anxious: '😟', angry: '😠', silly: '😜',
@@ -61,6 +73,9 @@ export default function TherapistPage() {
   const [assignActivityId, setAssignActivityId] = useState('');
   const [assignNote, setAssignNote] = useState('');
   const [assigning, setAssigning] = useState(false);
+  const [schedule, setSchedule] = useState<ScheduleEntry[]>([]);
+  const [struggles, setStruggles] = useState<any[]>([]);
+  const [myActivities, setMyActivities] = useState<any[]>([]);
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/auth/login');
@@ -70,19 +85,63 @@ export default function TherapistPage() {
     }
   }, [status]);
 
+  // Poll struggle signals every 30 seconds
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/therapist/struggles');
+        const data = await res.json();
+        setStruggles(data.struggles ?? []);
+      } catch {
+        // silent fail
+      }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [status]);
+
   const fetchData = async () => {
-    const [inviteRes, clientsRes, activitiesRes] = await Promise.all([
+    const [inviteRes, clientsRes, activitiesRes, strugglesRes, myActivitiesRes] = await Promise.all([
       fetch('/api/therapist/invite'),
       fetch('/api/therapist/clients'),
       fetch('/api/activities'),
+      fetch('/api/therapist/struggles'),
+      fetch('/api/therapist/create'),
     ]);
     const inviteData = await inviteRes.json();
     const clientsData = await clientsRes.json();
     const activitiesData = await activitiesRes.json();
+    const strugglesData = await strugglesRes.json();
+    const myActivitiesData = await myActivitiesRes.json();
     setInviteCode(inviteData.inviteCode ?? '');
     setClients(clientsData.clients ?? []);
     setActivities(activitiesData.activities ?? []);
+    setStruggles(strugglesData.struggles ?? []);
+    setMyActivities(myActivitiesData.activities ?? []);
+
+    const therapistId = (session?.user as any)?.id;
+    if (therapistId) {
+      const scheduleRes = await fetch(`/api/circle/schedule?therapistId=${therapistId}`);
+      const scheduleData = await scheduleRes.json();
+      setSchedule(scheduleData.schedule ?? []);
+    }
+
     setLoading(false);
+  };
+
+  const handleScheduleAdd = async (entry: Omit<ScheduleEntry, 'id'>) => {
+    const res = await fetch('/api/circle/schedule', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(entry),
+    });
+    const data = await res.json();
+    if (data.entry) setSchedule((prev) => [...prev, data.entry]);
+  };
+
+  const handleScheduleDelete = async (id: string) => {
+    await fetch(`/api/circle/schedule?id=${id}`, { method: 'DELETE' });
+    setSchedule((prev) => prev.filter((e) => e.id !== id));
   };
 
   const copyCode = () => {
@@ -136,6 +195,12 @@ export default function TherapistPage() {
           </div>
           <div className="flex gap-3 flex-wrap">
             <button
+              onClick={() => router.push('/circle/host')}
+              className="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
+            >
+              <Play className="w-5 h-5" /> Live Circle Time
+            </button>
+            <button
               onClick={() => router.push('/therapist/create')}
               className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
             >
@@ -171,12 +236,6 @@ export default function TherapistPage() {
             >
               <BookOpen className="w-5 h-5" /> Story Builder
             </button>
-            <button
-              onClick={() => signOut({ callbackUrl: '/' })}
-              className="px-6 py-3 bg-gray-500 text-white font-bold rounded-2xl hover:bg-gray-600 transition-all flex items-center gap-2 shadow-lg"
-            >
-              <LogOut className="w-5 h-5" /> Logout
-            </button>
           </div>
         </div>
 
@@ -196,6 +255,36 @@ export default function TherapistPage() {
               {copied ? 'Copied!' : 'Copy'}
             </button>
           </div>
+        </div>
+
+        {/* Live Circle Time Banner */}
+        <div className="bg-gradient-to-r from-pink-500 to-rose-500 rounded-3xl shadow-xl p-6 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <Users className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-white">Live Circle Time</h2>
+              <p className="text-pink-100 text-sm mt-0.5">Start a live group story session — children join with a code on their device</p>
+            </div>
+          </div>
+          <button
+            onClick={() => router.push('/circle/host')}
+            className="px-6 py-3 bg-white text-pink-600 font-bold rounded-2xl hover:bg-pink-50 transition-all flex items-center gap-2 shadow-md flex-shrink-0"
+          >
+            <Play className="w-5 h-5" />
+            Start Session
+          </button>
+        </div>
+
+        {/* Weekly Schedule Manager */}
+        <div className="bg-white rounded-3xl shadow-xl p-8 mb-8">
+          <ScheduleManager
+            schedule={schedule}
+            activities={activities}
+            onAdd={handleScheduleAdd}
+            onDelete={handleScheduleDelete}
+          />
         </div>
 
         {/* Stats */}
@@ -261,6 +350,60 @@ export default function TherapistPage() {
           </div>
         </div>
 
+        {/* Struggle Signals */}
+        {struggles.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-red-600 mb-4 flex items-center gap-2">
+              <AlertTriangle className="w-7 h-7" /> Children Needing Attention
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {struggles.map((s) => (
+                <div key={s.childId} className="bg-red-50 border-2 border-red-200 rounded-2xl p-5">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: s.avatarColor }}>
+                      {s.childName.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-800">{s.childName}</div>
+                      <div className="text-xs text-gray-500">Last 48 hours</div>
+                    </div>
+                  </div>
+                  <div className="space-y-1 text-sm">
+                    {s.wrongAnswers > 0 && <p className="text-red-600 font-semibold">❌ {s.wrongAnswers} wrong answers</p>}
+                    {s.hesitations > 0 && <p className="text-orange-600 font-semibold">⏳ {s.hesitations} hesitations</p>}
+                    <p className="text-gray-600">Activities: {s.activityTypes.join(', ')}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* My Custom Activities */}
+        {myActivities.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-purple-600 mb-4 flex items-center gap-2">
+              <PenLine className="w-7 h-7" /> My Custom Activities
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {myActivities.map((a) => (
+                <div key={a.id} className="bg-white border-2 border-purple-100 rounded-2xl p-5 flex items-center justify-between gap-3 shadow-sm">
+                  <div className="min-w-0">
+                    <p className="font-bold text-gray-800 truncate">{a.title}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{a.type}</p>
+                  </div>
+                  <button
+                    onClick={() => router.push(`/therapist/create?edit=${a.id}`)}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 font-semibold text-sm rounded-xl transition-all"
+                  >
+                    <Pencil className="w-4 h-4" /> Edit
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Clients List */}
         {clients.length === 0 ? (
           <div className="bg-white rounded-3xl shadow-xl p-12 text-center">
@@ -296,9 +439,13 @@ export default function TherapistPage() {
                             <div className="text-sm text-gray-500">Age {child.age}</div>
                           </div>
                         </div>
-                        <button onClick={() => openAssign(child)} className="p-2 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 transition-all">
-                          <Plus className="w-5 h-5" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          {/* PC-14: Progress Report */}
+                          <ProgressReportModal childId={child.id} childName={child.name} />
+                          <button onClick={() => openAssign(child)} className="p-2 bg-purple-100 text-purple-600 rounded-xl hover:bg-purple-200 transition-all">
+                            <Plus className="w-5 h-5" />
+                          </button>
+                        </div>
                       </div>
 
                       <div className="flex gap-4 mb-3 text-sm">
@@ -313,6 +460,12 @@ export default function TherapistPage() {
                         </div>
                       )}
 
+                      {/* PC-08: Emotion Transition Velocity */}
+                      <div className="mb-3">
+                        <div className="text-xs text-gray-500 mb-2">Emotion velocity:</div>
+                        <EmotionVelocityChart childId={child.id} />
+                      </div>
+
                       {child.assignedActivities.length > 0 && (
                         <div>
                           <div className="text-xs text-gray-500 mb-1">Assigned:</div>
@@ -320,9 +473,16 @@ export default function TherapistPage() {
                             {child.assignedActivities.map((a) => (
                               <div key={a.id} className="flex items-center justify-between bg-purple-50 rounded-xl px-3 py-1">
                                 <span className="text-xs font-semibold text-purple-700 truncate">{a.title}</span>
-                                <button onClick={() => handleUnassign(child.id, a.activityId)} className="ml-2 text-red-400 hover:text-red-600">
-                                  <Trash2 className="w-3 h-3" />
-                                </button>
+                                <div className="flex items-center">
+                                  {a.createdBy === (session?.user as any)?.id && (
+                                    <button onClick={() => router.push(`/therapist/create?edit=${a.activityId}`)} className="ml-1 text-blue-400 hover:text-blue-600">
+                                      <Pencil className="w-3 h-3" />
+                                    </button>
+                                  )}
+                                  <button onClick={() => handleUnassign(child.id, a.activityId)} className="ml-2 text-red-400 hover:text-red-600">
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
                               </div>
                             ))}
                           </div>

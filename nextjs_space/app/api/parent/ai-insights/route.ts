@@ -2,15 +2,13 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import Anthropic from '@anthropic-ai/sdk';
+import { geminiJSON, isGeminiConfigured } from '@/lib/gemini';
 
 export const dynamic = 'force-dynamic';
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
 export async function POST(request: Request) {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured' }, { status: 500 });
+  if (!isGeminiConfigured()) {
+    return NextResponse.json({ error: 'GROQ_API_KEY not configured' }, { status: 500 });
   }
 
   const session = await getServerSession(authOptions);
@@ -75,20 +73,6 @@ Generate a friendly, easy-to-read parent report as JSON with exactly this shape:
   "encouragement": "A warm, personal closing message for the parent"
 }`;
 
-  const response = await client.messages.create({
-    model: 'claude-opus-4-6',
-    max_tokens: 1800,
-    thinking: { type: 'enabled', budget_tokens: 3000 },
-    messages: [{ role: 'user', content: prompt }],
-  });
-
-  const textBlock = response.content.find((b) => b.type === 'text');
-  if (!textBlock || textBlock.type !== 'text') {
-    return NextResponse.json({ error: 'No response from AI' }, { status: 500 });
-  }
-
-  const match = textBlock.text.match(/\{[\s\S]*\}/);
-  if (!match) return NextResponse.json({ error: 'Could not parse AI response' }, { status: 500 });
-
-  return NextResponse.json({ insights: JSON.parse(match[0]) });
+  const insights = await geminiJSON(prompt, 1800);
+  return NextResponse.json({ insights });
 }

@@ -2,11 +2,9 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import Anthropic from '@anthropic-ai/sdk';
+import { geminiJSON, isGeminiConfigured } from '@/lib/gemini';
 
 export const dynamic = 'force-dynamic';
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // ── Content schema descriptions for the prompt ──────────────────────────────
 
@@ -16,13 +14,27 @@ The emotion must be one of: happy, sad, angry, surprised, scared, disgusted, cal
 The child will be shown 6 face images and must pick the one matching the emotion.
 Example: { "emotion": "happy" }`,
 
-  scenario: `Return content as: { "choices": [ { "text": "...", "isCorrect": true|false, "feedback": "..." }, ... ] }
-Provide exactly 3-4 choices. Exactly one must have isCorrect: true.
-feedback should be warm, encouraging (1-2 sentences), child-appropriate.
-Example: { "choices": [
-  { "text": "Wait patiently for your turn", "isCorrect": true, "feedback": "That's great! Waiting your turn is very kind." },
-  { "text": "Grab the toy anyway", "isCorrect": false, "feedback": "It's better to wait so everyone gets a turn." },
-  { "text": "Walk away and cry", "isCorrect": false, "feedback": "It's okay to feel sad, but try asking instead." }
+  scenario: `Return content as: { "scenes": [ { "situation": "...", "choices": [ { "text": "...", "isCorrect": true|false, "feedback": "..." } ] } ] }
+Provide exactly 3 scenes. Each scene is a different social situation related to the overall theme.
+Each scene must have exactly 3 choices. Exactly one must have isCorrect: true.
+situation: 1-2 sentences describing the scene (simple, child-appropriate language for ages 3-6).
+feedback should be warm, encouraging (1-2 sentences).
+Example: { "scenes": [
+  { "situation": "You want to play with a toy your friend has.", "choices": [
+    { "text": "Ask nicely to share", "isCorrect": true, "feedback": "Great asking! Sharing is caring." },
+    { "text": "Grab it away", "isCorrect": false, "feedback": "Try asking instead — your friend will be happier." },
+    { "text": "Walk away and cry", "isCorrect": false, "feedback": "It's okay to feel sad, but try asking nicely." }
+  ]},
+  { "situation": "A new child sits alone at snack time.", "choices": [
+    { "text": "Invite them to sit with you", "isCorrect": true, "feedback": "That's so kind! New friends are wonderful." },
+    { "text": "Ignore them", "isCorrect": false, "feedback": "Everyone likes to feel included. Try saying hello!" },
+    { "text": "Point and whisper", "isCorrect": false, "feedback": "That might hurt their feelings. Try being friendly instead." }
+  ]},
+  { "situation": "You accidentally bump into someone and they drop their snack.", "choices": [
+    { "text": "Say sorry and help pick it up", "isCorrect": true, "feedback": "Saying sorry is very grown-up! Well done." },
+    { "text": "Run away", "isCorrect": false, "feedback": "Accidents happen — saying sorry helps make it better." },
+    { "text": "Laugh at them", "isCorrect": false, "feedback": "That would hurt their feelings. A kind sorry is better." }
+  ]}
 ]}`,
 
   story: `Return content as: { "pages": [ { "text": "...", "image": "", "question": "...", "options": ["...", "...", "..."], "correctAnswer": 0 }, ... ] }
@@ -83,8 +95,8 @@ Example: { "scenario": "You see a new friend sitting alone at lunch.", "characte
 // ── Route handler ────────────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json({ error: 'ANTHROPIC_API_KEY is not configured on the server.' }, { status: 500 });
+  if (!isGeminiConfigured()) {
+    return NextResponse.json({ error: 'GROQ_API_KEY is not configured on the server.' }, { status: 500 });
   }
 
   const session = await getServerSession(authOptions);
@@ -165,23 +177,9 @@ ${schemaDocs}
 Respond with ONLY the JSON object. No markdown, no explanation.`;
 
   try {
-    const message = await client.messages.create({
-      model: 'claude-opus-4-6',
-      max_tokens: 2048,
-      thinking: { type: 'adaptive' },
-      messages: [{ role: 'user', content: userPrompt }],
-    });
-
-    const textBlock = message.content.find((b) => b.type === 'text');
-    if (!textBlock || textBlock.type !== 'text') {
-      return NextResponse.json({ error: 'No text response from AI' }, { status: 500 });
-    }
-
-    // Extract JSON — strip any accidental markdown fences
-    const raw = textBlock.text.trim().replace(/^```json?\n?/, '').replace(/\n?```$/, '');
     let parsed: { title: string; description: string; content: unknown };
     try {
-      parsed = JSON.parse(raw);
+      parsed = await geminiJSON<{ title: string; description: string; content: unknown }>(userPrompt, 2048);
     } catch {
       return NextResponse.json({ error: 'AI returned invalid JSON. Please try again.' }, { status: 500 });
     }

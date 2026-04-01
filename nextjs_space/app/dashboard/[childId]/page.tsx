@@ -46,13 +46,51 @@ function getRecommendations(
   completedIds: Set<string>,
   allActivities: Activity[],
   assignedIds: Set<string>,
+  adaptiveData?: { adaptation?: { difficultyLevel?: number }; recommendations?: Array<{ type: string; confusionRate: number; priority: string }>; personalizedPriority?: Record<string, string[]> } | null,
+  recentCompletions?: Array<{ activityId: string; completedAt: string; type: string }>,
+  personalizedPriority?: Record<string, string[]>,
 ): Activity[] {
   // Exclude assigned activities (shown separately)
   const pool = allActivities.filter((a) => !assignedIds.has(a.id));
   if (!pool.length) return [];
 
   // If no mood yet or streak is 0, prioritise easiest uncompleted activities across all types
-  const priority = mood ? (TYPE_PRIORITY[mood] ?? Object.keys(TYPE_PRIORITY)[0].split(',')) : ['breathing', 'emotion', 'scenario', 'story', 'communication'];
+  let priority = mood ? (TYPE_PRIORITY[mood] ?? Object.keys(TYPE_PRIORITY)[0].split(',')) : ['breathing', 'emotion', 'scenario', 'story', 'communication'];
+
+  // Use personalized priority if we have data for this mood (at least 2 types)
+  if (mood && personalizedPriority?.[mood] && personalizedPriority[mood].length >= 2) {
+    const allTypes = ['breathing', 'emotion', 'scenario', 'story', 'communication', 'social_coach'];
+    const personalized = personalizedPriority[mood];
+    // Merge: personalized first, then remaining types not in personalized list
+    priority = [...personalized, ...allTypes.filter(t => !personalized.includes(t))];
+  }
+
+  // 7-day type stats: boost types with 0 completions in last 7 days
+  if (recentCompletions && recentCompletions.length >= 0) {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const recentTypes = new Set(
+      recentCompletions
+        .filter((c) => new Date(c.completedAt) >= sevenDaysAgo)
+        .map((c) => c.type),
+    );
+    const allTypes = ['breathing', 'emotion', 'scenario', 'story', 'communication'];
+    const zeroCompletionTypes = allTypes.filter((t) => !recentTypes.has(t));
+    // Add zero-completion types after mood-priority types if not already in list
+    for (const t of zeroCompletionTypes) {
+      if (!priority.includes(t)) priority = [...priority, t];
+    }
+  }
+
+  // De-prioritize types with high confusion rate (>50%) from adaptiveData
+  if (adaptiveData?.recommendations) {
+    const highConfusion = adaptiveData.recommendations
+      .filter((r) => r.confusionRate > 50)
+      .map((r) => r.type);
+    priority = [
+      ...priority.filter((t) => !highConfusion.includes(t)),
+      ...priority.filter((t) => highConfusion.includes(t)),
+    ];
+  }
 
   const picked: Activity[] = [];
   const used = new Set<string>();
@@ -89,6 +127,7 @@ interface Activity {
   description: string;
   type: string;
   imageUrl?: string;
+  difficulty?: number;
 }
 
 interface Child {
@@ -132,6 +171,8 @@ export default function ChildDashboard() {
   const [showMoodCheck, setShowMoodCheck] = useState(false);
   const [todayMood, setTodayMood] = useState<string | null>(null);
   const [savingMood, setSavingMood] = useState(false);
+  const [adaptiveData, setAdaptiveData] = useState<{ adaptation?: { difficultyLevel?: number }; recommendations?: Array<{ type: string; confusionRate: number; priority: string }>; personalizedPriority?: Record<string, string[]> } | null>(null);
+  const [completedActivitiesData, setCompletedActivitiesData] = useState<Array<{ activityId: string; completedAt: string; type: string }>>([]);
 
   useEffect(() => {
     if (childId) {
@@ -139,19 +180,37 @@ export default function ChildDashboard() {
     }
   }, [childId]);
 
+  // Poll adaptive data every 60 seconds to refresh recommendations live
+  useEffect(() => {
+    if (!childId) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/adaptive?childId=${childId}`);
+        const data = await res.json();
+        setAdaptiveData(data ?? null);
+      } catch {
+        // silent fail
+      }
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [childId]);
+
   const fetchData = async () => {
     try {
-      const [childRes, activitiesRes, progressRes, moodRes] = await Promise.all([
+      const [childRes, activitiesRes, progressRes, moodRes, adaptiveRes] = await Promise.all([
         fetch('/api/children'),
         fetch('/api/activities'),
         fetch(`/api/progress?childId=${childId}`),
         fetch(`/api/mood?childId=${childId}`),
+        fetch(`/api/adaptive?childId=${childId}`),
       ]);
 
       const childData = await childRes.json();
       const activitiesData = await activitiesRes.json();
       const progressData = await progressRes.json();
       const moodData = await moodRes.json();
+      const adaptiveResult = await adaptiveRes.json();
+      setAdaptiveData(adaptiveResult ?? null);
 
       const currentChild = childData?.children?.find((c: Child) => c?.id === childId);
       setChild(currentChild ?? null);
@@ -162,11 +221,22 @@ export default function ChildDashboard() {
       setAssignedActivities(
         (progressData?.assignments ?? []).map((a: any) => a.activity).filter(Boolean)
       );
-      setActivities(allActivities.filter((a) => !assignmentIds.has(a.id)));
+      setActivities(allActivities);
 
       const completedActivityIds: string[] =
         progressData?.completedActivities?.map((ca: any) => ca?.activityId ?? '') ?? [];
       setCompletedIds(new Set<string>(completedActivityIds));
+
+      // Build completedActivitiesData with type info
+      const activityMap = new Map(allActivities.map((a) => [a.id, a]));
+      const completedWithType: Array<{ activityId: string; completedAt: string; type: string }> =
+        (progressData?.completedActivities ?? []).map((ca: any) => ({
+          activityId: ca?.activityId ?? '',
+          completedAt: ca?.completedAt ?? new Date().toISOString(),
+          type: activityMap.get(ca?.activityId ?? '')?.type ?? '',
+        }));
+      setCompletedActivitiesData(completedWithType);
+
       setAchievements(progressData?.achievements ?? []);
       setStreak(progressData?.streak ?? 0);
 
@@ -223,14 +293,15 @@ export default function ChildDashboard() {
   const handleActivityClick = (activity: Activity) => {
     const type = activity?.type ?? '';
     const id = activity?.id ?? '';
+    const moodParam = todayMood ? `&mood=${todayMood}` : '';
 
     const routes: Record<string, string> = {
-      emotion: `/activity/emotion/${id}?childId=${childId}`,
-      scenario: `/activity/scenario/${id}?childId=${childId}`,
-      story: `/activity/story/${id}?childId=${childId}`,
-      breathing: `/activity/breathing/${id}?childId=${childId}`,
-      communication: `/activity/communication/${id}?childId=${childId}`,
-      social_coach: `/activity/social-coach/${id}?childId=${childId}`,
+      emotion: `/activity/emotion/${id}?childId=${childId}${moodParam}`,
+      scenario: `/activity/scenario/${id}?childId=${childId}${moodParam}`,
+      story: `/activity/story/${id}?childId=${childId}${moodParam}`,
+      breathing: `/activity/breathing/${id}?childId=${childId}${moodParam}`,
+      communication: `/activity/communication/${id}?childId=${childId}${moodParam}`,
+      social_coach: `/activity/social-coach/${id}?childId=${childId}${moodParam}`,
     };
 
     if (routes[type]) {
@@ -272,8 +343,9 @@ export default function ChildDashboard() {
 
   const totalStars = completedIds.size;
   const assignedIds = new Set(assignedActivities.map((a) => a.id));
-  const recommendations = getRecommendations(todayMood, streak, completedIds, activities, assignedIds);
+  const recommendations = getRecommendations(todayMood, streak, completedIds, activities, assignedIds, adaptiveData, completedActivitiesData, adaptiveData?.personalizedPriority);
   const moodBanner = todayMood ? MOOD_BANNER[todayMood] : null;
+  const difficultyLevel = adaptiveData?.adaptation?.difficultyLevel ?? 0.5;
 
   return (
     <div className="min-h-screen p-6">
@@ -481,7 +553,20 @@ export default function ChildDashboard() {
 
         {/* Activity categories */}
         {(['breathing', 'emotion', 'scenario', 'story', 'communication'] as const).map((type) => {
-          const typeActivities = activities.filter((a) => a.type === type);
+          const diffLevel = adaptiveData?.adaptation?.difficultyLevel ?? 0.5;
+          // Convert 0-1 difficulty level to 1-3 activity difficulty scale
+          const maxDifficulty = diffLevel <= 0.3 ? 1 : diffLevel <= 0.65 ? 2 : 3;
+
+          const typeActivities = activities
+            .filter((a) => a.type === type)
+            .filter((a) => !a.difficulty || a.difficulty <= maxDifficulty + 1) // allow 1 level above
+            .sort((a, b) => (assignedIds.has(b.id) ? 1 : 0) - (assignedIds.has(a.id) ? 1 : 0))
+            .sort((a, b) => {
+              // Sort by difficulty based on child's level
+              if (difficultyLevel <= 0.4) return (a.difficulty ?? 2) - (b.difficulty ?? 2);
+              if (difficultyLevel >= 0.7) return (b.difficulty ?? 2) - (a.difficulty ?? 2);
+              return 0;
+            });
           if (!typeActivities.length) return null;
 
           const typeLabels: Record<string, string> = {
@@ -510,6 +595,11 @@ export default function ChildDashboard() {
                       {isCompleted && (
                         <div className="absolute top-4 right-4 bg-yellow-400 rounded-full p-2 z-10">
                           <Star className="w-6 h-6 text-white fill-white" />
+                        </div>
+                      )}
+                      {assignedIds.has(activity?.id ?? '') && (
+                        <div className="absolute top-3 left-3 bg-indigo-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10">
+                          ⭐ From Therapist
                         </div>
                       )}
                       <div

@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Social Stars — Investor Pitch</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #f8f7ff;
+      color: #1a1a2e;
+      line-height: 1.6;
+    }
+
+    /* ─── COVER ─────────────────────────────────────────────── */
+    .cover {
+      background: linear-gradient(135deg, #7c3aed 0%, #ec4899 60%, #f97316 100%);
+      color: #fff;
+      padding: 100px 60px 80px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.08) 0%, transparent 60%),
+                  radial-gradient(circle at 80% 20%, rgba(255,255,255,0.06) 0%, transparent 50%);
+    }
+    .cover-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 100px;
+      padding: 6px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+    .cover h1 {
+      font-size: 72px;
+      font-weight: 900;
+      letter-spacing: -2px;
+      margin-bottom: 12px;
+    }
+    .cover h1 span { color: #fde68a; }
+    .cover .tagline {
+      font-size: 24px;
+      font-weight: 400;
+      opacity: 0.9;
+      max-width: 640px;
+      margin: 0 auto 40px;
+    }
+    .cover-stats {
+      display: flex;
+      justify-content: center;
+      gap: 60px;
+      margin-top: 50px;
+      flex-wrap: wrap;
+    }
+    .cover-stat { text-align: center; }
+    .cover-stat .num { font-size: 42px; font-weight: 900; color: #fde68a; }
+    .cover-stat .label { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+
+    /* ─── SECTIONS ──────────────────────────────────────────── */
+    .section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 70px 40px;
+    }
+    .section + .section { border-top: 1px solid #e9e6f5; }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: #7c3aed;
+      margin-bottom: 10px;
+    }
+    h2 {
+      font-size: 38px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #1a1a2e;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+    h2 em { font-style: normal; color: #7c3aed; }
+    .lead {
+      font-size: 18px;
+      color: #555;
+      max-width: 740px;
+      margin-bottom: 48px;
+    }
+
+    /* ─── PROBLEM ───────────────────────────────────────────── */
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+    .problem-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 32px;
+      border-left: 5px solid #f97316;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    }
+    .problem-card .icon { font-size: 36px; margin-bottom: 16px; }
+    .problem-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: #1a1a2e; }
+    .problem-card p { font-size: 15px; color: #666; }
+    .stat-highlight {
+      font-size: 32px;
+      font-weight: 900;
+      color: #ec4899;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* ─── SOLUTION ──────────────────────────────────────────── */
+    .solution-banner {
+      background: linear-gradient(135deg, #ede9fe, #fce7f3);
+      border-radius: 24px;
+      padding: 48px;
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .solution-banner h3 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #7c3aed;
+      margin-bottom: 12px;
+    }
+    .solution-banner p { font-size: 17px; color: #555; max-width: 700px; margin: 0 auto; }
+
+    /* ─── USER TIERS ────────────────────────────────────────── */
+    .tier-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+    @media (max-width: 800px) { .tier-grid { grid-template-columns: 1fr; } }
+    .tier-card {
+      border-radius: 24px;
+      padding: 36px 32px;
+      color: #fff;
+    }
+    .tier-card.child  { background: linear-gradient(135deg, #f97316, #ec4899); }
+    .tier-card.parent { background: linear-gradient(135deg, #7c3aed, #4f46e5); }
+    .tier-card.therapist { background: linear-gradient(135deg, #059669, #0d9488); }
+    .tier-card .tier-icon { font-size: 42px; margin-bottom: 16px; }
+    .tier-card h3 { font-size: 22px; font-weight: 800; margin-bottom: 16px; }
+    .tier-card ul { list-style: none; }
+    .tier-card ul li {
+      font-size: 14px;
+      padding: 5px 0;
+      opacity: 0.92;
+      padding-left: 20px;
+      position: relative;
+    }
+    .tier-card ul li::before { content: '✓'; position: absolute; left: 0; font-weight: 700; }
+
+    /* ─── FEATURES DEEP DIVE ────────────────────────────────── */
+    .feature-group { margin-bottom: 56px; }
+    .feature-group-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #ec4899;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #fce7f3;
+    }
+    .feature-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 28px 24px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .feature-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+    .feature-card .fc-icon { font-size: 32px; margin-bottom: 14px; }
+    .feature-card h4 { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
+    .feature-card p { font-size: 13.5px; color: #666; line-height: 1.5; }
+    .feature-tag {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .tag-ai    { background: #ede9fe; color: #7c3aed; }
+    .tag-live  { background: #fce7f3; color: #be185d; }
+    .tag-child { background: #fff7ed; color: #ea580c; }
+    .tag-data  { background: #ecfdf5; color: #059669; }
+
+    /* ─── TECH STACK ────────────────────────────────────────── */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 18px;
+    }
+    .tech-item {
+      background: #fff;
+      border-radius: 16px;
+      padding: 22px 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .tech-item .t-icon { font-size: 28px; }
+    .tech-item .t-info h4 { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+    .tech-item .t-info p { font-size: 12px; color: #888; }
+
+    /* ─── MARKET ────────────────────────────────────────────── */
+    .market-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+    @media (max-width: 700px) { .market-grid { grid-template-columns: 1fr; } }
+    .market-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 36px 28px;
+      text-align: center;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    }
+    .market-card .m-num {
+      font-size: 44px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #7c3aed, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .market-card .m-label { font-size: 14px; color: #555; margin-top: 8px; font-weight: 600; }
+    .market-card .m-sub   { font-size: 12px; color: #999; margin-top: 4px; }
+
+    /* ─── COMPETITIVE ADVANTAGE ─────────────────────────────── */
+    .advantage-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+    }
+    .advantage-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+      border-top: 4px solid;
+    }
+    .advantage-card:nth-child(1) { border-color: #7c3aed; }
+    .advantage-card:nth-child(2) { border-color: #ec4899; }
+    .advantage-card:nth-child(3) { border-color: #f97316; }
+    .advantage-card:nth-child(4) { border-color: #059669; }
+    .advantage-card:nth-child(5) { border-color: #0ea5e9; }
+    .advantage-card:nth-child(6) { border-color: #d97706; }
+    .advantage-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 10px; color: #1a1a2e; }
+    .advantage-card p { font-size: 14px; color: #666; }
+    .adv-icon { font-size: 30px; margin-bottom: 14px; }
+
+    /* ─── TRACTION / ROADMAP ────────────────────────────────── */
+    .roadmap { display: flex; flex-direction: column; gap: 0; position: relative; }
+    .roadmap::before {
+      content: '';
+      position: absolute;
+      left: 22px; top: 0; bottom: 0;
+      width: 3px;
+      background: linear-gradient(to bottom, #7c3aed, #ec4899, #f97316);
+      border-radius: 4px;
+    }
+    .roadmap-item {
+      display: flex;
+      gap: 32px;
+      padding: 0 0 36px 0;
+    }
+    .roadmap-dot {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      z-index: 1;
+      box-shadow: 0 0 0 4px #f8f7ff;
+    }
+    .dot-done    { background: linear-gradient(135deg, #7c3aed, #4f46e5); }
+    .dot-now     { background: linear-gradient(135deg, #ec4899, #be185d); }
+    .dot-next    { background: linear-gradient(135deg, #f97316, #ea580c); }
+    .dot-future  { background: #e5e7eb; }
+    .roadmap-content h4 { font-size: 17px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+    .roadmap-content p  { font-size: 14px; color: #666; }
+    .roadmap-content .phase-tag {
+      display: inline-block;
+      padding: 2px 12px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .phase-done   { background: #ede9fe; color: #7c3aed; }
+    .phase-now    { background: #fce7f3; color: #be185d; }
+    .phase-next   { background: #fff7ed; color: #ea580c; }
+    .phase-future { background: #f3f4f6; color: #6b7280; }
+
+    /* ─── ASK ───────────────────────────────────────────────── */
+    .ask-section {
+      background: linear-gradient(135deg, #1a1a2e 0%, #2d1b69 50%, #1a1a2e 100%);
+      color: #fff;
+      padding: 80px 60px;
+      text-align: center;
+    }
+    .ask-section h2 { color: #fff; font-size: 44px; margin-bottom: 16px; }
+    .ask-section .lead { color: rgba(255,255,255,0.75); margin: 0 auto 50px; }
+    .ask-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      max-width: 900px;
+      margin: 0 auto 50px;
+    }
+    @media (max-width: 700px) { .ask-grid { grid-template-columns: 1fr; } }
+    .ask-card {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 32px 24px;
+    }
+    .ask-card .ask-num {
+      font-size: 36px;
+      font-weight: 900;
+      color: #fde68a;
+      margin-bottom: 8px;
+    }
+    .ask-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+    .ask-card p  { font-size: 13px; opacity: 0.7; }
+
+    /* ─── FOOTER ────────────────────────────────────────────── */
+    .footer {
+      background: #1a1a2e;
+      color: rgba(255,255,255,0.5);
+      text-align: center;
+      padding: 32px;
+      font-size: 13px;
+    }
+    .footer strong { color: #fff; }
+
+    /* ─── UTILITY ───────────────────────────────────────────── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: start;
+    }
+    @media (max-width: 750px) { .two-col { grid-template-columns: 1fr; } }
+    .pill {
+      display: inline-block;
+      padding: 5px 16px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      background: #ede9fe;
+      color: #7c3aed;
+      margin: 3px;
+    }
+
+    @media print {
+      .cover { padding: 60px 40px; }
+      .section { padding: 48px 40px; }
+      .feature-card:hover { transform: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     COVER
+═══════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-badge">⭐ Investor Pitch · 2026</div>
+  <h1>Social <span>Stars</span> ✨</h1>
+  <p class="tagline">AI-powered social-emotional learning for autistic children — built for the whole care ecosystem</p>
+  <div class="cover-stats">
+    <div class="cover-stat"><div class="num">3–6</div><div class="label">Target age group</div></div>
+    <div class="cover-stat"><div class="num">6</div><div class="label">Activity types</div></div>
+    <div class="cover-stat"><div class="num">3</div><div class="label">User tiers</div></div>
+    <div class="cover-stat"><div class="num">AI</div><div class="label">Powered by Claude</div></div>
+    <div class="cover-stat"><div class="num">Live</div><div class="label">Multiplayer sessions</div></div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     THE PROBLEM
+═══════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">The Problem</div>
+  <h2>Early intervention is critical — and <em>massively underserved</em></h2>
+  <p class="lead">1 in 36 children is diagnosed with autism. Ages 3–6 are the highest-impact window for intervention, yet families face fragmented, inaccessible, and expensive support.</p>
+
+  <div class="problem-grid">
+    <div class="problem-card">
+      <div class="icon">⏳</div>
+      <h3>Therapy Access Gap</h3>
+      <span class="stat-highlight">18–24 mo</span>
+      Average wait time for ABA or speech therapy in the US. Families are left without support during the most critical developmental window.
+    </div>
+    <div class="problem-card">
+      <div class="icon">💸</div>
+      <h3>Prohibitive Costs</h3>
+      <span class="stat-highlight">$60–120/hr</span>
+      Cost of an occupational therapist session. Insurance coverage is inconsistent, and most families need 5–20 hours per week.
+    </div>
+    <div class="problem-card">
+      <div class="icon">🔗</div>
+      <h3>Disconnected Ecosystem</h3>
+      <span class="stat-highlight">0 tools</span>
+      No platform bridges the therapist ↔ parent ↔ child triangle with shared data, real-time collaboration, and AI-driven insights.
+    </div>
+    <div class="problem-card">
+      <div class="icon">📉</div>
+      <h3>Generalization Failure</h3>
+      Skills learned in a clinic rarely transfer to the home environment without structured, consistent home practice tools.
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     THE SOLUTION
+═══════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">The Solution</div>
+  <h2>One platform. <em>Three stakeholders. </em>Infinite impact.</h2>
+  <p class="lead">Social Stars connects therapists, parents, and children in a unified digital care environment — making clinical-quality intervention accessible, measurable, and engaging every day.</p>
+
+  <div class="solution-banner">
+    <h3>🌟 Social Stars = Clinic-Grade Intervention + Consumer-Grade Experience</h3>
+    <p>We deliver evidence-based social-emotional learning through games children love, give therapists powerful management and AI tools, and keep parents in the loop with real-time insights — all on a single platform.</p>
+  </div>
+
+  <div class="tier-grid">
+    <div class="tier-card child">
+      <div class="tier-icon">🧒</div>
+      <h3>Children (Ages 3–6)</h3>
+      <ul>
+        <li>6 types of interactive activities</li>
+        <li>Real-time emotion detection via camera</li>
+        <li>Adaptive difficulty based on performance</li>
+        <li>Stars, badges, streaks & confetti rewards</li>
+        <li>Daily mood check-ins</li>
+        <li>Live multiplayer Circle Time sessions</li>
+        <li>Audio-first, visual design</li>
+      </ul>
+    </div>
+    <div class="tier-card parent">
+      <div class="tier-icon">👨‍👩‍👧</div>
+      <h3>Parents</h3>
+      <ul>
+        <li>Multi-child progress dashboard with charts</li>
+        <li>Mood tracking and trend analysis</li>
+        <li>AI-generated weekly insights report</li>
+        <li>AI-generated personalized weekly plan</li>
+        <li>Therapist notes and assignments</li>
+        <li>Live session join notifications</li>
+        <li>Therapist weekly schedule visibility</li>
+      </ul>
+    </div>
+    <div class="tier-card therapist">
+      <div class="tier-icon">🩺</div>
+      <h3>Therapists</h3>
+      <ul>
+        <li>Full client management dashboard</li>
+        <li>Assign activities with clinical notes</li>
+        <li>AI therapy plan generation per child</li>
+        <li>Host live group Circle Time sessions</li>
+        <li>Weekly recurring schedule management</li>
+        <li>Custom activity & story creation</li>
+        <li>Family enrollment & onboarding tools</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     FEATURE DEEP DIVE
+═══════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Product Features</div>
+  <h2>A full-stack <em>intervention platform</em></h2>
+  <p class="lead">Every feature is designed with clinical input and child-development research in mind.</p>
+
+  <!-- CHILD ACTIVITIES -->
+  <div class="feature-group">
+    <div class="feature-group-title">🧒 Child Activity Engine — 6 Specialised Learning Modes</div>
+    <div class="feature-cards">
+      <div class="feature-card">
+        <div class="fc-icon">😊</div>
+        <h4>Emotion Recognition</h4>
+        <p>Child selects the correct emotion from 6 illustrated faces. Includes confetti, audio feedback, and smart hints after repeated errors.</p>
+        <span class="feature-tag tag-child">Core Skill</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">🤔</div>
+        <h4>Social Scenarios</h4>
+        <p>Multiple-choice social situations where children practice making the right choice. Immediate feedback explains why choices are correct or incorrect.</p>
+        <span class="feature-tag tag-child">Core Skill</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">📖</div>
+        <h4>Interactive Stories</h4>
+        <p>Page-by-page illustrated stories with embedded comprehension questions. Covers emotion, friendship, conflict resolution, and empathy themes.</p>
+        <span class="feature-tag tag-child">Core Skill</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">🧘</div>
+        <h4>Guided Breathing</h4>
+        <p>Animated breathing exercises with phase-based guidance (inhale, hold, exhale). Triggers automatically when child's mood is anxious or angry.</p>
+        <span class="feature-tag tag-child">Regulation</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">💬</div>
+        <h4>Communication Board</h4>
+        <p>AAC-inspired tap-to-speak interface. Children tap emoji-labelled buttons to communicate needs, building functional language in non-verbal or pre-verbal children.</p>
+        <span class="feature-tag tag-child">Communication</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">🎭</div>
+        <h4>Social Coach</h4>
+        <p>Branching dialogue trees simulate real social situations. Children practice multi-turn conversations with contextual feedback at each turn.</p>
+        <span class="feature-tag tag-child">Social Skills</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI FEATURES -->
+  <div class="feature-group">
+    <div class="feature-group-title">🤖 AI — Powered by Claude (Anthropic)</div>
+    <div class="feature-cards">
+      <div class="feature-card">
+        <div class="fc-icon">🧠</div>
+        <h4>Real-Time Coaching Hints</h4>
+        <p>When a child is confused or stuck, Claude Haiku generates age-appropriate, encouraging hints within milliseconds. Never blocks progress — fires silently in the background.</p>
+        <span class="feature-tag tag-ai">Claude Haiku</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">📊</div>
+        <h4>Parent AI Insights</h4>
+        <p>Weekly AI-generated report in plain language — explaining child's strengths, mood patterns, activity engagement, and suggested home activities for the coming week.</p>
+        <span class="feature-tag tag-ai">Claude Opus</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">📅</div>
+        <h4>Parent AI Weekly Plan</h4>
+        <p>Personalised 7-day activity schedule generated from the child's progress data, mood history, and characteristics profile. Tailored to each child's communication level and sensory needs.</p>
+        <span class="feature-tag tag-ai">Claude Opus</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">🩺</div>
+        <h4>Therapist Therapy Plan Generator</h4>
+        <p>AI generates a multi-week clinical therapy plan for each client child — with daily focus areas, recommended activity types, parent communication tips, and measurable goals.</p>
+        <span class="feature-tag tag-ai">Claude Opus</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">⚡</div>
+        <h4>Quick AI Activity Generator</h4>
+        <p>Therapists describe a goal in natural language and AI instantly creates a complete activity — scenarios, story pages, emotion sets — ready to assign to clients.</p>
+        <span class="feature-tag tag-ai">Claude</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">🔍</div>
+        <h4>Therapist Client Insights</h4>
+        <p>AI synthesises all data from a child's sessions — activity completion, mood trends, confusion areas, achievements — into clinical-quality insights for the therapist portal.</p>
+        <span class="feature-tag tag-ai">Claude Opus</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE CIRCLE TIME -->
+  <div class="feature-group">
+    <div class="feature-group-title">📡 Live Circle Time — Real-Time Group Sessions</div>
+    <div class="feature-cards">
+      <div class="feature-card">
+        <div class="fc-icon">🎓</div>
+        <h4>Therapist-Led Group Sessions</h4>
+        <p>Therapist starts a live story session from their portal. Children across different locations join with a 6-character code from any device — replicating classroom circle time digitally.</p>
+        <span class="feature-tag tag-live">Real-Time</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">📲</div>
+        <h4>Instant Parent Notification</h4>
+        <p>When a therapist goes live, all linked parents receive a real-time push notification on their dashboard with the join code — no emails, no delay, immediate access.</p>
+        <span class="feature-tag tag-live">Pusher</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">👥</div>
+        <h4>Live Participant Grid</h4>
+        <p>Therapist sees all participants, their current detected emotion (via camera), and whether they've answered correctly — enabling responsive, data-driven facilitation.</p>
+        <span class="feature-tag tag-live">Real-Time</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">📆</div>
+        <h4>Weekly Schedule Manager</h4>
+        <p>Therapists set recurring weekly time slots for Circle Time. Parents see the full timetable on their dashboard so children are prepared and routines are maintained.</p>
+        <span class="feature-tag tag-live">Scheduling</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADAPTIVE LEARNING -->
+  <div class="feature-group">
+    <div class="feature-group-title">📈 Adaptive Learning & Emotion Detection</div>
+    <div class="feature-cards">
+      <div class="feature-card">
+        <div class="fc-icon">📷</div>
+        <h4>Real-Time Emotion Detection</h4>
+        <p>Opt-in camera analysis using face-api.js detects the child's actual emotional state during activities — enabling the platform to respond to frustration before it escalates.</p>
+        <span class="feature-tag tag-data">face-api.js</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">🏋️</div>
+        <h4>Pose Detection (Raise Hand)</h4>
+        <p>TensorFlow.js pose detection enables gesture-based interaction (e.g., raise hand to answer) — increasing engagement for children who struggle with touch-screen input.</p>
+        <span class="feature-tag tag-data">TensorFlow.js</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">🗺️</div>
+        <h4>Confusion Heatmap</h4>
+        <p>Every hesitation, retry, and wrong answer is tracked per activity type. A confusion map reveals exactly where each child struggles — surfaced visually on the parent dashboard.</p>
+        <span class="feature-tag tag-data">Analytics</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">🎯</div>
+        <h4>Dynamic Difficulty Adaptation</h4>
+        <p>Each child has a per-type difficulty profile (0.1–1.0 scale) that automatically adjusts based on performance. The app always challenges without overwhelming.</p>
+        <span class="feature-tag tag-data">Adaptive</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAMIFICATION & ENGAGEMENT -->
+  <div class="feature-group">
+    <div class="feature-group-title">🏆 Engagement & Gamification</div>
+    <div class="feature-cards">
+      <div class="feature-card">
+        <div class="fc-icon">⭐</div>
+        <h4>Stars & Achievement Badges</h4>
+        <p>Children earn stars per activity and milestone badges at 1, 5, 10, and 20 completions — plus type-specific badges for breathing and communication activities.</p>
+        <span class="feature-tag tag-child">Motivation</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">🔥</div>
+        <h4>Daily Streaks</h4>
+        <p>Consecutive calendar-day streaks encourage daily habits. The dashboard celebrates streaks with visual feedback — building the consistency that drives intervention outcomes.</p>
+        <span class="feature-tag tag-child">Retention</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">😌</div>
+        <h4>Mood-Aware Experience</h4>
+        <p>Daily mood check-in before activities. Anxious or angry moods trigger breathing activity recommendations. Mood history visible to both parents and therapists.</p>
+        <span class="feature-tag tag-child">Wellbeing</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">🎉</div>
+        <h4>Celebrations & Audio Feedback</h4>
+        <p>Confetti explosions on correct answers, speech synthesis encouragement, and visual star animations reward effort — making every session feel like a win.</p>
+        <span class="feature-tag tag-child">Engagement</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- THERAPIST TOOLS -->
+  <div class="feature-group">
+    <div class="feature-group-title">🩺 Therapist Toolkit</div>
+    <div class="feature-cards">
+      <div class="feature-card">
+        <div class="fc-icon">📋</div>
+        <h4>Client Management Dashboard</h4>
+        <p>Therapists manage multiple families in one view — see each child's mood history, badges, streaks, and assigned activities. Assign and unassign activities in one click.</p>
+        <span class="feature-tag tag-ai">Therapist</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">✍️</div>
+        <h4>Custom Activity Creator</h4>
+        <p>Build bespoke emotion, scenario, story, breathing, or communication activities tailored to a specific child's goals — no coding required. Saved for reuse across clients.</p>
+        <span class="feature-tag tag-ai">Therapist</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">📚</div>
+        <h4>Visual Story Builder</h4>
+        <p>WYSIWYG interface to build multi-page interactive stories with images, text, and embedded questions. Stories are instantly available to all children in the therapist's practice.</p>
+        <span class="feature-tag tag-ai">Therapist</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">📩</div>
+        <h4>Family Enrollment System</h4>
+        <p>Generate personalised enrollment links per family. Parents sign up with pre-filled child details, and are automatically linked to the therapist — zero friction onboarding.</p>
+        <span class="feature-tag tag-ai">Therapist</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">🗒️</div>
+        <h4>Clinical Notes</h4>
+        <p>Therapists leave typed observations, recommendations, and milestone notes against each child — visible to parents on their dashboard in a structured, readable format.</p>
+        <span class="feature-tag tag-ai">Therapist</span>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">🔗</div>
+        <h4>Invite Code & Therapist Directory</h4>
+        <p>Each therapist has a unique invite code. Parents can find therapists through a public directory and link in one step — or therapists can proactively enroll families.</p>
+        <span class="feature-tag tag-ai">Therapist</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     TECHNOLOGY
+═══════════════════════════════════════════════════════ -->
+<div class="section" style="background:#fff; margin:0; max-width:100%; padding:70px 0;">
+  <div style="max-width:1100px; margin:0 auto; padding:0 40px;">
+    <div class="section-label">Technology</div>
+    <h2>Built for <em>scale and safety</em></h2>
+    <p class="lead">Modern, proven stack — deployable globally in minutes, HIPAA-aligned architecture, no proprietary lock-in.</p>
+
+    <div class="tech-grid">
+      <div class="tech-item"><div class="t-icon">⚡</div><div class="t-info"><h4>Next.js 14</h4><p>App Router, SSR, edge-ready</p></div></div>
+      <div class="tech-item"><div class="t-icon">🐘</div><div class="t-info"><h4>PostgreSQL / Neon</h4><p>Serverless, globally distributed</p></div></div>
+      <div class="tech-item"><div class="t-icon">🔷</div><div class="t-info"><h4>Prisma ORM</h4><p>Type-safe, auto-migrating schema</p></div></div>
+      <div class="tech-item"><div class="t-icon">🔐</div><div class="t-info"><h4>NextAuth.js</h4><p>JWT sessions, credentials + OAuth-ready</p></div></div>
+      <div class="tech-item"><div class="t-icon">📡</div><div class="t-info"><h4>Pusher Channels</h4><p>WebSocket real-time multiplayer</p></div></div>
+      <div class="tech-item"><div class="t-icon">🤖</div><div class="t-info"><h4>Anthropic Claude</h4><p>Haiku (hints) + Opus (plans)</p></div></div>
+      <div class="tech-item"><div class="t-icon">👁️</div><div class="t-info"><h4>face-api.js</h4><p>Client-side emotion detection</p></div></div>
+      <div class="tech-item"><div class="t-icon">🦴</div><div class="t-info"><h4>TensorFlow.js</h4><p>Pose detection (MoveNet)</p></div></div>
+      <div class="tech-item"><div class="t-icon">🎨</div><div class="t-info"><h4>Tailwind CSS</h4><p>shadcn/ui component library</p></div></div>
+      <div class="tech-item"><div class="t-icon">📊</div><div class="t-info"><h4>Recharts</h4><p>Interactive analytics charts</p></div></div>
+      <div class="tech-item"><div class="t-icon">☁️</div><div class="t-info"><h4>Vercel</h4><p>Serverless deployment, global CDN</p></div></div>
+      <div class="tech-item"><div class="t-icon">🔊</div><div class="t-info"><h4>Web Speech API</h4><p>Zero-dependency audio feedback</p></div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     MARKET OPPORTUNITY
+═══════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Market Opportunity</div>
+  <h2>A <em>massive, underserved</em> market</h2>
+  <p class="lead">The autism intervention market is growing rapidly, driven by rising diagnosis rates and a global push for early, accessible support.</p>
+
+  <div class="market-grid">
+    <div class="market-card">
+      <div class="m-num">$8.1B</div>
+      <div class="m-label">Global Autism Therapy Market</div>
+      <div class="m-sub">Projected 2027 value (CAGR ~7.5%)</div>
+    </div>
+    <div class="market-card">
+      <div class="m-num">1 in 36</div>
+      <div class="m-label">Children Diagnosed with ASD</div>
+      <div class="m-sub">CDC 2023 — up from 1 in 44 in 2021</div>
+    </div>
+    <div class="market-card">
+      <div class="m-num">$296B</div>
+      <div class="m-label">EdTech Market Size (2023)</div>
+      <div class="m-sub">Special needs segment growing fastest</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <h3 style="font-size:22px; font-weight:800; margin-bottom:16px;">Why Now?</h3>
+      <ul style="list-style:none; display:flex; flex-direction:column; gap:12px;">
+        <li style="display:flex; gap:12px;"><span style="font-size:20px;">📈</span><span><strong>Diagnosis rates rising</strong> — demand for intervention tools is growing faster than clinical supply</span></li>
+        <li style="display:flex; gap:12px;"><span style="font-size:20px;">🏠</span><span><strong>Post-pandemic normalisation</strong> of digital therapy and tele-intervention</span></li>
+        <li style="display:flex; gap:12px;"><span style="font-size:20px;">🤖</span><span><strong>LLM maturity</strong> — affordable, high-quality AI enables personalisation at scale for the first time</span></li>
+        <li style="display:flex; gap:12px;"><span style="font-size:20px;">📱</span><span><strong>Device ubiquity</strong> — every family has a smartphone or tablet; no hardware barrier to adoption</span></li>
+      </ul>
+    </div>
+    <div>
+      <h3 style="font-size:22px; font-weight:800; margin-bottom:16px;">Who Pays?</h3>
+      <ul style="list-style:none; display:flex; flex-direction:column; gap:12px;">
+        <li style="display:flex; gap:12px;"><span style="font-size:20px;">🩺</span><span><strong>Therapy practices</strong> — SaaS subscription per therapist seat; reduces admin, increases client capacity</span></li>
+        <li style="display:flex; gap:12px;"><span style="font-size:20px;">👨‍👩‍👧</span><span><strong>Parents</strong> — affordable monthly plan for home access; fraction of one therapy session cost</span></li>
+        <li style="display:flex; gap:12px;"><span style="font-size:20px;">🏫</span><span><strong>Schools / districts</strong> — site licensing for special education classrooms</span></li>
+        <li style="display:flex; gap:12px;"><span style="font-size:20px;">🏥</span><span><strong>Healthcare systems</strong> — white-label or integrated offering for paediatric departments</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     COMPETITIVE ADVANTAGES
+═══════════════════════════════════════════════════════ -->
+<div class="section" style="background:#fff; margin:0; max-width:100%; padding:70px 0;">
+  <div style="max-width:1100px; margin:0 auto; padding:0 40px;">
+    <div class="section-label">Why We Win</div>
+    <h2>Six <em>defensible moats</em></h2>
+    <p class="lead">Social Stars is not a flashcard app. It's a platform with compounding data, network effects, and AI that gets smarter with every session.</p>
+
+    <div class="advantage-grid">
+      <div class="advantage-card">
+        <div class="adv-icon">🔺</div>
+        <h3>Full Ecosystem Lock-In</h3>
+        <p>Therapist, parent, and child are all on the same platform. Switching means losing shared data, notes, schedules, and history — creating durable retention across all three user types.</p>
+      </div>
+      <div class="advantage-card">
+        <div class="adv-icon">🧠</div>
+        <h3>Proprietary Learning Data</h3>
+        <p>Every tap, hesitation, emotion detection, and mood log builds a per-child longitudinal dataset that competitors starting today cannot replicate for years.</p>
+      </div>
+      <div class="advantage-card">
+        <div class="adv-icon">🤖</div>
+        <h3>AI Personalisation at Scale</h3>
+        <p>Claude-powered insights and plans tailored to each child's characteristics, mood history, and confusion profile. No other consumer autism app is doing this.</p>
+      </div>
+      <div class="advantage-card">
+        <div class="adv-icon">📡</div>
+        <h3>Live Multiplayer (Unique)</h3>
+        <p>Real-time therapist-led group sessions are a category-defining feature. No existing autism app supports live multi-child sessions with emotion detection and host controls.</p>
+      </div>
+      <div class="advantage-card">
+        <div class="adv-icon">🏥</div>
+        <h3>Therapist Channel = B2B2C</h3>
+        <p>Therapists enroll families, driving organic consumer growth. Each new therapist partner brings 10–50 families. This viral loop makes CAC near zero on the parent side.</p>
+      </div>
+      <div class="advantage-card">
+        <div class="adv-icon">👁️</div>
+        <h3>Multimodal Detection (Rare)</h3>
+        <p>Client-side emotion detection and pose recognition in a child-facing app is technically complex. Our implementation in the browser with no data upload creates a privacy-first moat.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     ROADMAP
+═══════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Roadmap</div>
+  <h2>Where we are. <em>Where we're going.</em></h2>
+  <p class="lead">We've shipped a comprehensive v1 platform. The roadmap focuses on monetisation, scale, and clinical validation.</p>
+
+  <div class="roadmap">
+    <div class="roadmap-item">
+      <div class="roadmap-dot dot-done">✓</div>
+      <div class="roadmap-content">
+        <span class="phase-tag phase-done">Shipped</span>
+        <h4>Full Platform v1</h4>
+        <p>6 activity types, adaptive learning, mood tracking, AI coaching, therapist portal, parent dashboard with AI insights & plans, custom activity creation, story builder, family enrollment, therapist directory, clinical notes.</p>
+      </div>
+    </div>
+    <div class="roadmap-item">
+      <div class="roadmap-dot dot-done">✓</div>
+      <div class="roadmap-content">
+        <span class="phase-tag phase-done">Shipped</span>
+        <h4>Live Circle Time Multiplayer</h4>
+        <p>Real-time group story sessions via Pusher. Therapist host controls, participant emotion grid, live join code, parent notifications, weekly schedule management.</p>
+      </div>
+    </div>
+    <div class="roadmap-item">
+      <div class="roadmap-dot dot-now">→</div>
+      <div class="roadmap-content">
+        <span class="phase-tag phase-now">Now</span>
+        <h4>Beta Launch & Clinical Partnerships</h4>
+        <p>Onboard 10–20 therapy practices for paid beta. Collect outcome data. IRB study with partner clinic to validate learning gains. Iterate on therapist workflow based on feedback.</p>
+      </div>
+    </div>
+    <div class="roadmap-item">
+      <div class="roadmap-dot dot-next">◎</div>
+      <div class="roadmap-content">
+        <span class="phase-tag phase-next">Q3 2026</span>
+        <h4>Monetisation & Mobile Apps</h4>
+        <p>Launch Therapist Pro subscription ($99/mo), Parent subscription ($19/mo), and iOS/Android native apps for child activities. In-app upgrade flows and Stripe billing.</p>
+      </div>
+    </div>
+    <div class="roadmap-item">
+      <div class="roadmap-dot dot-future">○</div>
+      <div class="roadmap-content">
+        <span class="phase-tag phase-future">Q4 2026</span>
+        <h4>School District Licensing</h4>
+        <p>Bulk licensing for special education classrooms. Teacher role, classroom session management, IEP progress tracking export, district-level analytics dashboard.</p>
+      </div>
+    </div>
+    <div class="roadmap-item">
+      <div class="roadmap-dot dot-future">○</div>
+      <div class="roadmap-content">
+        <span class="phase-tag phase-future">2027</span>
+        <h4>International Expansion & API</h4>
+        <p>Multi-language support (Spanish, French, Arabic). Open API for EHR integrations. Telehealth platform partnerships. White-label offering for healthcare systems.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     THE ASK
+═══════════════════════════════════════════════════════ -->
+<div class="ask-section">
+  <div class="section-label" style="color:#fde68a;">The Ask</div>
+  <h2>Seed Round — <span style="color:#fde68a;">$1.5M</span></h2>
+  <p class="lead">To grow from platform to business: clinical validation, mobile apps, and the first 100 therapy practice partners.</p>
+
+  <div class="ask-grid">
+    <div class="ask-card">
+      <div class="ask-num">40%</div>
+      <h4>Product & Engineering</h4>
+      <p>Mobile app development, offline mode, EHR integration, AI model fine-tuning on autism-specific data</p>
+    </div>
+    <div class="ask-card">
+      <div class="ask-num">35%</div>
+      <h4>Clinical & Sales</h4>
+      <p>Clinical validation study, therapy practice partnerships, conference presence (ASHA, AOTA), outcomes marketing</p>
+    </div>
+    <div class="ask-card">
+      <div class="ask-num">25%</div>
+      <h4>Operations & Growth</h4>
+      <p>Team growth, infrastructure scaling, parent community building, compliance (HIPAA, COPPA)</p>
+    </div>
+  </div>
+
+  <div style="margin-top:20px;">
+    <p style="color:rgba(255,255,255,0.7); font-size:16px; margin-bottom:16px;">We are looking for investors who understand:</p>
+    <div>
+      <span class="pill" style="background:rgba(255,255,255,0.1); color:#fff;">EdTech / HealthTech crossover</span>
+      <span class="pill" style="background:rgba(255,255,255,0.1); color:#fff;">AI-first product companies</span>
+      <span class="pill" style="background:rgba(255,255,255,0.1); color:#fff;">B2B2C growth models</span>
+      <span class="pill" style="background:rgba(255,255,255,0.1); color:#fff;">Special education / neurodiversity</span>
+      <span class="pill" style="background:rgba(255,255,255,0.1); color:#fff;">Mission-driven investing</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════ -->
+<div class="footer">
+  <p><strong>Social Stars</strong> — AI-Powered Social-Emotional Learning for Autistic Children</p>
+  <p style="margin-top:8px;">Confidential. For investor use only. © 2026 Social Stars.</p>
+</div>
+
+</body>
+</html>

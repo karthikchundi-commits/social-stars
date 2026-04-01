@@ -13,8 +13,12 @@ export async function GET() {
     const orConditions: any[] = [{ createdBy: null }];
 
     if (userId) {
-      // Include activities created by this user
+      // Include activities created by this user (therapist creating their own)
       orConditions.push({ createdBy: userId });
+      // Include activities assigned to any of this user's children (therapist-created, parent viewing)
+      orConditions.push({
+        assignments: { some: { child: { userId } } },
+      });
     }
 
     const activities = await prisma.activity.findMany({

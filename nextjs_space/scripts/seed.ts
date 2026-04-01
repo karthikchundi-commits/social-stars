@@ -91,11 +91,31 @@ async function main() {
       category: 'greeting',
       imageUrl: 'https://cdn.abacus.ai/images/a694cc55-9041-4e3a-b6f1-8b18cb56ef73.jpg',
       content: JSON.stringify({
-        scenario: 'greeting',
-        choices: [
-          { text: 'Wave and say "Hi!"', isCorrect: true, feedback: 'That\'s a friendly way to greet someone!' },
-          { text: 'Turn away and ignore them', isCorrect: false, feedback: 'It\'s nice to say hello to friends.' },
-          { text: 'Run away', isCorrect: false, feedback: 'Try waving and saying hi instead!' },
+        scenes: [
+          {
+            situation: 'You arrive at the playground and see your friend Mia by the swings. What do you do?',
+            choices: [
+              { text: 'Wave and say "Hi!"', isCorrect: true, feedback: 'That\'s a friendly way to greet someone!' },
+              { text: 'Turn away and ignore her', isCorrect: false, feedback: 'It\'s nice to say hello to friends.' },
+              { text: 'Run to the other side', isCorrect: false, feedback: 'Try waving and saying hi instead!' },
+            ],
+          },
+          {
+            situation: 'Mia waves back and smiles at you! She looks like she wants to talk. What do you say?',
+            choices: [
+              { text: '"Hi! Do you want to play together?"', isCorrect: true, feedback: 'Great job! Asking to play is a wonderful idea!' },
+              { text: 'Stay quiet and look at the ground', isCorrect: false, feedback: 'You can do it — ask if she wants to play!' },
+              { text: 'Walk to the slide without saying anything', isCorrect: false, feedback: 'Try saying something friendly to Mia!' },
+            ],
+          },
+          {
+            situation: 'Mia says "Yes! Let\'s play!" You both have so much fun. It\'s time to go home. What do you say?',
+            choices: [
+              { text: '"Bye Mia! See you next time!"', isCorrect: true, feedback: 'Saying goodbye is a lovely way to end playtime!' },
+              { text: 'Just walk away without saying anything', isCorrect: false, feedback: 'It\'s kind to say goodbye to your friend.' },
+              { text: 'Keep playing and ignore your parent calling you', isCorrect: false, feedback: 'Say bye to Mia and then go to your parent!' },
+            ],
+          },
         ],
       }),
       difficulty: 1,
@@ -108,11 +128,31 @@ async function main() {
       category: 'sharing',
       imageUrl: 'https://cdn.abacus.ai/images/ce62a709-3173-4af2-bb1d-966a5b6cabb8.jpg',
       content: JSON.stringify({
-        scenario: 'sharing',
-        choices: [
-          { text: 'Share and take turns', isCorrect: true, feedback: 'Great! Sharing makes everyone happy!' },
-          { text: 'Say "No! It\'s mine!"', isCorrect: false, feedback: 'Sharing helps us make friends.' },
-          { text: 'Take all the toys away', isCorrect: false, feedback: 'Let\'s try sharing instead!' },
+        scenes: [
+          {
+            situation: 'You are playing with your building blocks. Your friend Sam says "Those look fun! Can I have a turn?" What do you do?',
+            choices: [
+              { text: 'Say "Sure! Let\'s take turns!"', isCorrect: true, feedback: 'Great! Sharing makes everyone happy!' },
+              { text: 'Say "No! They\'re mine!"', isCorrect: false, feedback: 'Sharing helps us make friends.' },
+              { text: 'Take all the blocks away', isCorrect: false, feedback: 'Let\'s try sharing instead!' },
+            ],
+          },
+          {
+            situation: 'Sam is playing with the blocks and having a great time. You both build a big tower together! Sam asks "Can we keep playing?" What do you say?',
+            choices: [
+              { text: '"Yes! Building together is more fun!"', isCorrect: true, feedback: 'You\'re being such a kind friend!' },
+              { text: 'Grab the blocks back and say "My turn now"', isCorrect: false, feedback: 'Taking turns means both people get to play.' },
+              { text: 'Walk away and stop playing', isCorrect: false, feedback: 'Try staying and building together!' },
+            ],
+          },
+          {
+            situation: 'It\'s time to tidy up. Sam passes your toy car back and says "Thank you for sharing!" What do you say?',
+            choices: [
+              { text: '"You\'re welcome! That was fun playing together!"', isCorrect: true, feedback: 'What a wonderful thing to say!' },
+              { text: 'Grab it and walk away without saying anything', isCorrect: false, feedback: 'Saying "you\'re welcome" is a kind response.' },
+              { text: '"You took too long with it!"', isCorrect: false, feedback: 'Be kind — Sam enjoyed playing with you!' },
+            ],
+          },
         ],
       }),
       difficulty: 2,
@@ -125,11 +165,31 @@ async function main() {
       category: 'helping',
       imageUrl: 'https://cdn.abacus.ai/images/cb0f72ba-d55f-4e82-b34b-2d99c229def4.jpg',
       content: JSON.stringify({
-        scenario: 'helping',
-        choices: [
-          { text: 'Help them pick up the crayons', isCorrect: true, feedback: 'You\'re so helpful! That\'s very kind!' },
-          { text: 'Walk away', isCorrect: false, feedback: 'It feels good to help others.' },
-          { text: 'Laugh at them', isCorrect: false, feedback: 'Let\'s be kind and help instead!' },
+        scenes: [
+          {
+            situation: 'Your friend dropped all their crayons on the floor. They look upset. What do you do?',
+            choices: [
+              { text: 'Help them pick up the crayons', isCorrect: true, feedback: 'You\'re so helpful! That\'s very kind!' },
+              { text: 'Walk away', isCorrect: false, feedback: 'It feels good to help others.' },
+              { text: 'Laugh at them', isCorrect: false, feedback: 'Let\'s be kind and help instead!' },
+            ],
+          },
+          {
+            situation: 'You helped pick up all the crayons! Your friend looks happy and says "Thank you so much!" What do you say?',
+            choices: [
+              { text: '"No problem! That\'s what friends are for!"', isCorrect: true, feedback: 'That\'s such a warm and friendly thing to say!' },
+              { text: 'Walk away without saying anything', isCorrect: false, feedback: 'A kind reply makes your friend feel even better!' },
+              { text: '"You should be more careful next time!"', isCorrect: false, feedback: 'Be kind — accidents happen to everyone.' },
+            ],
+          },
+          {
+            situation: 'Your friend wants to draw with you to say thank you. But there is only one piece of paper left. What do you do?',
+            choices: [
+              { text: 'Share the paper and draw together', isCorrect: true, feedback: 'Wonderful! Sharing and helping go hand in hand.' },
+              { text: '"It\'s my paper, I found it first"', isCorrect: false, feedback: 'Sharing the paper means you can both enjoy drawing!' },
+              { text: 'Take all the crayons and start drawing alone', isCorrect: false, feedback: 'Let\'s share so both of you can have fun!' },
+            ],
+          },
         ],
       }),
       difficulty: 2,
@@ -142,11 +202,31 @@ async function main() {
       category: 'takingTurns',
       imageUrl: 'https://cdn.abacus.ai/images/97cca0a3-bcab-4e6c-b861-9585254062db.jpg',
       content: JSON.stringify({
-        scenario: 'takingTurns',
-        choices: [
-          { text: 'Wait in line and take turns', isCorrect: true, feedback: 'Perfect! Taking turns makes playtime fun for everyone!' },
-          { text: 'Push in front of everyone', isCorrect: false, feedback: 'We need to take turns so everyone can have fun.' },
-          { text: 'Leave the playground', isCorrect: false, feedback: 'Just wait your turn — you\'ll get to play soon!' },
+        scenes: [
+          {
+            situation: 'Lots of children want to go on the slide. There is a long line. What do you do?',
+            choices: [
+              { text: 'Join the line and wait your turn', isCorrect: true, feedback: 'Perfect! Taking turns makes playtime fun for everyone!' },
+              { text: 'Push in front of everyone', isCorrect: false, feedback: 'We need to take turns so everyone can have fun.' },
+              { text: 'Leave the playground', isCorrect: false, feedback: 'Just wait your turn — you\'ll get to play soon!' },
+            ],
+          },
+          {
+            situation: 'You waited and now you\'re next! But the child behind you has been waiting a really long time. What do you do?',
+            choices: [
+              { text: 'Go quickly down the slide so they can have their turn', isCorrect: true, feedback: 'That\'s so thoughtful! You thought about others too.' },
+              { text: 'Climb back up and go again before they get a turn', isCorrect: false, feedback: 'Let others have their turn — then you can go again!' },
+              { text: 'Tell the child behind you to go to the back of the line', isCorrect: false, feedback: 'They waited just like you — let\'s be fair.' },
+            ],
+          },
+          {
+            situation: 'Now everyone wants the see-saw but there are 4 children and only 2 spots. What do you suggest?',
+            choices: [
+              { text: '"Let\'s take turns — two go first, then swap!"', isCorrect: true, feedback: 'Amazing idea! You helped everyone play fairly.' },
+              { text: 'Grab a spot and refuse to move', isCorrect: false, feedback: 'Suggesting turns means everyone gets a go.' },
+              { text: 'Walk away because it\'s too complicated', isCorrect: false, feedback: 'You can help find a fair solution for everyone!' },
+            ],
+          },
         ],
       }),
       difficulty: 2,
@@ -159,11 +239,31 @@ async function main() {
       category: 'askingHelp',
       imageUrl: 'https://cdn.abacus.ai/images/cb0f72ba-d55f-4e82-b34b-2d99c229def4.jpg',
       content: JSON.stringify({
-        scenario: 'askingHelp',
-        choices: [
-          { text: 'Ask a teacher or friend for help', isCorrect: true, feedback: 'Asking for help is a brave and smart thing to do!' },
-          { text: 'Cry and give up', isCorrect: false, feedback: 'It\'s OK to ask someone for help!' },
-          { text: 'Throw the lunchbox', isCorrect: false, feedback: 'Let\'s try asking for help instead.' },
+        scenes: [
+          {
+            situation: 'You can\'t open your lunchbox and you\'re getting hungry. What do you do?',
+            choices: [
+              { text: 'Ask a teacher or friend for help', isCorrect: true, feedback: 'Asking for help is a brave and smart thing to do!' },
+              { text: 'Cry and give up', isCorrect: false, feedback: 'It\'s OK to ask someone for help!' },
+              { text: 'Throw the lunchbox on the floor', isCorrect: false, feedback: 'Let\'s try asking for help instead.' },
+            ],
+          },
+          {
+            situation: 'The teacher opened your lunchbox! But now your juice has spilled on the table. What do you do?',
+            choices: [
+              { text: 'Ask for some paper towels to help clean it up', isCorrect: true, feedback: 'Great thinking! Asking for help and cleaning up is the right thing.' },
+              { text: 'Leave the mess for someone else to clean', isCorrect: false, feedback: 'It\'s good to take responsibility and help clean up.' },
+              { text: 'Hide it under your lunchbox', isCorrect: false, feedback: 'It\'s better to ask for help cleaning it up honestly.' },
+            ],
+          },
+          {
+            situation: 'You cleaned up together. Now your friend can\'t find their eraser. What do you do?',
+            choices: [
+              { text: 'Ask "Would you like help looking for it?"', isCorrect: true, feedback: 'You\'re such a caring friend for offering to help!' },
+              { text: 'Say nothing and keep eating your lunch', isCorrect: false, feedback: 'A little offer of help can mean a lot to a friend.' },
+              { text: 'Say "That\'s your problem, not mine"', isCorrect: false, feedback: 'Being kind and offering help is always a good choice.' },
+            ],
+          },
         ],
       }),
       difficulty: 1,
@@ -176,11 +276,31 @@ async function main() {
       category: 'mistakes',
       imageUrl: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
       content: JSON.stringify({
-        scenario: 'mistakes',
-        choices: [
-          { text: 'Say "I\'m sorry" and help clean it up', isCorrect: true, feedback: 'Saying sorry and helping is the kind thing to do!' },
-          { text: 'Run away and pretend it didn\'t happen', isCorrect: false, feedback: 'It\'s always better to say sorry.' },
-          { text: 'Blame someone else', isCorrect: false, feedback: 'Telling the truth and saying sorry is brave!' },
+        scenes: [
+          {
+            situation: 'You accidentally knocked over the paint and it spilled on your friend\'s drawing. What do you do?',
+            choices: [
+              { text: 'Say "I\'m sorry!" and try to help clean it up', isCorrect: true, feedback: 'Saying sorry and helping is the kind thing to do!' },
+              { text: 'Run away and pretend it didn\'t happen', isCorrect: false, feedback: 'It\'s always better to say sorry.' },
+              { text: 'Blame someone else', isCorrect: false, feedback: 'Telling the truth and saying sorry is brave!' },
+            ],
+          },
+          {
+            situation: 'Your friend looks sad about the ruined painting. What do you say to help them feel better?',
+            choices: [
+              { text: '"I\'m really sorry. Let\'s make a new one together!"', isCorrect: true, feedback: 'Offering to help make it better shows you really care!' },
+              { text: 'Say nothing and look away', isCorrect: false, feedback: 'A kind word can really help your friend feel better.' },
+              { text: '"It wasn\'t that good anyway"', isCorrect: false, feedback: 'That would hurt your friend\'s feelings. Try saying sorry instead.' },
+            ],
+          },
+          {
+            situation: 'You helped your friend start a new painting and it looks great! The teacher says "accidents happen to everyone." How do you feel?',
+            choices: [
+              { text: 'Happy that you said sorry and helped fix things', isCorrect: true, feedback: 'Saying sorry and making things right always feels good!' },
+              { text: 'Still embarrassed — you hide in the corner', isCorrect: false, feedback: 'You did the right thing. Be proud of yourself!' },
+              { text: 'You blame the paint again', isCorrect: false, feedback: 'Taking responsibility helps everyone feel better, including you.' },
+            ],
+          },
         ],
       }),
       difficulty: 2,
@@ -193,11 +313,31 @@ async function main() {
       category: 'emotionRegulation',
       imageUrl: 'https://cdn.abacus.ai/images/9924338c-9cb3-482e-bf9e-de1970eef82d.jpg',
       content: JSON.stringify({
-        scenario: 'emotionRegulation',
-        choices: [
-          { text: 'Take three deep breaths and use words to say how I feel', isCorrect: true, feedback: 'Taking deep breaths is a superpower when we feel angry!' },
-          { text: 'Hit the person', isCorrect: false, feedback: 'We never hurt others. Try breathing and using words instead.' },
-          { text: 'Scream and throw things', isCorrect: false, feedback: 'Let\'s try breathing slowly to calm our body.' },
+        scenes: [
+          {
+            situation: 'Someone took your favourite toy without asking. You feel very angry inside. What do you do first?',
+            choices: [
+              { text: 'Take three deep breaths to calm down', isCorrect: true, feedback: 'Taking deep breaths is a superpower when we feel angry!' },
+              { text: 'Hit the person who took it', isCorrect: false, feedback: 'We never hurt others. Try breathing first.' },
+              { text: 'Scream and throw things', isCorrect: false, feedback: 'Let\'s try breathing slowly to calm our body.' },
+            ],
+          },
+          {
+            situation: 'You took three deep breaths and feel a little calmer. You still feel upset. What do you do next?',
+            choices: [
+              { text: 'Use your words to explain how you feel to an adult', isCorrect: true, feedback: 'Using words to express feelings is so mature and brave!' },
+              { text: 'Go and grab the toy back without saying anything', isCorrect: false, feedback: 'Using words is always better than grabbing.' },
+              { text: 'Cry loudly to get everyone\'s attention', isCorrect: false, feedback: 'Try talking to an adult — they can help sort it out.' },
+            ],
+          },
+          {
+            situation: 'The adult helped sort it out and you got your toy back. The other child says "Sorry, I should have asked." What do you do?',
+            choices: [
+              { text: 'Say "It\'s okay. Next time please ask first."', isCorrect: true, feedback: 'Perfect! You accepted the apology and taught them kindly.' },
+              { text: 'Ignore them and walk away', isCorrect: false, feedback: 'Accepting an apology is a kind and grown-up thing to do.' },
+              { text: 'Tell everyone about it for the rest of the day', isCorrect: false, feedback: 'When something is sorted out, it\'s best to move on happily.' },
+            ],
+          },
         ],
       }),
       difficulty: 2,
@@ -210,11 +350,31 @@ async function main() {
       category: 'joining',
       imageUrl: 'https://cdn.abacus.ai/images/a694cc55-9041-4e3a-b6f1-8b18cb56ef73.jpg',
       content: JSON.stringify({
-        scenario: 'joining',
-        choices: [
-          { text: 'Walk over and ask "Can I play too?"', isCorrect: true, feedback: 'Asking politely is the perfect way to join in!' },
-          { text: 'Push into the game without asking', isCorrect: false, feedback: 'It\'s polite to ask first before joining.' },
-          { text: 'Stand far away and watch quietly', isCorrect: false, feedback: 'You can do it — walk over and ask to join!' },
+        scenes: [
+          {
+            situation: 'Some children are playing a fun game in the playground. You really want to play too. What do you do?',
+            choices: [
+              { text: 'Walk over and ask "Can I play too?"', isCorrect: true, feedback: 'Asking politely is the perfect way to join in!' },
+              { text: 'Push into the game without asking', isCorrect: false, feedback: 'It\'s polite to ask first before joining.' },
+              { text: 'Stand far away and just watch', isCorrect: false, feedback: 'You can do it — walk over and ask to join!' },
+            ],
+          },
+          {
+            situation: 'The children say "Yes! You can be on our team!" But you don\'t know the rules of the game. What do you do?',
+            choices: [
+              { text: 'Ask "Can you explain the rules to me?"', isCorrect: true, feedback: 'Asking questions is a great way to learn!' },
+              { text: 'Pretend you know and guess what to do', isCorrect: false, feedback: 'It\'s always better to ask than to guess!' },
+              { text: 'Walk away because you don\'t know how to play', isCorrect: false, feedback: 'Ask them to explain — they will be happy to help you!' },
+            ],
+          },
+          {
+            situation: 'You played the game together and it was SO fun! The group says "Come play with us again tomorrow!" What do you say?',
+            choices: [
+              { text: '"Yes please! I\'d love to play again!"', isCorrect: true, feedback: 'You made new friends by being brave and asking to join!' },
+              { text: 'Say nothing and walk away', isCorrect: false, feedback: 'Tell them you\'d love to play again — it will make them happy!' },
+              { text: '"Maybe..." and then not come back', isCorrect: false, feedback: 'If you want to play again, say yes! Friends love knowing you want to be there.' },
+            ],
+          },
         ],
       }),
       difficulty: 2,
@@ -249,26 +409,147 @@ async function main() {
     },
     {
       title: 'Circle Time at School',
-      description: 'Learning to listen and share',
+      description: 'A full day of feelings, choices and friendship with Sam and his class',
       type: 'story',
       category: 'classroom',
       imageUrl: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
       content: JSON.stringify({
         pages: [
-          { text: 'It was circle time at school. Everyone sat together on the colorful rug.', image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg' },
+          // ── Part 1: Morning Arrival ───────────────────────────────────────────
+          // Page 1 — scene
           {
-            text: 'The teacher asked, "Who wants to share their weekend story?" Many hands went up!',
+            text: 'It was Monday morning at Maple Leaf School. Sam put on his backpack, kissed his mum goodbye, and walked through the big blue doors. Today was going to be a great day!',
             image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
-            question: 'What should you do when you want to talk?',
-            options: ['Raise your hand', 'Shout loudly', 'Talk over others'],
+          },
+          // Page 2 — emotion: excited/happy
+          {
+            text: 'Sam stepped into the classroom. The colourful rug was laid out in the middle of the room. His friends were already sitting down. He LOVED circle time!',
+            image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
+            question: 'How does Sam feel walking into circle time?',
+            options: ['He feels happy and excited — circle time is his favourite!', 'He feels sad and tired and wants to sleep.', 'He feels angry because he did not want to come to school.'],
             correctAnswer: 0,
           },
-          { text: 'Sam raised his hand and waited. The teacher called on him. Sam felt proud!', image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg' },
-          { text: 'Everyone listened to Sam\'s story. Then it was someone else\'s turn. Taking turns is important!', image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg' },
+          // Page 3 — action: raise_hand (good morning question)
+          {
+            text: '"Good morning everyone!" said the teacher, Miss Kim. "Who can tell me what the weather is like outside today?" Sam had looked out the window — it was sunny!',
+            image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
+            question: 'Sam wants to answer. What is the right thing to do?',
+            options: ['Raise your hand and wait for Miss Kim to call your name', 'Shout "SUNNY!" as loudly as possible', 'Nudge the person next to you and whisper the answer'],
+            correctAnswer: 0,
+          },
+          // Page 4 — scene (reward for raising hand)
+          {
+            text: 'Sam raised his hand and waited patiently. Miss Kim smiled and called on him. "It\'s sunny today!" said Sam. "Perfect answer, Sam — a gold star for you!" The class cheered.',
+            image: 'https://cdn.abacus.ai/images/97cca0a3-bcab-4e6c-b861-9585254062db.jpg',
+          },
+          // ── Part 2: Show and Tell ─────────────────────────────────────────────
+          // Page 5 — emotion: surprised
+          {
+            text: 'Miss Kim clapped her hands. "Class — today is a very special day! It\'s Show and Tell!" She held up a mystery box with a big question mark on it. Nobody knew what was inside!',
+            image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
+            question: 'How does Sam feel when he hears the big surprise?',
+            options: ['Surprised and excited — he did not expect that at all!', 'Bored and sleepy — he has seen it all before.', 'Scared and upset — surprises are never good.'],
+            correctAnswer: 0,
+          },
+          // Page 6 — scenario: Sam forgot his item
+          {
+            text: 'Sam\'s tummy did a little flip. He had completely forgotten to bring something for Show and Tell! His special toy was still sitting on his bed at home.',
+            image: 'https://cdn.abacus.ai/images/b0785242-a22c-4999-950c-4845cddfca02.jpg',
+            question: 'Sam forgot his Show and Tell item. What is the best thing to do?',
+            options: ['Tell Miss Kim honestly and ask if he can share a story instead', 'Pretend he never forgot and sit quietly hoping nobody notices', 'Cry loudly and refuse to take part'],
+            correctAnswer: 0,
+          },
+          // Page 7 — action: raise_hand (to tell teacher)
+          {
+            text: 'Sam decided to be honest. He wanted to let Miss Kim know before it was his turn so she would not be confused. He knew exactly what he had to do.',
+            image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
+            question: 'How does Sam get Miss Kim\'s attention politely?',
+            options: ['Raise your hand and wait quietly until she looks over', 'Walk straight up to her desk while she is talking to someone else', 'Tug on her sleeve over and over again'],
+            correctAnswer: 0,
+          },
+          // Page 8 — scene
+          {
+            text: '"Miss Kim, I forgot my toy at home," Sam whispered. "That\'s okay, Sam — you can tell us your favourite story about it!" Sam took a big breath and felt much better.',
+            image: 'https://cdn.abacus.ai/images/a694cc55-9041-4e3a-b6f1-8b18cb56ef73.jpg',
+          },
+          // ── Part 3: A New Friend Arrives ─────────────────────────────────────
+          // Page 9 — scene
+          {
+            text: 'Just as Show and Tell was finishing, the classroom door opened slowly. A girl with a purple backpack peeked in. It was her very first day at Maple Leaf School.',
+            image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
+          },
+          // Page 10 — emotion: scared
+          {
+            text: 'The girl\'s name was Lily. She stood in the doorway looking at all the new faces staring back at her. Her hands were shaking and she did not move.',
+            image: 'https://cdn.abacus.ai/images/b0785242-a22c-4999-950c-4845cddfca02.jpg',
+            question: 'How is Lily feeling right now?',
+            options: ['Scared and worried — everything is new and she does not know anyone', 'Happy and confident — she loves meeting strangers', 'Angry and frustrated — she did not want to come to school'],
+            correctAnswer: 0,
+          },
+          // Page 11 — scenario: how to welcome Lily
+          {
+            text: 'Miss Kim said to the class, "Let\'s all make Lily feel welcome!" Sam looked over at Lily. He remembered how nervous HE felt on his first day last year.',
+            image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
+            question: 'What is the kindest thing Sam\'s class can do for Lily?',
+            options: ['Smile warmly and say "Welcome, Lily! You can sit with us!"', 'Stare at her in silence and wait for her to figure things out', 'Laugh and point because she looks nervous'],
+            correctAnswer: 0,
+          },
+          // Page 12 — action: raise_hand (volunteer as buddy)
+          {
+            text: '"Who would like to be Lily\'s special buddy today and show her around?" asked Miss Kim. Sam\'s heart jumped. He really wanted to help Lily feel safe and happy.',
+            image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
+            question: 'Sam wants to volunteer to be Lily\'s buddy. What should he do?',
+            options: ['Raise your hand proudly to show Miss Kim you want to help', 'Run to the front of the room before anyone else can get there', 'Look away and hope someone else does it'],
+            correctAnswer: 0,
+          },
+          // Page 13 — scene
+          {
+            text: '"Thank you, Sam!" said Miss Kim. Sam walked over to Lily and said, "Hi! I\'m Sam. Don\'t worry — circle time is really fun. You can sit next to me." Lily\'s shoulders relaxed.',
+            image: 'https://cdn.abacus.ai/images/ce62a709-3173-4af2-bb1d-966a5b6cabb8.jpg',
+          },
+          // ── Part 4: Paint Activity ────────────────────────────────────────────
+          // Page 14 — scenario: Maya spills paint
+          {
+            text: 'After circle time the class did a painting activity. Sam\'s friend Maya reached over for the blue paint and — whoops! — the whole pot tipped and splashed across the table.',
+            image: 'https://cdn.abacus.ai/images/9924338c-9cb3-482e-bf9e-de1970eef82d.jpg',
+            question: 'Maya spilled the paint by accident. What should Sam do?',
+            options: ['Say "It\'s okay! Accidents happen — let\'s clean it up together!"', 'Point at Maya and shout "Maya made a mess!" to the whole class', 'Ignore it completely and keep painting'],
+            correctAnswer: 0,
+          },
+          // Page 15 — emotion: sad (Maya embarrassed)
+          {
+            text: 'Maya\'s cheeks went bright red. She put her hands over her face. She felt terrible about making a mess in front of everyone, especially Lily on her first day.',
+            image: 'https://cdn.abacus.ai/images/449d23ac-d94d-4502-8095-e1d985ecb1bd.jpg',
+            question: 'How is Maya feeling right now?',
+            options: ['Sad and embarrassed — she wishes the floor would swallow her up', 'Happy and proud — she thinks spilling paint is funny', 'Surprised and excited — she loves making messes'],
+            correctAnswer: 0,
+          },
+          // Page 16 — scenario: what to say
+          {
+            text: 'Sam picked up the cloth from the sink and brought it over to Maya. He wanted to say something to make her feel better. He thought carefully about the right words.',
+            image: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
+            question: 'What is the best thing Sam can say to Maya?',
+            options: ['"Don\'t worry, Maya — everyone has accidents. You are still my best friend!"', '"You are so clumsy. You always do things like this."', '"I am not helping you — you should have been more careful."'],
+            correctAnswer: 0,
+          },
+          // ── Part 5: End of Day ────────────────────────────────────────────────
+          // Page 17 — emotion: happy (everyone feels better)
+          {
+            text: 'Maya dried her eyes and smiled at Sam. Lily helped wipe down the table too. Miss Kim told the class she was proud of everyone for working as a team.',
+            image: 'https://cdn.abacus.ai/images/a694cc55-9041-4e3a-b6f1-8b18cb56ef73.jpg',
+            question: 'How does Sam feel seeing his friends smile again?',
+            options: ['Happy and proud — helping others feels really good!', 'Bored — he just wanted to finish his painting', 'Angry — it took up too much of his time'],
+            correctAnswer: 0,
+          },
+          // Page 18 — scene (finale)
+          {
+            text: 'At home time Sam, Maya, and Lily walked out together. "Same time tomorrow?" said Sam. "Same time tomorrow!" they both said. Sam smiled all the way home. What a wonderful day.',
+            image: 'https://cdn.abacus.ai/images/97cca0a3-bcab-4e6c-b861-9585254062db.jpg',
+          },
         ],
       }),
-      difficulty: 2,
-      starsReward: 3,
+      difficulty: 3,
+      starsReward: 8,
     },
     {
       title: 'The Dragon Who Felt Angry',
