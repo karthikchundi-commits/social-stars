@@ -59,3 +59,46 @@ export async function GET() {
     },
   });
 }
+
+export async function PATCH(request: Request) {
+  const session = await getServerSession(authOptions);
+  const userId = (session?.user as any)?.id;
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { planId } = await request.json();
+  if (!planId) return NextResponse.json({ error: 'planId required' }, { status: 400 });
+
+  const subscription = await prisma.familySubscription.findUnique({
+    where: { parentId: userId },
+  });
+  if (!subscription) return NextResponse.json({ error: 'No subscription found' }, { status: 404 });
+
+  // Verify the plan belongs to the therapist linked to this parent
+  const plan = await prisma.therapistSubscriptionPlan.findUnique({
+    where: { id: planId },
+  });
+  if (!plan || plan.therapistId !== subscription.therapistId) {
+    return NextResponse.json({ error: 'Invalid plan' }, { status: 403 });
+  }
+
+  const updated = await prisma.familySubscription.update({
+    where: { parentId: userId },
+    data: { planId },
+    include: {
+      plan: true,
+      therapist: { select: { id: true, name: true, email: true, city: true, state: true, country: true } },
+    },
+  });
+
+  const basePrice = updated.customPrice ?? updated.plan?.pricePerMonth ?? 0;
+  const effectivePrice = basePrice * (1 - updated.discountPercent / 100);
+
+  return NextResponse.json({
+    subscription: {
+      ...updated,
+      features: updated.plan ? JSON.parse(updated.plan.features) : [],
+      basePrice,
+      effectivePrice,
+    },
+  });
+}

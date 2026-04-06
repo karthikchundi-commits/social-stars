@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Check, Star, Zap, Crown, Brain, Shield, TrendingUp, MapPin, ArrowLeft } from 'lucide-react';
+import { Check, Star, Zap, Crown, Brain, Shield, TrendingUp, MapPin, ArrowLeft, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
 const PARENT_PLANS = [
@@ -98,10 +99,13 @@ const THERAPIST_PLANS = [
 export default function PricingPage() {
   const { data: session, status } = useSession() || {};
   const role = (session?.user as any)?.role as 'parent' | 'therapist' | undefined;
+  const router = useRouter();
 
   const [therapistPlans, setTherapistPlans] = useState<any[]>([]);
   const [therapistInfo, setTherapistInfo] = useState<any>(null);
   const [loadingSubscription, setLoadingSubscription] = useState(false);
+  const [selectingPlanId, setSelectingPlanId] = useState<string | null>(null);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
 
   // Fetch therapist-managed subscription if parent
   useEffect(() => {
@@ -127,6 +131,23 @@ export default function PricingPage() {
         if (data.plans?.length > 0) setTherapistPlans(data.plans);
       });
   }, [therapistInfo]);
+
+  const selectPlan = async (planId: string) => {
+    setSelectingPlanId(planId);
+    try {
+      const res = await fetch('/api/parent/subscription', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planId }),
+      });
+      if (res.ok) {
+        setSelectedPlanId(planId);
+        setTimeout(() => router.push('/parent-dashboard'), 1200);
+      }
+    } finally {
+      setSelectingPlanId(null);
+    }
+  };
 
   // Determine what to show
   const isParent = role === 'parent' || !role; // unauthenticated defaults to parent view
@@ -210,16 +231,25 @@ export default function PricingPage() {
                       <span className="text-5xl font-extrabold text-gray-900">${plan.pricePerMonth}</span>
                       <span className="text-gray-400 ml-2 text-sm">/month</span>
                     </div>
-                    <Link
-                      href="/parent-dashboard"
-                      className={`block text-center py-3 px-6 rounded-2xl font-bold text-sm transition-all mb-8 ${
-                        isMiddle
+                    <button
+                      onClick={() => selectPlan(plan.id)}
+                      disabled={!!selectingPlanId || selectedPlanId === plan.id}
+                      className={`w-full flex items-center justify-center gap-2 py-3 px-6 rounded-2xl font-bold text-sm transition-all mb-8 disabled:opacity-60 ${
+                        selectedPlanId === plan.id
+                          ? 'bg-green-500 text-white'
+                          : isMiddle
                           ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90 shadow-md'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      Contact Your Therapist
-                    </Link>
+                      {selectedPlanId === plan.id ? (
+                        <><CheckCircle className="w-4 h-4" /> Selected!</>
+                      ) : selectingPlanId === plan.id ? (
+                        'Selecting...'
+                      ) : (
+                        'Select This Plan'
+                      )}
+                    </button>
                     <div className="space-y-3 flex-1">
                       {features.map((f) => (
                         <div key={f} className="flex items-start gap-3">
