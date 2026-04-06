@@ -79,6 +79,7 @@ model ChildProfile {
   name                String
   age                 Int
   avatarColor         String              @default("#FF6B6B")
+  childType           String              @default("general") // general | autism | adhd | developmental_delay
   characteristics     String?             @db.Text // JSON: { communicationLevel, sensoryNeeds, interests, challenges, goals, notes }
   userId              String
   user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -104,6 +105,8 @@ model Activity {
   content             String               @db.Text
   difficulty          Int                  @default(1)
   starsReward         Int                  @default(1)
+  ageGroup            String               @default("all") // all | toddler (3-4) | preschool (4-5) | early-elementary (5-8)
+  isABAPlus           Boolean              @default(false) // true = therapist-gated ABA clinical activities
   createdBy           String?
   creator             User?                @relation("CustomActivities", fields: [createdBy], references: [id], onDelete: SetNull)
   createdAt           DateTime             @default(now())

@@ -123,6 +123,7 @@ async function main() {
       content: JSON.stringify({ emotion: 'happy' }),
       difficulty: 1,
       starsReward: 1,
+      ageGroup: 'toddler',
     },
     {
       title: 'Find Sad!',
@@ -133,6 +134,7 @@ async function main() {
       content: JSON.stringify({ emotion: 'sad' }),
       difficulty: 1,
       starsReward: 1,
+      ageGroup: 'toddler',
     },
     {
       title: 'Find Surprised!',
@@ -143,6 +145,7 @@ async function main() {
       content: JSON.stringify({ emotion: 'surprised' }),
       difficulty: 1,
       starsReward: 1,
+      ageGroup: 'preschool',
     },
     {
       title: 'Find Excited!',
@@ -153,6 +156,7 @@ async function main() {
       content: JSON.stringify({ emotion: 'excited' }),
       difficulty: 2,
       starsReward: 1,
+      ageGroup: 'preschool',
     },
     {
       title: 'Find Angry!',
@@ -163,6 +167,7 @@ async function main() {
       content: JSON.stringify({ emotion: 'angry' }),
       difficulty: 2,
       starsReward: 1,
+      ageGroup: 'preschool',
     },
     {
       title: 'Find Scared!',
@@ -173,6 +178,7 @@ async function main() {
       content: JSON.stringify({ emotion: 'scared' }),
       difficulty: 2,
       starsReward: 1,
+      ageGroup: 'preschool',
     },
   ];
 
@@ -183,6 +189,7 @@ async function main() {
       description: 'You see a friend at the playground. What should you do?',
       type: 'scenario',
       category: 'greeting',
+      ageGroup: 'toddler',
       imageUrl: 'https://cdn.abacus.ai/images/a694cc55-9041-4e3a-b6f1-8b18cb56ef73.jpg',
       content: JSON.stringify({
         scenes: [
@@ -220,6 +227,7 @@ async function main() {
       description: 'Your friend wants to play with your toy. What should you do?',
       type: 'scenario',
       category: 'sharing',
+      ageGroup: 'toddler',
       imageUrl: 'https://cdn.abacus.ai/images/ce62a709-3173-4af2-bb1d-966a5b6cabb8.jpg',
       content: JSON.stringify({
         scenes: [
@@ -368,6 +376,7 @@ async function main() {
       description: 'You spilled paint on your friend\'s drawing by accident. What do you do?',
       type: 'scenario',
       category: 'mistakes',
+      ageGroup: 'early-elementary',
       imageUrl: 'https://cdn.abacus.ai/images/53dce2b0-a6e3-4893-bb9f-872909ee336c.jpg',
       content: JSON.stringify({
         scenes: [
@@ -951,6 +960,113 @@ async function main() {
     },
   ];
 
+  // ── ABA+ ACTIVITIES (therapist-gated clinical exercises) ────────────────────
+  // These require a therapist to assign them. They appear locked on the child
+  // dashboard until a therapist adds them to the child's activity plan.
+  const abaPlusActivities = [
+    {
+      title: 'Name That Feeling (DTT)',
+      description: 'Structured practice naming emotions from photos — therapist guided.',
+      type: 'emotion',
+      category: 'aba_emotion',
+      imageUrl: 'https://cdn.abacus.ai/images/a787547d-75e2-491e-9a32-79f6a6f8b545.jpg',
+      content: JSON.stringify({ emotion: 'happy' }),
+      difficulty: 1,
+      starsReward: 2,
+      ageGroup: 'all',
+      isABAPlus: true,
+    },
+    {
+      title: 'Greetings Practice (DTT)',
+      description: 'Discrete trial training for saying hello, goodbye, and please.',
+      type: 'scenario',
+      category: 'aba_greeting',
+      imageUrl: 'https://cdn.abacus.ai/images/a694cc55-9041-4e3a-b6f1-8b18cb56ef73.jpg',
+      content: JSON.stringify({
+        scenes: [
+          {
+            situation: 'You see your teacher in the morning. What do you say?',
+            choices: [
+              { text: '"Good morning!"', isCorrect: true, feedback: 'Perfect greeting!' },
+              { text: 'Say nothing', isCorrect: false, feedback: 'Try saying "Good morning!"' },
+              { text: 'Wave only', isCorrect: false, feedback: 'Add words to your wave!' },
+            ],
+          },
+        ],
+      }),
+      difficulty: 1,
+      starsReward: 2,
+      ageGroup: 'all',
+      isABAPlus: true,
+    },
+    {
+      title: 'Waiting My Turn (ABA)',
+      description: 'Structured scenario practice for waiting and impulse control.',
+      type: 'scenario',
+      category: 'aba_waiting',
+      imageUrl: 'https://cdn.abacus.ai/images/97cca0a3-bcab-4e6c-b861-9585254062db.jpg',
+      content: JSON.stringify({
+        scenes: [
+          {
+            situation: 'The teacher is talking to another child. You want to ask a question. What do you do?',
+            choices: [
+              { text: 'Raise your hand and wait quietly', isCorrect: true, feedback: 'Excellent waiting! That shows great self-control.' },
+              { text: 'Call out loudly right away', isCorrect: false, feedback: 'Raise your hand and wait for your turn.' },
+              { text: 'Tug on the teacher\'s sleeve', isCorrect: false, feedback: 'Raising your hand is the respectful way to wait.' },
+            ],
+          },
+        ],
+      }),
+      difficulty: 2,
+      starsReward: 3,
+      ageGroup: 'all',
+      isABAPlus: true,
+    },
+    {
+      title: 'Calm Body Check (ABA)',
+      description: 'Body awareness breathing exercise with structured prompts for regulation.',
+      type: 'breathing',
+      category: 'aba_regulation',
+      imageUrl: 'https://cdn.abacus.ai/images/b0785242-a22c-4999-950c-4845cddfca02.jpg',
+      content: JSON.stringify({
+        instruction: 'Let\'s check in with our body and calm down together.',
+        cycles: 3,
+        phases: [
+          { label: 'Breathe In', duration: 4, color: '#818CF8', expand: true },
+          { label: 'Hold', duration: 2, color: '#A78BFA', expand: false },
+          { label: 'Breathe Out', duration: 4, color: '#6EE7B7', expand: false },
+        ],
+      }),
+      difficulty: 1,
+      starsReward: 2,
+      ageGroup: 'all',
+      isABAPlus: true,
+    },
+    {
+      title: 'Friendship Skills (Early Elementary)',
+      description: 'Advanced social scenarios for older children learning complex peer interactions.',
+      type: 'scenario',
+      category: 'aba_friendship',
+      imageUrl: 'https://cdn.abacus.ai/images/ce62a709-3173-4af2-bb1d-966a5b6cabb8.jpg',
+      content: JSON.stringify({
+        scenes: [
+          {
+            situation: 'Your friend is upset about a test result. You want to help. What is the best thing to say?',
+            choices: [
+              { text: '"That sounds tough. Do you want to talk about it?"', isCorrect: true, feedback: 'Offering to listen is a great way to support a friend.' },
+              { text: '"You should have studied harder"', isCorrect: false, feedback: 'That might hurt their feelings. Try to be supportive instead.' },
+              { text: '"I got a better score than you"', isCorrect: false, feedback: 'Focus on your friend\'s feelings, not the comparison.' },
+            ],
+          },
+        ],
+      }),
+      difficulty: 3,
+      starsReward: 3,
+      ageGroup: 'early-elementary',
+      isABAPlus: true,
+    },
+  ];
+
   // ── SEED ALL ACTIVITIES ──────────────────────────────────────────────────────
   const allActivities = [
     ...breathingActivities,       // Calm Down first — shown first in dashboard
@@ -959,6 +1075,7 @@ async function main() {
     ...storyActivities,
     ...communicationActivities,
     ...socialCoachActivities,
+    ...abaPlusActivities,          // ABA+ last — therapist-gated
   ];
 
   await prisma.activity.deleteMany({});

@@ -7,11 +7,19 @@ import { Plus, User, LogOut, Star, Stethoscope, BookOpen, Link } from 'lucide-re
 import { AVATAR_COLORS } from '@/lib/constants';
 import { signOut } from 'next-auth/react';
 
+const CHILD_TYPE_LABELS: Record<string, { label: string; emoji: string; color: string }> = {
+  general:              { label: 'Typically Developing', emoji: '⭐', color: 'bg-blue-100 text-blue-700' },
+  autism:               { label: 'Autistic',              emoji: '🌈', color: 'bg-purple-100 text-purple-700' },
+  adhd:                 { label: 'ADHD',                  emoji: '⚡', color: 'bg-yellow-100 text-yellow-700' },
+  developmental_delay:  { label: 'Dev. Delay',            emoji: '🌱', color: 'bg-green-100 text-green-700' },
+};
+
 interface Child {
   id: string;
   name: string;
   age: number;
   avatarColor: string;
+  childType: string;
 }
 
 export default function SelectChildPage() {
@@ -25,6 +33,7 @@ export default function SelectChildPage() {
   const [linkResult, setLinkResult] = useState('');
   const [newChildName, setNewChildName] = useState('');
   const [newChildAge, setNewChildAge] = useState('3');
+  const [newChildType, setNewChildType] = useState('general');
   const [selectedColor, setSelectedColor] = useState(AVATAR_COLORS[0]);
   const userRole = (session?.user as any)?.role;
 
@@ -63,6 +72,7 @@ export default function SelectChildPage() {
           name: newChildName,
           age: newChildAge,
           avatarColor: selectedColor,
+          childType: newChildType,
         }),
       });
 
@@ -70,6 +80,7 @@ export default function SelectChildPage() {
         setShowAddModal(false);
         setNewChildName('');
         setNewChildAge('3');
+        setNewChildType('general');
         fetchChildren();
       }
     } catch (error) {
@@ -170,6 +181,14 @@ export default function SelectChildPage() {
                 <div>
                   <h3 className="text-2xl font-bold text-gray-800">{child?.name ?? 'Child'}</h3>
                   <p className="text-lg text-gray-600">Age {child?.age ?? 0}</p>
+                  {child?.childType && child.childType !== 'general' && (() => {
+                    const t = CHILD_TYPE_LABELS[child.childType];
+                    return t ? (
+                      <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full mt-1 ${t.color}`}>
+                        {t.emoji} {t.label}
+                      </span>
+                    ) : null;
+                  })()}
                 </div>
               </div>
             </button>
@@ -248,12 +267,41 @@ export default function SelectChildPage() {
                   onChange={(e) => setNewChildAge(e.target.value)}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none text-lg"
                 >
-                  {[3, 4, 5, 6].map((age) => (
+                  {[3, 4, 5, 6, 7, 8].map((age) => (
                     <option key={age} value={age}>
                       {age} years old
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-lg font-semibold text-gray-700 mb-2">
+                  Learning Profile
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { value: 'general', label: 'Typically Developing', emoji: '⭐', desc: 'General social & emotional learning' },
+                    { value: 'autism', label: 'Autistic', emoji: '🌈', desc: 'ABA-aligned autism support' },
+                    { value: 'adhd', label: 'ADHD', emoji: '⚡', desc: 'Attention & impulse skills' },
+                    { value: 'developmental_delay', label: 'Developmental Delay', emoji: '🌱', desc: 'Milestone-based pacing' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setNewChildType(opt.value)}
+                      className={`flex flex-col items-start p-3 rounded-xl border-2 text-left transition-all ${
+                        newChildType === opt.value
+                          ? 'border-purple-500 bg-purple-50'
+                          : 'border-gray-200 hover:border-purple-200'
+                      }`}
+                    >
+                      <span className="text-2xl mb-1">{opt.emoji}</span>
+                      <span className="font-bold text-gray-800 text-sm">{opt.label}</span>
+                      <span className="text-xs text-gray-500 mt-0.5">{opt.desc}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div>
