@@ -604,52 +604,48 @@ export default function ChildDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {typeActivities.map((activity) => {
                   const isCompleted = completedIds.has(activity?.id ?? '');
+                  const isLocked = activity.isABAPlus && !assignedActivities.some((a) => a.id === activity.id);
                   return (
-                    {(() => {
-                      const isLocked = activity.isABAPlus && !assignedActivities.some((a) => a.id === activity.id);
-                      return (
-                        <button
-                          key={activity?.id}
-                          onClick={() => handleActivityClick(activity)}
-                          className={`child-card bg-white text-left relative overflow-hidden group ${isLocked ? 'opacity-80' : ''}`}
-                        >
-                          {isCompleted && !isLocked && (
-                            <div className="absolute top-4 right-4 bg-yellow-400 rounded-full p-2 z-10">
-                              <Star className="w-6 h-6 text-white fill-white" />
-                            </div>
-                          )}
-                          {assignedIds.has(activity?.id ?? '') && (
-                            <div className="absolute top-3 left-3 bg-indigo-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10">
-                              ⭐ From Therapist
-                            </div>
-                          )}
-                          {isLocked && (
-                            <div className="absolute top-3 left-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white text-xs font-bold px-2 py-1 rounded-full z-10 flex items-center gap-1">
-                              <Lock className="w-3 h-3" /> ABA+
-                            </div>
-                          )}
-                          <div
-                            className={`w-full h-28 bg-gradient-to-br ${getActivityColor(
-                              activity?.type ?? ''
-                            )} rounded-2xl mb-4 flex items-center justify-center text-white relative`}
-                          >
-                            {getActivityIcon(activity?.type ?? '')}
-                            {isLocked && (
-                              <div className="absolute inset-0 bg-black/20 rounded-2xl flex items-center justify-center">
-                                <Lock className="w-10 h-10 text-white/80" />
-                              </div>
-                            )}
+                    <button
+                      key={activity?.id}
+                      onClick={() => handleActivityClick(activity)}
+                      className={`child-card bg-white text-left relative overflow-hidden group ${isLocked ? 'opacity-80' : ''}`}
+                    >
+                      {isCompleted && !isLocked && (
+                        <div className="absolute top-4 right-4 bg-yellow-400 rounded-full p-2 z-10">
+                          <Star className="w-6 h-6 text-white fill-white" />
+                        </div>
+                      )}
+                      {assignedIds.has(activity?.id ?? '') && (
+                        <div className="absolute top-3 left-3 bg-indigo-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10">
+                          ⭐ From Therapist
+                        </div>
+                      )}
+                      {isLocked && (
+                        <div className="absolute top-3 left-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white text-xs font-bold px-2 py-1 rounded-full z-10 flex items-center gap-1">
+                          <Lock className="w-3 h-3" /> ABA+
+                        </div>
+                      )}
+                      <div
+                        className={`w-full h-28 bg-gradient-to-br ${getActivityColor(
+                          activity?.type ?? ''
+                        )} rounded-2xl mb-4 flex items-center justify-center text-white relative`}
+                      >
+                        {getActivityIcon(activity?.type ?? '')}
+                        {isLocked && (
+                          <div className="absolute inset-0 bg-black/20 rounded-2xl flex items-center justify-center">
+                            <Lock className="w-10 h-10 text-white/80" />
                           </div>
-                          <h3 className="text-2xl font-bold text-gray-800 mb-1">
-                            {activity?.title ?? 'Activity'}
-                          </h3>
-                          <p className="text-gray-600 text-base">{activity?.description ?? ''}</p>
-                          {isLocked && (
-                            <p className="text-xs text-purple-600 font-semibold mt-2">Ask your therapist to unlock this activity</p>
-                          )}
-                        </button>
-                      );
-                    })()}
+                        )}
+                      </div>
+                      <h3 className="text-2xl font-bold text-gray-800 mb-1">
+                        {activity?.title ?? 'Activity'}
+                      </h3>
+                      <p className="text-gray-600 text-base">{activity?.description ?? ''}</p>
+                      {isLocked && (
+                        <p className="text-xs text-purple-600 font-semibold mt-2">Ask your therapist to unlock this activity</p>
+                      )}
+                    </button>
                   );
                 })}
               </div>
