@@ -18,6 +18,100 @@ async function main() {
   });
   console.log('Created test user:', user.email);
 
+  // ── SEED THERAPIST USER ──────────────────────────────────────────────────────
+  const therapistPassword = await bcrypt.hash('therapist123', 10);
+  const therapist = await prisma.user.upsert({
+    where: { email: 'therapist@socialstars.app' },
+    update: {},
+    create: {
+      email: 'therapist@socialstars.app',
+      password: therapistPassword,
+      name: 'Dr. Sarah Mitchell',
+      role: 'therapist',
+      inviteCode: 'THER-SEED01',
+      city: 'Austin',
+      state: 'Texas',
+      country: 'United States',
+      bio: 'Board-certified speech-language pathologist specializing in autism spectrum disorder, social skills development, and AAC for children ages 2–10.',
+    },
+  });
+  console.log('Created therapist user:', therapist.email);
+
+  // ── DEFAULT BILLING PLANS TEMPLATE ──────────────────────────────────────────
+  const DEFAULT_PLANS = [
+    {
+      name: 'Basic Support',
+      description: 'Ideal for families just getting started with structured therapy support.',
+      pricePerMonth: 29,
+      features: JSON.stringify([
+        'Access to all 50+ activities',
+        'Weekly activity assignments',
+        'Monthly progress report',
+        'Email support',
+        'Mood & streak tracking',
+      ]),
+    },
+    {
+      name: 'Standard Care',
+      description: 'Our most popular plan — full adaptive learning with regular therapist check-ins.',
+      pricePerMonth: 59,
+      features: JSON.stringify([
+        'Everything in Basic Support',
+        'Bi-weekly therapist notes',
+        'Real-time adaptive difficulty',
+        'AI-generated weekly plan',
+        'Circle Time session access',
+        'Therapist struggle alerts',
+        'Priority response within 24h',
+      ]),
+    },
+    {
+      name: 'Intensive Program',
+      description: 'Comprehensive support for families needing intensive, personalised therapy.',
+      pricePerMonth: 99,
+      features: JSON.stringify([
+        'Everything in Standard Care',
+        'Unlimited therapist notes',
+        'Custom activity creation',
+        'Weekly 1:1 video check-in',
+        'PDF progress reports',
+        'School/IEP coordination support',
+        'Same-day priority response',
+      ]),
+    },
+  ];
+
+  // Seed plans for the seeded therapist
+  for (const plan of DEFAULT_PLANS) {
+    const existing = await prisma.therapistSubscriptionPlan.findFirst({
+      where: { therapistId: therapist.id, name: plan.name },
+    });
+    if (!existing) {
+      await prisma.therapistSubscriptionPlan.create({
+        data: { therapistId: therapist.id, ...plan },
+      });
+    }
+  }
+  console.log('Seeded billing plans for:', therapist.name);
+
+  // Seed default plans for any other existing therapists that have none
+  const existingTherapists = await prisma.user.findMany({
+    where: { role: 'therapist', id: { not: therapist.id } },
+    select: { id: true, name: true },
+  });
+
+  for (const t of existingTherapists) {
+    const planCount = await prisma.therapistSubscriptionPlan.count({ where: { therapistId: t.id } });
+    if (planCount === 0) {
+      for (const plan of DEFAULT_PLANS) {
+        await prisma.therapistSubscriptionPlan.create({
+          data: { therapistId: t.id, ...plan },
+        });
+      }
+      console.log('Seeded default billing plans for existing therapist:', t.name);
+    }
+  }
+
   // ── EMOTION ACTIVITIES ───────────────────────────────────────────────────────
   const emotionActivities = [
     {
