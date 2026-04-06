@@ -139,6 +139,7 @@ export default function ParentDashboard() {
 
   // Subscription state
   const [subscription, setSubscription] = useState<any>(null);
+  const [linkedTherapists, setLinkedTherapists] = useState<any[]>([]);
 
   // Link/change therapist modal
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -177,14 +178,18 @@ export default function ParentDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const [childrenRes, subRes] = await Promise.all([
+      const [childrenRes, subRes, therapistRes] = await Promise.all([
         fetch('/api/children'),
         fetch('/api/parent/subscription'),
+        fetch('/api/parent/therapist'),
       ]);
-      const [childrenData, subData] = await Promise.all([childrenRes.json(), subRes.json()]);
+      const [childrenData, subData, therapistData] = await Promise.all([
+        childrenRes.json(), subRes.json(), therapistRes.json(),
+      ]);
       const childrenList: Child[] = childrenData?.children ?? [];
       setChildren(childrenList);
       setSubscription(subData.subscription ?? null);
+      setLinkedTherapists(therapistData.therapists ?? []);
 
       const progressPromises = childrenList.map(async (child) => {
         const [progressRes, moodRes] = await Promise.all([
@@ -458,7 +463,8 @@ export default function ParentDashboard() {
   ].filter((d) => d.value > 0);
 
   const hasNotes = children.some((c) => (therapistNotes[c.id] ?? []).length > 0);
-  const isTherapistLinked = hasNotes || progressData.some((p) => p.hasAssignments);
+  const isTherapistLinked = linkedTherapists.length > 0 || hasNotes || progressData.some((p) => p.hasAssignments);
+  const primaryTherapist = linkedTherapists[0] ?? null;
 
   return (
     <div className="min-h-screen p-6">
@@ -485,7 +491,8 @@ export default function ParentDashboard() {
             </button>
             {isTherapistLinked ? (
               <div className="px-5 py-3 bg-gradient-to-r from-green-400 to-teal-500 text-white font-bold rounded-2xl flex items-center gap-2 shadow-lg">
-                <UserCheck className="w-5 h-5" /> Therapist Connected ✓
+                <UserCheck className="w-5 h-5" />
+                {primaryTherapist?.name ? `${primaryTherapist.name} ✓` : 'Therapist Connected ✓'}
               </div>
             ) : (
               <button

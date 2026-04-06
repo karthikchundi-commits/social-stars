@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import { CheckCircle, Lock, Baby, Target, User, AlertCircle, LogIn } from 'lucide-react';
 
 interface EnrollmentData {
@@ -78,14 +79,28 @@ function EnrollForm() {
       body: JSON.stringify({ token, password }),
     });
     const data = await res.json();
-    setSubmitting(false);
 
     if (!res.ok) {
+      setSubmitting(false);
       setSubmitError(data.error || 'Registration failed. Please try again.');
       return;
     }
 
-    setDone(true);
+    // Auto sign-in so the parent doesn't have to log in again manually
+    const signInResult = await signIn('credentials', {
+      email: data.email,
+      password,
+      redirect: false,
+    });
+
+    setSubmitting(false);
+
+    if (signInResult?.ok) {
+      router.replace('/parent-dashboard');
+    } else {
+      // Sign-in failed for some reason — fall back to showing success + manual login
+      setDone(true);
+    }
   };
 
   if (loading) return null;
