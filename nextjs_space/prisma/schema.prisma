@@ -52,6 +52,10 @@ model User {
   image            String?
   role             String            @default("parent") // "parent" | "therapist"
   inviteCode       String?           @unique
+  city             String?
+  state            String?
+  country          String?
+  bio              String?           @db.Text
   createdAt        DateTime          @default(now())
   accounts         Account[]
   sessions         Session[]
@@ -64,6 +68,10 @@ model User {
   therapistNotes   TherapistNote[]      @relation("TherapistNotes")
   hostedSessions   LiveSession[]        @relation("TherapistSessions")
   circleSchedules  CircleTimeSchedule[] @relation("TherapistSchedules")
+  subscriptionPlans     TherapistSubscriptionPlan[] @relation("TherapistSubscriptionPlans")
+  familySubscriptions   FamilySubscription[]        @relation("TherapistFamilySubscriptions")
+  mySubscription        FamilySubscription?         @relation("ParentSubscription")
+  groupDiscounts        GroupDiscount[]              @relation("TherapistGroupDiscounts")
 }
 
 model ChildProfile {
@@ -271,6 +279,52 @@ model CircleTimeSchedule {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model TherapistSubscriptionPlan {
+  id            String   @id @default(cuid())
+  therapistId   String
+  name          String
+  description   String?
+  pricePerMonth Float    @default(0)
+  features      String   @db.Text // JSON: string[]
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  therapist      User               @relation("TherapistSubscriptionPlans", fields: [therapistId], references: [id], onDelete: Cascade)
+  subscriptions  FamilySubscription[]
+  groupDiscounts GroupDiscount[]
+}
+
+model FamilySubscription {
+  id              String   @id @default(cuid())
+  parentId        String   @unique
+  therapistId     String
+  planId          String?
+  discountPercent Float    @default(0)
+  customPrice     Float?
+  status          String   @default("active") // active | paused | cancelled
+  notes           String?
+  startDate       DateTime @default(now())
+
+  parent    User                       @relation("ParentSubscription", fields: [parentId], references: [id], onDelete: Cascade)
+  therapist User                       @relation("TherapistFamilySubscriptions", fields: [therapistId], references: [id], onDelete: Cascade)
+  plan      TherapistSubscriptionPlan? @relation(fields: [planId], references: [id], onDelete: SetNull)
+}
+
+model GroupDiscount {
+  id              String   @id @default(cuid())
+  therapistId     String
+  planId          String?
+  name            String
+  minFamilies     Int
+  discountPercent Float
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  therapist User                       @relation("TherapistGroupDiscounts", fields: [therapistId], references: [id], onDelete: Cascade)
+  plan      TherapistSubscriptionPlan? @relation(fields: [planId], references: [id], onDelete: SetNull)
 }
 
 model LiveParticipant {

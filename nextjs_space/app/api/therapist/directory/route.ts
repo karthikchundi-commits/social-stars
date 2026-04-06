@@ -5,16 +5,27 @@ import { prisma } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-// GET: list all therapists in the app, with isLinked flag for the current parent
-export async function GET() {
+export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  const { searchParams } = new URL(request.url);
+  const city = searchParams.get('city')?.trim().toLowerCase();
+  const state = searchParams.get('state')?.trim().toLowerCase();
+  const country = searchParams.get('country')?.trim().toLowerCase();
+  const name = searchParams.get('name')?.trim().toLowerCase();
+
   const [therapists, existingLinks] = await Promise.all([
     prisma.user.findMany({
-      where: { role: 'therapist' },
-      select: { id: true, name: true, inviteCode: true },
+      where: {
+        role: 'therapist',
+        ...(city && { city: { contains: city, mode: 'insensitive' } }),
+        ...(state && { state: { contains: state, mode: 'insensitive' } }),
+        ...(country && { country: { contains: country, mode: 'insensitive' } }),
+        ...(name && { name: { contains: name, mode: 'insensitive' } }),
+      },
+      select: { id: true, name: true, inviteCode: true, city: true, state: true, country: true, bio: true },
       orderBy: { name: 'asc' },
     }),
     prisma.therapistFamily.findMany({
@@ -31,6 +42,10 @@ export async function GET() {
       name: t.name ?? 'Therapist',
       inviteCode: t.inviteCode,
       isLinked: linkedIds.has(t.id),
+      city: t.city,
+      state: t.state,
+      country: t.country,
+      bio: t.bio,
     })),
   });
 }

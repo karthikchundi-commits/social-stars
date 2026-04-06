@@ -7,6 +7,7 @@ import {
   TrendingUp, Award, Activity, Flame, Heart, MessageSquare,
   Plus, LogOut, Play, Star, BarChart2, Sparkles, Brain,
   CalendarDays, UserCheck, Search, Users, Clock, Radio,
+  CreditCard, MapPin, RefreshCw, Check,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -38,6 +39,10 @@ interface TherapistEntry {
   name: string;
   inviteCode: string | null;
   isLinked: boolean;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  bio?: string | null;
 }
 
 interface AiInsights {
@@ -132,14 +137,21 @@ export default function ParentDashboard() {
   const [goals, setGoals] = useState('');
   const [childNotes, setChildNotes] = useState('');
 
-  // Link therapist modal
+  // Subscription state
+  const [subscription, setSubscription] = useState<any>(null);
+
+  // Link/change therapist modal
   const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkModalMode, setLinkModalMode] = useState<'link' | 'change'>('link');
+  const [changingTherapistId, setChangingTherapistId] = useState<string | null>(null);
   const [linkCode, setLinkCode] = useState('');
   const [linkResult, setLinkResult] = useState('');
   const [linkTab, setLinkTab] = useState<'browse' | 'code'>('browse');
   const [therapistDirectory, setTherapistDirectory] = useState<TherapistEntry[]>([]);
   const [loadingDirectory, setLoadingDirectory] = useState(false);
   const [connectingId, setConnectingId] = useState<string | null>(null);
+  // Location filter for directory
+  const [locationFilter, setLocationFilter] = useState('');
 
   // AI tools state
   const [showAiModal, setShowAiModal] = useState(false);
@@ -165,10 +177,14 @@ export default function ParentDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const childrenRes = await fetch('/api/children');
-      const childrenData = await childrenRes.json();
+      const [childrenRes, subRes] = await Promise.all([
+        fetch('/api/children'),
+        fetch('/api/parent/subscription'),
+      ]);
+      const [childrenData, subData] = await Promise.all([childrenRes.json(), subRes.json()]);
       const childrenList: Child[] = childrenData?.children ?? [];
       setChildren(childrenList);
+      setSubscription(subData.subscription ?? null);
 
       const progressPromises = childrenList.map(async (child) => {
         const [progressRes, moodRes] = await Promise.all([
@@ -274,12 +290,21 @@ export default function ParentDashboard() {
     if (res.ok) { setLinkCode(''); fetchDashboardData(); }
   };
 
-  const openLinkModal = async () => {
+  const openLinkModal = async (mode: 'link' | 'change' = 'link', therapistId?: string) => {
+    setLinkModalMode(mode);
+    setChangingTherapistId(therapistId ?? null);
     setShowLinkModal(true);
     setLinkTab('browse');
+    setLocationFilter('');
+    fetchDirectory();
+  };
+
+  const fetchDirectory = async (loc?: string) => {
     setLoadingDirectory(true);
     try {
-      const res = await fetch('/api/therapist/directory');
+      const params = new URLSearchParams();
+      if (loc) params.set('city', loc);
+      const res = await fetch(`/api/therapist/directory?${params.toString()}`);
       const data = await res.json();
       setTherapistDirectory(data.therapists ?? []);
     } finally {
@@ -290,6 +315,16 @@ export default function ParentDashboard() {
   const handleConnectTherapist = async (inviteCode: string | null, therapistId: string) => {
     if (!inviteCode) return;
     setConnectingId(therapistId);
+
+    // If changing therapist, unlink old one first
+    if (linkModalMode === 'change' && changingTherapistId) {
+      await fetch('/api/parent/therapist', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ therapistId: changingTherapistId }),
+      });
+    }
+
     const res = await fetch('/api/therapist/invite', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -298,8 +333,19 @@ export default function ParentDashboard() {
     if (res.ok) {
       setTherapistDirectory((prev) => prev.map((t) => t.id === therapistId ? { ...t, isLinked: true } : t));
       fetchDashboardData();
+      setShowLinkModal(false);
     }
     setConnectingId(null);
+  };
+
+  const handleUnlinkTherapist = async (therapistId: string) => {
+    if (!confirm('Are you sure you want to unlink from this therapist? Your subscription managed by them will also be removed.')) return;
+    await fetch('/api/parent/therapist', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ therapistId }),
+    });
+    fetchDashboardData();
   };
 
   const fetchConfusionData = async (childId: string) => {
@@ -443,7 +489,7 @@ export default function ParentDashboard() {
               </div>
             ) : (
               <button
-                onClick={openLinkModal}
+                onClick={() => openLinkModal('link')}
                 className="px-5 py-3 bg-gradient-to-r from-orange-400 to-pink-500 text-white font-bold rounded-2xl hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
               >
                 <Search className="w-5 h-5" /> Find a Therapist
@@ -585,50 +631,116 @@ export default function ParentDashboard() {
 
         {/* Subscription Status */}
         <div className="bg-white rounded-3xl shadow-md border border-gray-100 p-6 mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-gray-300 to-gray-400 rounded-2xl flex items-center justify-center flex-shrink-0">
-                <Star className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span className="font-bold text-gray-900 text-lg">Free Plan</span>
-                  <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-semibold">Current</span>
+          {subscription ? (
+            /* Therapist-managed plan */
+            <div>
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <CreditCard className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                      <span className="font-bold text-gray-900 text-lg">
+                        {subscription.plan?.name ?? 'Custom Plan'}
+                      </span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                        subscription.status === 'active' ? 'bg-green-100 text-green-700' :
+                        subscription.status === 'paused' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-red-100 text-red-700'
+                      }`}>{subscription.status}</span>
+                      <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-semibold">Therapist-managed</span>
+                    </div>
+                    <p className="text-sm text-gray-500 mb-1">
+                      Managed by <strong>{subscription.therapist?.name ?? 'your therapist'}</strong>
+                      {subscription.therapist?.city && (
+                        <span className="ml-1 text-gray-400">· {subscription.therapist.city}{subscription.therapist.state ? `, ${subscription.therapist.state}` : ''}</span>
+                      )}
+                    </p>
+                    <div className="flex items-center gap-3 text-sm">
+                      <span className="font-bold text-gray-900 text-xl">${subscription.effectivePrice?.toFixed(2)}<span className="text-gray-400 font-normal text-sm">/mo</span></span>
+                      {subscription.discountPercent > 0 && (
+                        <>
+                          <span className="text-orange-600 font-semibold">{subscription.discountPercent}% discount applied</span>
+                          <span className="text-gray-400 line-through text-xs">${subscription.basePrice?.toFixed(2)}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <p className="text-sm text-gray-500">
-                  {children.length} / 1 child profile used &nbsp;·&nbsp; 10 starter activities &nbsp;·&nbsp; Basic tracking
-                </p>
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    onClick={() => openLinkModal('change', subscription.therapistId)}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold rounded-xl text-sm hover:bg-indigo-100 transition-all"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" /> Change Therapist
+                  </button>
+                  <button
+                    onClick={() => handleUnlinkTherapist(subscription.therapistId)}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-red-50 border border-red-200 text-red-600 font-bold rounded-xl text-sm hover:bg-red-100 transition-all"
+                  >
+                    Unlink
+                  </button>
+                </div>
               </div>
-            </div>
-            <div className="flex gap-3 flex-wrap">
-              {children.length >= 1 && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700 font-semibold">
-                  <Sparkles className="w-4 h-4" />
-                  Upgrade to add more children
+              {/* Plan features */}
+              {subscription.features?.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap gap-2">
+                  {subscription.features.map((f: string) => (
+                    <span key={f} className="flex items-center gap-1 text-xs bg-purple-50 text-purple-700 px-2.5 py-1 rounded-lg">
+                      <Check className="w-3 h-3" /> {f}
+                    </span>
+                  ))}
                 </div>
               )}
-              <a
-                href="/pricing"
-                className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl text-sm hover:opacity-90 transition-all shadow-md"
-              >
-                View Plans &amp; Upgrade
-              </a>
+              {subscription.notes && (
+                <p className="mt-3 text-xs text-gray-400 italic">{subscription.notes}</p>
+              )}
             </div>
-          </div>
-
-          {/* Feature lock hints */}
-          <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {[
-              { locked: true, label: 'Unlimited children', plan: 'Family · $9/mo' },
-              { locked: true, label: 'All 50+ activities', plan: 'Family · $9/mo' },
-              { locked: true, label: 'PDF progress reports', plan: 'Premium · $19/mo' },
-            ].map((item) => (
-              <div key={item.label} className="flex items-center gap-2 text-sm text-gray-400">
-                <span className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-xs flex-shrink-0">🔒</span>
-                <span>{item.label} — <span className="text-purple-500 font-semibold">{item.plan}</span></span>
+          ) : (
+            /* No therapist subscription — show free plan nudge */
+            <div>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-gray-300 to-gray-400 rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <Star className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="font-bold text-gray-900 text-lg">Free Plan</span>
+                      <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-semibold">Current</span>
+                    </div>
+                    <p className="text-sm text-gray-500">
+                      {children.length} / 1 child profile used &nbsp;·&nbsp; 10 starter activities &nbsp;·&nbsp; Basic tracking
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-3 flex-wrap">
+                  {children.length >= 1 && (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700 font-semibold">
+                      <Sparkles className="w-4 h-4" />
+                      Connect a therapist to get a managed plan
+                    </div>
+                  )}
+                  <a href="/pricing" className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl text-sm hover:opacity-90 transition-all shadow-md">
+                    View Plans
+                  </a>
+                </div>
               </div>
-            ))}
-          </div>
+              <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  { label: 'Unlimited children', plan: 'Family · $9/mo' },
+                  { label: 'All 50+ activities', plan: 'Family · $9/mo' },
+                  { label: 'PDF progress reports', plan: 'Premium · $19/mo' },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-2 text-sm text-gray-400">
+                    <span className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-xs flex-shrink-0">🔒</span>
+                    <span>{item.label} — <span className="text-purple-500 font-semibold">{item.plan}</span></span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Live Circle Time Banner */}
@@ -828,8 +940,14 @@ export default function ParentDashboard() {
           <div className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="text-center mb-5">
               <div className="text-4xl mb-2">🩺</div>
-              <h2 className="text-2xl font-bold text-purple-600 mb-1">Find a Therapist</h2>
-              <p className="text-gray-500 text-sm">Browse available therapists or enter an invite code.</p>
+              <h2 className="text-2xl font-bold text-purple-600 mb-1">
+                {linkModalMode === 'change' ? 'Change Therapist' : 'Find a Therapist'}
+              </h2>
+              <p className="text-gray-500 text-sm">
+                {linkModalMode === 'change'
+                  ? 'Select a new therapist. Your current therapist will be unlinked.'
+                  : 'Browse available therapists or enter an invite code.'}
+              </p>
             </div>
 
             {/* Tabs */}
@@ -850,40 +968,67 @@ export default function ParentDashboard() {
 
             {linkTab === 'browse' ? (
               <div>
+                {/* Location search */}
+                <div className="flex gap-2 mb-4">
+                  <div className="flex-1 relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      value={locationFilter}
+                      onChange={(e) => setLocationFilter(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:border-purple-400 focus:outline-none"
+                      placeholder="Filter by city or location..."
+                    />
+                  </div>
+                  <button
+                    onClick={() => fetchDirectory(locationFilter)}
+                    className="px-4 py-2.5 bg-purple-600 text-white font-bold rounded-xl text-sm hover:bg-purple-700 transition-all"
+                  >
+                    Search
+                  </button>
+                </div>
+
                 {loadingDirectory ? (
                   <div className="text-center py-8 text-gray-400">Loading therapists...</div>
                 ) : therapistDirectory.length === 0 ? (
-                  <div className="text-center py-8 text-gray-400">No therapists registered yet.</div>
+                  <div className="text-center py-8 text-gray-400">No therapists found{locationFilter ? ` in "${locationFilter}"` : ''}.</div>
                 ) : (
                   <div className="space-y-3">
-                    {therapistDirectory.map((t) => (
-                      <div key={t.id} className="flex items-center justify-between bg-purple-50 rounded-2xl p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold">
-                            {t.name.charAt(0)}
+                    {therapistDirectory.map((t: any) => (
+                      <div key={t.id} className="bg-purple-50 rounded-2xl p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold flex-shrink-0">
+                              {t.name.charAt(0)}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-bold text-gray-800">{t.name}</p>
+                              {(t.city || t.state || t.country) && (
+                                <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                                  <MapPin className="w-3 h-3 flex-shrink-0" />
+                                  {[t.city, t.state, t.country].filter(Boolean).join(', ')}
+                                </p>
+                              )}
+                              {t.bio && <p className="text-xs text-gray-500 mt-1 line-clamp-2">{t.bio}</p>}
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-bold text-gray-800">{t.name}</p>
-                            <p className="text-xs text-gray-500">Autism support specialist</p>
-                          </div>
+                          {t.isLinked ? (
+                            <span className="text-xs font-bold text-green-600 bg-green-100 px-3 py-1 rounded-full flex-shrink-0">Connected ✓</span>
+                          ) : (
+                            <button
+                              onClick={() => handleConnectTherapist(t.inviteCode, t.id)}
+                              disabled={connectingId === t.id || !t.inviteCode}
+                              className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-bold rounded-xl hover:opacity-90 disabled:opacity-50 transition-all flex-shrink-0"
+                            >
+                              {connectingId === t.id ? 'Connecting...' : linkModalMode === 'change' ? 'Switch' : 'Connect'}
+                            </button>
+                          )}
                         </div>
-                        {t.isLinked ? (
-                          <span className="text-xs font-bold text-green-600 bg-green-100 px-3 py-1 rounded-full">Connected ✓</span>
-                        ) : (
-                          <button
-                            onClick={() => handleConnectTherapist(t.inviteCode, t.id)}
-                            disabled={connectingId === t.id || !t.inviteCode}
-                            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-bold rounded-xl hover:opacity-90 disabled:opacity-50 transition-all"
-                          >
-                            {connectingId === t.id ? 'Connecting...' : 'Connect'}
-                          </button>
-                        )}
                       </div>
                     ))}
                   </div>
                 )}
                 <p className="text-xs text-gray-400 mt-4 text-center">
-                  Connecting lets your therapist view progress, assign activities, and leave notes for you.
+                  Connecting lets your therapist view progress, assign activities, and manage your plan.
                 </p>
               </div>
             ) : (
