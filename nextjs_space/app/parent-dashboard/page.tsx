@@ -649,7 +649,7 @@ export default function ParentDashboard() {
                   <div>
                     <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                       <span className="font-bold text-gray-900 text-lg">
-                        {subscription.plan?.name ?? 'Custom Plan'}
+                        {subscription.plan?.name ?? 'Plan Pending'}
                       </span>
                       <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
                         subscription.status === 'active' ? 'bg-green-100 text-green-700' :
@@ -665,8 +665,14 @@ export default function ParentDashboard() {
                       )}
                     </p>
                     <div className="flex items-center gap-3 text-sm">
-                      <span className="font-bold text-gray-900 text-xl">${subscription.effectivePrice?.toFixed(2)}<span className="text-gray-400 font-normal text-sm">/mo</span></span>
-                      {subscription.discountPercent > 0 && (
+                      {subscription.plan ? (
+                        <span className="font-bold text-gray-900 text-xl">${subscription.effectivePrice?.toFixed(2)}<span className="text-gray-400 font-normal text-sm">/mo</span></span>
+                      ) : (
+                        <span className="text-sm text-amber-600 font-semibold bg-amber-50 px-3 py-1 rounded-xl border border-amber-200">
+                          No plan assigned yet — contact your therapist
+                        </span>
+                      )}
+                      {subscription.plan && subscription.discountPercent > 0 && (
                         <>
                           <span className="text-orange-600 font-semibold">{subscription.discountPercent}% discount applied</span>
                           <span className="text-gray-400 line-through text-xs">${subscription.basePrice?.toFixed(2)}</span>

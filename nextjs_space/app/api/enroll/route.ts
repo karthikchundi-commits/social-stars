@@ -83,6 +83,18 @@ export async function POST(request: Request) {
       },
     });
 
+    // Create a FamilySubscription so the therapist appears in the parent's billing view
+    // (no plan assigned yet — therapist assigns one via the Billing page)
+    await tx.familySubscription.upsert({
+      where: { parentId: parent.id },
+      create: {
+        parentId: parent.id,
+        therapistId: enrollment.therapistId,
+        status: 'active',
+      },
+      update: {},
+    });
+
     // Mark enrollment as completed
     await tx.prospectEnrollment.update({
       where: { id: enrollment.id },
