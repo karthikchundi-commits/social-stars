@@ -668,9 +668,12 @@ export default function ParentDashboard() {
                       {subscription.plan ? (
                         <span className="font-bold text-gray-900 text-xl">${subscription.effectivePrice?.toFixed(2)}<span className="text-gray-400 font-normal text-sm">/mo</span></span>
                       ) : (
-                        <span className="text-sm text-amber-600 font-semibold bg-amber-50 px-3 py-1 rounded-xl border border-amber-200">
-                          No plan assigned yet — contact your therapist
-                        </span>
+                        <a
+                          href="/pricing"
+                          className="flex items-center gap-1.5 px-4 py-2 bg-purple-600 text-white font-bold rounded-xl text-sm hover:bg-purple-700 transition-all"
+                        >
+                          View Therapist Plans
+                        </a>
                       )}
                       {subscription.plan && subscription.discountPercent > 0 && (
                         <>
